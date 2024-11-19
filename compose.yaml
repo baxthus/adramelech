@@ -1,0 +1,7 @@
+﻿services:
+  adramelech:
+    image: adramelech
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env
