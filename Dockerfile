@@ -8,7 +8,7 @@ COPY ["adramelech.csproj", "adramelech/"]
 RUN dotnet restore "adramelech/adramelech.csproj"
 
 COPY . adramelech/
-WORKDIR "/src/Adramelech"
+WORKDIR "/src/adramelech"
 RUN dotnet build "adramelech.csproj" -c Release -o /app/build
 
 FROM build AS publish
