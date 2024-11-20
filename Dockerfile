@@ -4,17 +4,17 @@ WORKDIR /app
 FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
 WORKDIR /src
 
-COPY ["Adramelech/Adramelech.csproj", "Adramelech/"]
-RUN dotnet restore "Adramelech/Adramelech.csproj"
+COPY ["adramelech.csproj", "adramelech/"]
+RUN dotnet restore "adramelech/adramelech.csproj"
 
-COPY . .
+COPY . adramelech/
 WORKDIR "/src/Adramelech"
-RUN dotnet build "Adramelech.csproj" -c Release -o /app/build
+RUN dotnet build "adramelech.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Adramelech.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "adramelech.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Adramelech.dll"]
+ENTRYPOINT ["dotnet", "adramelech.dll"]
