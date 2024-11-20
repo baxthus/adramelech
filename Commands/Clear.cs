@@ -12,8 +12,8 @@ public class Clear : InteractionModuleBase<SocketInteractionContext<SocketSlashC
 {
     [SlashCommand("clear", "Clears the chat")]
     [RequireUserPermission(GuildPermission.ManageMessages)]
-    [RequireBotPermission(ChannelPermission.ManageMessages)]
-    [RequireContext(ContextType.Guild | ContextType.Group)]
+    [RequireBotPermission(GuildPermission.ManageMessages)]
+    [RequireContext(ContextType.Guild)]
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     public async Task ClearAsync(
         [Summary("amount", "The amount of messages to clear")] [MinValue(1)] [MaxValue(100)]
