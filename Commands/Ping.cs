@@ -1,5 +1,4 @@
 ﻿using adramelech.Configuration;
-using adramelech.Extensions;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
@@ -9,9 +8,7 @@ namespace adramelech.Commands;
 public class Ping : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("ping", "Reply with pong!")]
-    public async Task PingAsync(
-        [Summary("ephemeral", "Whether the response should only appear to you")]
-        bool ephemeral = false)
+    public async Task PingAsync()
     {
         await RespondAsync(
             embed: new EmbedBuilder()
@@ -21,8 +18,7 @@ public class Ping : InteractionModuleBase<SocketInteractionContext<SocketSlashCo
             components: new ComponentBuilder()
                 .WithButton("Velocity", "velocity")
                 .WithButton("Author", style: ButtonStyle.Link, url: "https://abysmal.eu.org")
-                .Build(),
-            ephemeral: ephemeral);
+                .Build());
     }
 }
 
@@ -39,15 +35,11 @@ public class Velocity : InteractionModuleBase<SocketInteractionContext<SocketMes
                 .Build();
         });
 
-        var ephemeral = (Context.Interaction.Message.Flags & MessageFlags.Ephemeral) != 0;
-
         await ReplyAsync(
             embed: new EmbedBuilder()
                 .WithColor(BotConfig.EmbedColor)
                 .WithTitle("Velocity")
                 .WithDescription($"Latency: {Context.Client.Latency}ms")
-                .Build(),
-            flags: ephemeral ? MessageFlags.Ephemeral : MessageFlags.None,
-            messageReference: Context.MessageReference());
+                .Build());
     }
 }
