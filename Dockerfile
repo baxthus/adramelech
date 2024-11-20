@@ -4,7 +4,7 @@ WORKDIR /app
 FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
 WORKDIR /src
 
-COPY ["Adramelech.csproj", "Adramelech/"]
+COPY ["Adramelech/Adramelech.csproj", "Adramelech/"]
 RUN dotnet restore "Adramelech/Adramelech.csproj"
 
 COPY . .
