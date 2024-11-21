@@ -21,6 +21,8 @@ public class Clear : InteractionModuleBase<SocketInteractionContext<SocketSlashC
         [Summary("time_before_autodelete", "The time before the bot deletes the response")] [MinValue(1)] [MaxValue(10)]
         int timeBeforeDelete = 5)
     {
+        await DeferAsync();
+
         var messages = await Context.Channel.GetMessagesAsync(amount).FlattenAsync();
         messages = messages.Where(x => x.CreatedAt > DateTimeOffset.Now.AddDays(-14)).ToList();
         if (!messages.Any())
@@ -33,7 +35,7 @@ public class Clear : InteractionModuleBase<SocketInteractionContext<SocketSlashC
                 Context.Guild.GetTextChannel(Context.Channel.Id).DeleteMessagesAsync(messages))).IsFailure)
             await Context.SendError("Failed to delete messages");
 
-        await RespondAsync(embed: new EmbedBuilder()
+        await FollowupAsync(embed: new EmbedBuilder()
             .WithColor(BotConfig.EmbedColor)
             .WithTitle("Messages Cleared")
             .WithDescription($"""
