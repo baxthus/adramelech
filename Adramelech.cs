@@ -41,7 +41,6 @@ internal class Adramelech
         await interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), services);
 
         services.GetRequiredService<InteractionCreated>().Initialize();
-        services.GetRequiredService<SlashCommandExecuted>().Initialize();
         services.GetRequiredService<Ready>().Initialize();
 
         await Task.Delay(-1);
@@ -53,7 +52,6 @@ internal class Adramelech
             .AddSingleton<DiscordSocketClient>()
             .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
             .AddSingleton<InteractionCreated>()
-            .AddSingleton<SlashCommandExecuted>()
             .AddSingleton<Ready>()
             .BuildServiceProvider();
     }
