@@ -1,2 +1,2 @@
-﻿sudo docker compose build --no-cache
-sudo docker compose up -d
+﻿docker compose build --no-cache
+docker compose up -d
