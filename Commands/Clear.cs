@@ -18,13 +18,15 @@ public class Clear : InteractionModuleBase<SocketInteractionContext<SocketSlashC
     public async Task ClearAsync(
         [Summary("amount", "The amount of messages to clear")] [MinValue(1)] [MaxValue(100)]
         int amount,
-        [Summary("time_before_autodelete", "The time before the bot deletes the response")] [MinValue(1)] [MaxValue(10)]
+        [Summary("time_before_autodelete", "The time before the bot deletes the response")] [MinValue(0)] [MaxValue(10)]
         int timeBeforeDelete = 5)
     {
         await DeferAsync();
 
         var messages = await Context.Channel.GetMessagesAsync(amount).FlattenAsync();
-        messages = messages.Where(x => x.CreatedAt > DateTimeOffset.Now.AddDays(-14)).ToList();
+        messages = messages.Where(x => x.CreatedAt > DateTimeOffset.Now.AddDays(-14)).ToList()
+            // Skip deferred response
+            .Skip(1);
         if (!messages.Any())
         {
             await Context.SendError("No messages to delete or messages are older than 14 days");
@@ -43,6 +45,9 @@ public class Clear : InteractionModuleBase<SocketInteractionContext<SocketSlashC
                               Command executed by {Context.User.Mention}
                               """)
             .Build());
+
+        if (timeBeforeDelete == 0)
+            return;
 
         await Task.Delay(TimeSpan.FromSeconds(timeBeforeDelete));
 
