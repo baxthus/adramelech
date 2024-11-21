@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using adramelech.Utilities;
+using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Serilog;
@@ -26,7 +27,8 @@ public class InteractionCreated(
         {
             Log.Error("An error occurred while executing an interaction command: {Exception}", exception);
             // Delete the troublesome message (works sometimes)
-            await interaction.GetOriginalResponseAsync().ContinueWith(async msg => await msg.Result.DeleteAsync());
+            await ExceptionUtils.TryAsync(() =>
+                interaction.GetOriginalResponseAsync().ContinueWith(async msg => await msg.Result.DeleteAsync()));
         }
     }
 
