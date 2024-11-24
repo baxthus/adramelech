@@ -8,6 +8,7 @@ public class BotConfig
     private static BotConfig? _instance;
     public static readonly Color EmbedColor = new(203, 166, 247);
     public static readonly Game Activity = new("you <3", ActivityType.Watching);
+    public static readonly string UserAgent = "Adramelech (by @baxthus)";
     public string? FeedbackWebhook;
     public string Token = null!;
 
