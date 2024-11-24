@@ -24,7 +24,7 @@ public class Obfuscate : InteractionModuleBase<SocketInteractionContext<SocketSl
             return;
         }
 
-        var response = await "https://owo.vc/api/v2/link".Request<ObfuscateData, ObfuscateResponse>(
+        var response = await "https://owo.vc/api/v2/link".Post<ObfuscateData, ObfuscateResponse>(
             new ObfuscateData
             {
                 Link = url,

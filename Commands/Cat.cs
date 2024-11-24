@@ -14,7 +14,7 @@ public class Cat : InteractionModuleBase<SocketInteractionContext<SocketSlashCom
     {
         await DeferAsync();
 
-        var response = await "https://api.thecatapi.com/v1/images/search".Request<CatResponse[]>();
+        var response = await "https://api.thecatapi.com/v1/images/search".Get<CatResponse[]>();
         if (response.IsDefault())
         {
             await Context.SendError("Failed to get cat image", true);

@@ -22,7 +22,7 @@ public class Covid : InteractionModuleBase<SocketInteractionContext<SocketSlashC
         else
             url.AppendPathSegments("countries", country);
 
-        var response = await url.ToString().Request<CovidResponse>();
+        var response = await url.ToString().Get<CovidResponse>();
         if (response.IsDefault())
         {
             await Context.SendError("There was an error getting the Covid-19 statistics", true);

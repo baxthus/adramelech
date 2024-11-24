@@ -22,7 +22,7 @@ public partial class CepSearch : InteractionModuleBase<SocketInteractionContext<
             return;
         }
 
-        var response = await $"https://brasilapi.com.br/api/cep/v2/{cep}".Request<CepResponse>();
+        var response = await $"https://brasilapi.com.br/api/cep/v2/{cep}".Get<CepResponse>();
         if (response.IsDefault())
         {
             await Context.SendError("Something went wrong while searching for the CEP", true);

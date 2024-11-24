@@ -14,7 +14,7 @@ public class Dog : InteractionModuleBase<SocketInteractionContext<SocketSlashCom
     {
         await DeferAsync();
 
-        var response = await "https://dog.ceo/api/breeds/image/random".Request<DogResponse>();
+        var response = await "https://dog.ceo/api/breeds/image/random".Get<DogResponse>();
         if (response.IsDefault() || response.Status != "success")
         {
             await Context.SendError("Failed to fetch dog image", true);
