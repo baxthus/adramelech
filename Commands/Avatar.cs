@@ -14,7 +14,7 @@ public class Avatar : InteractionModuleBase<SocketInteractionContext<SocketSlash
 
         await RespondAsync(
             embed: new EmbedBuilder()
-                .WithColor(BotConfig.EmbedColor)
+                .WithColor(Config.EmbedColor)
                 .WithTitle($"Avatar of {user.Username}")
                 .WithImageUrl(user.GetAvatarUrl(size: 2048))
                 .Build(),

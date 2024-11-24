@@ -22,7 +22,7 @@ public partial class CepSearch : InteractionModuleBase<SocketInteractionContext<
             return;
         }
 
-        var response = await $"https://brasilapi.com.br/api/cep/v2/{cep}".Get<CepResponse>();
+        var response = await $"https://brasilapi.com.br/api/cep/v2/{cep}".GetAsync<CepResponse>();
         if (response.IsDefault())
         {
             await Context.SendError("Something went wrong while searching for the CEP", true);
@@ -64,7 +64,7 @@ public partial class CepSearch : InteractionModuleBase<SocketInteractionContext<
 
         await FollowupAsync(
             embed: new EmbedBuilder()
-                .WithColor(BotConfig.EmbedColor)
+                .WithColor(Config.EmbedColor)
                 .WithTitle("CEP Search")
                 .AddField(":zap: **Main**", mainField)
                 .AddField(":earth_americas: **Location**", locationField)

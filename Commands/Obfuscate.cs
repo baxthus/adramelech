@@ -24,7 +24,7 @@ public class Obfuscate : InteractionModuleBase<SocketInteractionContext<SocketSl
             return;
         }
 
-        var response = await "https://owo.vc/api/v2/link".Post<ObfuscateData, ObfuscateResponse>(
+        var response = await "https://owo.vc/api/v2/link".PostAsync<ObfuscateData, ObfuscateResponse>(
             new ObfuscateData
             {
                 Link = url,
@@ -32,7 +32,7 @@ public class Obfuscate : InteractionModuleBase<SocketInteractionContext<SocketSl
                 Metadata = metadata ? "IGNORE" : "PROXY"
             },
             dataNamingStrategy: new CamelCaseNamingStrategy(),
-            userAgent: BotConfig.UserAgent);
+            userAgent: Config.UserAgent);
         if (response.IsDefault())
         {
             await Context.SendError("Failed to obfuscate URL", true);
@@ -43,7 +43,7 @@ public class Obfuscate : InteractionModuleBase<SocketInteractionContext<SocketSl
         var removedMetadata = response.Metadata == "IGNORE" ? "Yes" : "No";
 
         await FollowupAsync(embed: new EmbedBuilder()
-            .WithColor(BotConfig.EmbedColor)
+            .WithColor(Config.EmbedColor)
             .WithTitle("Obfuscated URL")
             .AddField(":outbox_tray: Destination", $"```{response.Destination}```")
             .AddField(":inbox_tray: Result", $"```{response.Id}```")

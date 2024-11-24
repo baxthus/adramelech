@@ -28,7 +28,7 @@ public class Lookup : InteractionModuleBase<SocketInteractionContext<SocketSlash
             return;
         }
 
-        var response = await $"https://ipwho.is/{ip.Value}".Get<Whois>("curl", new SnakeCaseNamingStrategy());
+        var response = await $"https://ipwho.is/{ip.Value}".GetAsync<Whois>("curl", new SnakeCaseNamingStrategy());
         if (response.IsDefault() || !response.Success)
         {
             await Context.SendError("Failed to get whois information", true);
@@ -68,7 +68,7 @@ public class Lookup : InteractionModuleBase<SocketInteractionContext<SocketSlash
 
         await FollowupAsync(
             embed: new EmbedBuilder()
-                .WithColor(BotConfig.EmbedColor)
+                .WithColor(Config.EmbedColor)
                 .WithTitle("Lookup")
                 .WithDescription("For best results, search by ip")
                 .AddField(":zap: Main", mainField)
@@ -85,7 +85,7 @@ public class Lookup : InteractionModuleBase<SocketInteractionContext<SocketSlash
 
     private static async Task<Result<string>> GetIpFromDomain(string domain)
     {
-        var response = await $"https://da.gd/host/{domain}".Get<string>();
+        var response = await $"https://da.gd/host/{domain}".GetAsync<string>();
         if (response.IsNullOrEmpty()) return new Exception("Failed to get ip from domain");
 
         response = response!.Trim();

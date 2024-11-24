@@ -17,7 +17,7 @@ public static class HttpUtils
     /// <typeparam name="T">The type of the response to expect (can be inferred).</typeparam>
     /// <returns>The response from the request, or default if the request failed.</returns>
     /// <remarks>This method don't support returning a int, because I don't fell like it.</remarks>
-    public static async Task<T?> Get<T>(this string url, string? userAgent = null,
+    public static async Task<T?> GetAsync<T>(this string url, string? userAgent = null,
         NamingStrategy? namingStrategy = null)
     {
         using var client = new HttpClient();
@@ -49,7 +49,7 @@ public static class HttpUtils
     /// <typeparam name="T">The type of the data to send with the request (can be inferred).</typeparam>
     /// <typeparam name="TF">The type of the response to expect.</typeparam>
     /// <returns>The response from the request, or default if the request failed.</returns>
-    public static async Task<TF?> Post<T, TF>(this string url, T data, string? userAgent = null,
+    public static async Task<TF?> PostAsync<T, TF>(this string url, T data, string? userAgent = null,
         NamingStrategy? dataNamingStrategy = null, NamingStrategy? responseNamingStrategy = null)
     {
         using var client = new HttpClient();

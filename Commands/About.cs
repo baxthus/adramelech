@@ -17,7 +17,7 @@ public class About : InteractionModuleBase<SocketInteractionContext<SocketSlashC
 
         await RespondAsync(
             embed: new EmbedBuilder()
-                .WithColor(BotConfig.EmbedColor)
+                .WithColor(Config.EmbedColor)
                 .WithTitle("About")
                 .WithDescription("This bot is a simple Discord bot written in C# using Discord.Net")
                 .AddField("Commands", $"> Currently has {commands.Count} commands")

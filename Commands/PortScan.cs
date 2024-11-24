@@ -95,7 +95,7 @@ public class PortScan : InteractionModuleBase<SocketInteractionContext<SocketSla
             }
 
             await Context.User.SendMessageAsync(embed: new EmbedBuilder()
-                .WithColor(BotConfig.EmbedColor)
+                .WithColor(Config.EmbedColor)
                 .WithTitle($"Port scan on `{target}` completed")
                 .WithDescription("""
                                  The port scan that you requested has been completed, you can find the results below.

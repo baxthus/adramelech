@@ -37,7 +37,7 @@ public class Kick : InteractionModuleBase<SocketInteractionContext<SocketSlashCo
 
         await RespondAsync(
             embed: new EmbedBuilder()
-                .WithColor(BotConfig.EmbedColor)
+                .WithColor(Config.EmbedColor)
                 .WithTitle("User Kicked")
                 .WithDescription($"User {user.Username} has been kicked")
                 .AddField("Reason", $"`{reason}`")

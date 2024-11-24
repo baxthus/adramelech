@@ -14,7 +14,7 @@ public class Dog : InteractionModuleBase<SocketInteractionContext<SocketSlashCom
     {
         await DeferAsync();
 
-        var response = await "https://dog.ceo/api/breeds/image/random".Get<DogResponse>();
+        var response = await "https://dog.ceo/api/breeds/image/random".GetAsync<DogResponse>();
         if (response.IsDefault() || response.Status != "success")
         {
             await Context.SendError("Failed to fetch dog image", true);
@@ -22,7 +22,7 @@ public class Dog : InteractionModuleBase<SocketInteractionContext<SocketSlashCom
         }
 
         await FollowupAsync(embed: new EmbedBuilder()
-            .WithColor(BotConfig.EmbedColor)
+            .WithColor(Config.EmbedColor)
             .WithImageUrl(response.Message)
             .WithFooter("Powered by dog.ceo")
             .Build());

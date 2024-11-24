@@ -18,7 +18,7 @@ public class DnsLookup : InteractionModuleBase<SocketInteractionContext<SocketSl
     {
         await DeferAsync();
 
-        var response = await $"https://da.gd/dns/{domain}".Get<string>();
+        var response = await $"https://da.gd/dns/{domain}".GetAsync<string>();
         if (response.IsNullOrEmpty())
         {
             await Context.SendError("Invalid domain", true);
@@ -35,7 +35,7 @@ public class DnsLookup : InteractionModuleBase<SocketInteractionContext<SocketSl
 
         await FollowupWithFileAsync(
             embed: new EmbedBuilder()
-                .WithColor(BotConfig.EmbedColor)
+                .WithColor(Config.EmbedColor)
                 .WithTitle("DNS Lookup")
                 .WithDescription($"DNS records for `{domain}`")
                 .WithFooter("Powered by da.gd")

@@ -38,7 +38,7 @@ public class Clear : InteractionModuleBase<SocketInteractionContext<SocketSlashC
             await Context.SendError("Failed to delete messages");
 
         await FollowupAsync(embed: new EmbedBuilder()
-            .WithColor(BotConfig.EmbedColor)
+            .WithColor(Config.EmbedColor)
             .WithTitle("Messages Cleared")
             .WithDescription($"""
                               Successfully cleared {messages.Count()} messages

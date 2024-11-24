@@ -14,7 +14,7 @@ public class Cat : InteractionModuleBase<SocketInteractionContext<SocketSlashCom
     {
         await DeferAsync();
 
-        var response = await "https://api.thecatapi.com/v1/images/search".Get<CatResponse[]>();
+        var response = await "https://api.thecatapi.com/v1/images/search".GetAsync<CatResponse[]>();
         if (response.IsDefault())
         {
             await Context.SendError("Failed to get cat image", true);
@@ -22,7 +22,7 @@ public class Cat : InteractionModuleBase<SocketInteractionContext<SocketSlashCom
         }
 
         await FollowupAsync(embed: new EmbedBuilder()
-            .WithColor(BotConfig.EmbedColor)
+            .WithColor(Config.EmbedColor)
             .WithImageUrl(response!.First().Url)
             .WithFooter("Powered by thecatapi.com")
             .Build());

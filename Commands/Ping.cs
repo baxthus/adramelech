@@ -12,7 +12,7 @@ public class Ping : InteractionModuleBase<SocketInteractionContext<SocketSlashCo
     {
         await RespondAsync(
             embed: new EmbedBuilder()
-                .WithColor(BotConfig.EmbedColor)
+                .WithColor(Config.EmbedColor)
                 .WithTitle("Pong!")
                 .Build(),
             components: new ComponentBuilder()
@@ -37,7 +37,7 @@ public class Velocity : InteractionModuleBase<SocketInteractionContext<SocketMes
 
         await ReplyAsync(
             embed: new EmbedBuilder()
-                .WithColor(BotConfig.EmbedColor)
+                .WithColor(Config.EmbedColor)
                 .WithTitle("Velocity")
                 .WithDescription($"Latency: {Context.Client.Latency}ms")
                 .Build());

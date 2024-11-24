@@ -14,15 +14,15 @@ public class Short : InteractionModuleBase<SocketInteractionContext<SocketSlashC
     {
         await DeferAsync();
 
-        var response = await $"https://is.gd/create.php?format=simple&url={url}".Get<string>();
+        var response = await $"https://is.gd/create.php?format=simple&url={url}".GetAsync<string>();
         if (response.IsNullOrEmpty() || response!.Trim().StartsWith("Error"))
         {
-            await Context.SendError("An error occurred while shortening the URL.");
+            await Context.SendError("An error occurred while shortening the URL.", true);
             return;
         }
 
         await FollowupAsync(embed: new EmbedBuilder()
-            .WithColor(BotConfig.EmbedColor)
+            .WithColor(Config.EmbedColor)
             .WithTitle("URL Shortened")
             .AddField(":outbox_tray: Original URL", url)
             .AddField(":inbox_tray: Shortened URL", response)

@@ -37,7 +37,7 @@ public class Ban : InteractionModuleBase<SocketInteractionContext<SocketSlashCom
 
         await RespondAsync(
             embed: new EmbedBuilder()
-                .WithColor(BotConfig.EmbedColor)
+                .WithColor(Config.EmbedColor)
                 .WithTitle("Member Banned")
                 .WithDescription($"User {user.Username} has been banned")
                 .AddField("Reason", $"`{reason}`")

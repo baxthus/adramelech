@@ -17,7 +17,7 @@ public class Server : InteractionModuleBase<SocketInteractionContext<SocketSlash
             : $" (Level {Context.Guild.PremiumTier})";
 
         await RespondAsync(embed: new EmbedBuilder()
-            .WithColor(BotConfig.EmbedColor)
+            .WithColor(Config.EmbedColor)
             .WithAuthor(Context.Guild.Name, Context.Guild.IconUrl)
             .AddField("> Owner", $"```{Context.Guild.Owner.Username}```", true)
             .AddField("> ID", $"```{Context.Guild.Id}```", true)

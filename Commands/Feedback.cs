@@ -32,13 +32,13 @@ public class FeedbackModalResponse : InteractionModuleBase<SocketInteractionCont
     {
         var message = modal.Message;
 
-        if (BotConfig.Instance.FeedbackWebhook.IsNullOrEmpty())
+        if (Config.Instance.FeedbackWebhook.IsNullOrEmpty())
         {
             await RespondAsync("Feedback webhook is not configured.");
             return;
         }
 
-        var webhook = new DiscordWebhookClient(BotConfig.Instance.FeedbackWebhook);
+        var webhook = new DiscordWebhookClient(Config.Instance.FeedbackWebhook);
 
         await webhook.SendMessageAsync(
             username: "Adramelech Feedback",
@@ -46,7 +46,7 @@ public class FeedbackModalResponse : InteractionModuleBase<SocketInteractionCont
             embeds:
             [
                 new EmbedBuilder()
-                    .WithColor(BotConfig.EmbedColor)
+                    .WithColor(Config.EmbedColor)
                     .WithTitle("Adramelech Feedback")
                     .WithDescription($"From `{Context.User.Username}` (`{Context.User.Id}`)")
                     .WithThumbnailUrl(Context.User.GetAvatarUrl())

@@ -38,7 +38,7 @@ public class EchoModalResponse : InteractionModuleBase<SocketInteractionContext<
 
         await RespondAsync(
             embed: new EmbedBuilder()
-                .WithColor(BotConfig.EmbedColor)
+                .WithColor(Config.EmbedColor)
                 .WithTitle("Message sent")
                 .Build(),
             ephemeral: true);

@@ -22,7 +22,7 @@ public class Covid : InteractionModuleBase<SocketInteractionContext<SocketSlashC
         else
             url.AppendPathSegments("countries", country);
 
-        var response = await url.ToString().Get<CovidResponse>();
+        var response = await url.ToString().GetAsync<CovidResponse>();
         if (response.IsDefault())
         {
             await Context.SendError("There was an error getting the Covid-19 statistics", true);
@@ -36,7 +36,7 @@ public class Covid : InteractionModuleBase<SocketInteractionContext<SocketSlashC
         }
 
         await FollowupAsync(embed: new EmbedBuilder()
-            .WithColor(BotConfig.EmbedColor)
+            .WithColor(Config.EmbedColor)
             .WithTitle($"Covid-19 Statistics for {response.Country}")
             .WithDescription($"""
                               **Cases:** `{response.Cases}` (`{response.CasesPerOneMillion}` per million)

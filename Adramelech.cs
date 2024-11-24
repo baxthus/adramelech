@@ -33,9 +33,9 @@ internal class Adramelech
         client.Log += LogAsync;
         interactionService.Log += LogAsync;
 
-        await client.SetActivityAsync(BotConfig.Activity);
+        await client.SetActivityAsync(Config.Activity);
 
-        await client.LoginAsync(TokenType.Bot, BotConfig.Instance.Token);
+        await client.LoginAsync(TokenType.Bot, Config.Instance.Token);
         await client.StartAsync();
 
         await interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), services);
