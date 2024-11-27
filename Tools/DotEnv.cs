@@ -1,4 +1,4 @@
-﻿namespace adramelech.Tools;
+﻿namespace Adramelech.Tools;
 
 public static class DotEnv
 {
@@ -13,9 +13,9 @@ public static class DotEnv
             // Split just the first =
             var parts = line.Split('=', 2);
             if (parts.Length != 2) continue;
-            
+
             Format(ref parts[1]);
-            
+
             Environment.SetEnvironmentVariable(parts[0], parts[1]);
         }
     }

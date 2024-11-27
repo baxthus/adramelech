@@ -1,11 +1,11 @@
-﻿using adramelech.Configuration;
-using adramelech.Extensions;
-using adramelech.Utilities;
+﻿using Adramelech.Configuration;
+using Adramelech.Extensions;
+using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 
-namespace Adramelech.Commands;
+namespace Adramelech.Commands.Slash;
 
 public class Kick : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
@@ -44,7 +44,7 @@ public class Kick : InteractionModuleBase<SocketInteractionContext<SocketSlashCo
                 .AddField("Author", Context.User.Mention)
                 .Build());
 
-        if (await ExceptionUtils.TryAsync(() =>
+        if (await ErrorUtils.TryAsync(() =>
                 user.SendMessageAsync($"You have been kicked from {Context.Guild.Name}. Reason: {reason}")) is
             { Success: false })
             await Context.SendError("Failed to notify the user about the kick");

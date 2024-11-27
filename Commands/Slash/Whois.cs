@@ -1,12 +1,12 @@
 ﻿using System.Text;
-using adramelech.Configuration;
-using adramelech.Extensions;
-using adramelech.Utilities;
+using Adramelech.Configuration;
+using Adramelech.Extensions;
+using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 
-namespace Adramelech.Commands;
+namespace Adramelech.Commands.Slash;
 
 public class Whois : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {

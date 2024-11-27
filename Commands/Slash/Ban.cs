@@ -1,11 +1,11 @@
-﻿using adramelech.Configuration;
-using adramelech.Extensions;
-using adramelech.Utilities;
+﻿using Adramelech.Configuration;
+using Adramelech.Extensions;
+using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 
-namespace adramelech.Commands;
+namespace Adramelech.Commands.Slash;
 
 public class Ban : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
@@ -45,7 +45,7 @@ public class Ban : InteractionModuleBase<SocketInteractionContext<SocketSlashCom
                 .Build(),
             ephemeral: ephemeral);
 
-        if ((await ExceptionUtils.TryAsync(() =>
+        if ((await ErrorUtils.TryAsync(() =>
                 user.SendMessageAsync($"You have benn banned from {Context.Guild.Name}. Reason: {reason}"))).IsFailure)
             await Context.SendError("Failed to notify the user about the ban");
     }

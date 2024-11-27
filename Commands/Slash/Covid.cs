@@ -1,12 +1,12 @@
-﻿using adramelech.Configuration;
-using adramelech.Extensions;
-using adramelech.Utilities;
+﻿using Adramelech.Configuration;
+using Adramelech.Extensions;
+using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Flurl;
 
-namespace adramelech.Commands;
+namespace Adramelech.Commands.Slash;
 
 public class Covid : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {

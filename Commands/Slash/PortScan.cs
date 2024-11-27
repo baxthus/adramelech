@@ -1,12 +1,12 @@
-﻿using adramelech.Configuration;
-using adramelech.Extensions;
+﻿using Adramelech.Configuration;
+using Adramelech.Extensions;
 using Adramelech.Tools;
-using adramelech.Utilities;
+using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 
-namespace Adramelech.Commands;
+namespace Adramelech.Commands.Slash;
 
 [Group("port_scan", "Scan ports on a target host")]
 public class PortScan : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
@@ -53,7 +53,7 @@ public class PortScan : InteractionModuleBase<SocketInteractionContext<SocketSla
         [Summary("ports", "The ports to can separated by spaces")]
         string ports)
     {
-        var portsList = ExceptionUtils.Try(() => ports.Split(' ').Select(int.Parse).ToList());
+        var portsList = ErrorUtils.Try(() => ports.Split(' ').Select(int.Parse).ToList());
         if (portsList.IsFailure)
         {
             await Context.SendError("Invalid format");

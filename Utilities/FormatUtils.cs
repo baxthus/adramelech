@@ -1,4 +1,4 @@
-﻿namespace adramelech.Utilities;
+﻿namespace Adramelech.Utilities;
 
 /// <summary>
 ///     Utilities for formatting strings

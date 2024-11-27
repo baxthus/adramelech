@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Newtonsoft.Json.Serialization;
 
-namespace adramelech.Utilities;
+namespace Adramelech.Utilities;
 
 /// <summary>
 ///     A collection of utility methods for working with HTTP requests.

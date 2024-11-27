@@ -1,10 +1,10 @@
 ﻿using System.Text;
-using adramelech.Extensions;
+using Adramelech.Extensions;
 using Adramelech.Tools;
 using Discord.Interactions;
 using Discord.WebSocket;
 
-namespace Adramelech.Commands;
+namespace Adramelech.Commands.Slash;
 
 public class Help : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {

@@ -1,15 +1,16 @@
 ﻿using Discord;
 using Serilog;
 
-namespace adramelech.Configuration;
+namespace Adramelech.Configuration;
 
 public class Config
 {
+    public const string UserAgent = "Adramelech (by @baxthus)";
     private static Config? _instance;
     public static readonly Color EmbedColor = new(203, 166, 247);
     public static readonly Game Activity = new("you <3", ActivityType.Watching);
-    public static readonly string UserAgent = "Adramelech (by @baxthus)";
     public string? FeedbackWebhook;
+    public string? OpenWeatherKey;
     public string Token = null!;
 
     private Config()
@@ -30,10 +31,14 @@ public class Config
 
         var feedbackWebhook = Environment.GetEnvironmentVariable("FEEDBACK_WEBHOOK");
         if (string.IsNullOrEmpty(feedbackWebhook))
-            // We will not exit, but remember to check when using this value.
             Log.Warning("No feedback webhook found in environment variables.");
+
+        var openWeatherKey = Environment.GetEnvironmentVariable("OPENWEATHER_KEY");
+        if (string.IsNullOrEmpty(openWeatherKey))
+            Log.Warning("No OpenWeather key found in environment variables.");
 
         Token = token;
         FeedbackWebhook = feedbackWebhook;
+        OpenWeatherKey = openWeatherKey;
     }
 }

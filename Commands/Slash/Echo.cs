@@ -1,9 +1,9 @@
-﻿using adramelech.Configuration;
+﻿using Adramelech.Configuration;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 
-namespace Adramelech.Commands;
+namespace Adramelech.Commands.Slash;
 
 public class Echo : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {

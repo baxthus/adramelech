@@ -1,17 +1,24 @@
-﻿using adramelech.Configuration;
-using adramelech.Utilities;
+﻿using Adramelech.Configuration;
+using Adramelech.Extensions;
+using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
 using Discord.Webhook;
 using Discord.WebSocket;
 
-namespace Adramelech.Commands;
+namespace Adramelech.Commands.Slash;
 
 public class Feedback : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("feedback", "Send feedback to the bot developers.")]
     public async Task FeedbackAsync()
     {
+        if (Config.Instance.FeedbackWebhook.IsNullOrEmpty())
+        {
+            await Context.SendError("Feedback webhook is not configured.");
+            return;
+        }
+
         await RespondWithModalAsync<FeedbackModal>("feedback_modal");
     }
 

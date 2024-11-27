@@ -1,12 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using adramelech.Configuration;
-using adramelech.Extensions;
-using adramelech.Utilities;
+using Adramelech.Configuration;
+using Adramelech.Extensions;
+using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 
-namespace adramelech.Commands;
+namespace Adramelech.Commands.Slash;
 
 public class Clear : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
@@ -33,7 +33,7 @@ public class Clear : InteractionModuleBase<SocketInteractionContext<SocketSlashC
             return;
         }
 
-        if ((await ExceptionUtils.TryAsync(() =>
+        if ((await ErrorUtils.TryAsync(() =>
                 Context.Guild.GetTextChannel(Context.Channel.Id).DeleteMessagesAsync(messages))).IsFailure)
             await Context.SendError("Failed to delete messages");
 
@@ -51,6 +51,6 @@ public class Clear : InteractionModuleBase<SocketInteractionContext<SocketSlashC
 
         await Task.Delay(TimeSpan.FromSeconds(timeBeforeDelete));
 
-        await ExceptionUtils.TryAsync(DeleteOriginalResponseAsync);
+        await ErrorUtils.TryAsync(DeleteOriginalResponseAsync);
     }
 }

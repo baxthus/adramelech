@@ -3,7 +3,7 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using Serilog;
 
-namespace adramelech.Extensions;
+namespace Adramelech.Extensions;
 
 /// <summary>
 ///     Extension class for <see cref="IInteractionContext" />

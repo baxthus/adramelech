@@ -1,11 +1,11 @@
-﻿using adramelech.Configuration;
-using adramelech.Extensions;
-using adramelech.Utilities;
+﻿using Adramelech.Configuration;
+using Adramelech.Extensions;
+using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 
-namespace Adramelech.Commands.Internals;
+namespace Adramelech.Commands.Slash.Internals;
 
 public class SendDm : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
@@ -15,7 +15,7 @@ public class SendDm : InteractionModuleBase<SocketInteractionContext<SocketSlash
         [Summary("message", "The message to send")]
         string message)
     {
-        var result = await ExceptionUtils.TryAsync(() => user.SendMessageAsync(message));
+        var result = await ErrorUtils.TryAsync(() => user.SendMessageAsync(message));
         if (result.IsFailure)
         {
             await Context.SendError("Failed to send the message.");

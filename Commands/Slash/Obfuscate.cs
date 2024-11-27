@@ -1,13 +1,13 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using adramelech.Configuration;
-using adramelech.Extensions;
-using adramelech.Utilities;
+using Adramelech.Configuration;
+using Adramelech.Extensions;
+using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Newtonsoft.Json.Serialization;
 
-namespace Adramelech.Commands;
+namespace Adramelech.Commands.Slash;
 
 public class Obfuscate : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {

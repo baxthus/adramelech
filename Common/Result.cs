@@ -1,4 +1,4 @@
-﻿namespace adramelech.Common;
+﻿namespace Adramelech.Common;
 
 public class Result
 {

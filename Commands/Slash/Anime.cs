@@ -1,15 +1,15 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text;
-using adramelech.Configuration;
-using adramelech.Extensions;
-using adramelech.Utilities;
+using Adramelech.Configuration;
+using Adramelech.Extensions;
+using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Flurl;
 using Newtonsoft.Json;
 
-namespace Adramelech.Commands;
+namespace Adramelech.Commands.Slash;
 
 [Group("anime", "Anime commands")]
 public class Anime : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>

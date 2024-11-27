@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
-using adramelech.Configuration;
+using Adramelech.Configuration;
 using Adramelech.Events;
-using adramelech.Logging;
-using adramelech.Tools;
+using Adramelech.Logging;
+using Adramelech.Tools;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
@@ -10,16 +10,25 @@ using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Events;
 
-namespace adramelech;
+namespace Adramelech;
 
 internal class Adramelech
 {
+    private static readonly DiscordSocketConfig ClientConfig = new()
+    {
+        GatewayIntents = GatewayIntents.Guilds |
+                         GatewayIntents.GuildMembers |
+                         GatewayIntents.GuildBans |
+                         GatewayIntents.GuildMessages |
+                         GatewayIntents.DirectMessages
+    };
+
     public static Task Main()
     {
-        return new Adramelech().MainAsync();
+        return MainAsync();
     }
 
-    private async Task MainAsync()
+    private static async Task MainAsync()
     {
         DotEnv.Load();
 
@@ -49,7 +58,7 @@ internal class Adramelech
     private static ServiceProvider ConfigureServices()
     {
         return new ServiceCollection()
-            .AddSingleton<DiscordSocketClient>()
+            .AddSingleton(_ => new DiscordSocketClient(ClientConfig))
             .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
             .AddSingleton<InteractionCreated>()
             .AddSingleton<Ready>()

@@ -3,7 +3,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace adramelech.Logging;
+namespace Adramelech.Logging;
 
 public static class Loggers
 {
