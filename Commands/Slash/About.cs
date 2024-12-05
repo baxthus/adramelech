@@ -1,4 +1,4 @@
-﻿using Adramelech.Configuration;
+using Adramelech.Configuration;
 using Discord;
 using Discord.Commands;
 using Discord.Interactions;
@@ -29,6 +29,9 @@ public class About : InteractionModuleBase<SocketInteractionContext<SocketSlashC
                 .AddField("Visibility",
                     $"> {(info.IsBotPublic ?? false ? ":globe_with_meridians: Public" : ":lock: Private")}")
                 .WithFooter($"Bot created by {info.Owner.Username}", info.Owner.GetAvatarUrl())
+                .Build(),
+            components: new ComponentBuilder()
+                .WithButton("Author", style: ButtonStyle.Link, url: Config.Instance.AuthorUrl)
                 .Build(),
             ephemeral: true);
     }

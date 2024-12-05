@@ -1,4 +1,4 @@
-﻿using Discord;
+using Discord;
 using Serilog;
 
 namespace Adramelech.Configuration;
@@ -11,6 +11,7 @@ public class Config
     public static readonly Game Activity = new("you <3", ActivityType.Watching);
     public string? FeedbackWebhook;
     public string? OpenWeatherKey;
+    public string? AuthorUrl;
     public string Token = null!;
 
     private Config()
@@ -37,8 +38,16 @@ public class Config
         if (string.IsNullOrEmpty(openWeatherKey))
             Log.Warning("No OpenWeather key found in environment variables.");
 
+        var authorUrl = Environment.GetEnvironmentVariable("AUTHOR_URL");
+        if (string.IsNullOrEmpty(authorUrl))
+        {
+            Log.Warning("No author link found in environment variables.");
+            authorUrl = "https://www.pudim.com.br";
+        }
+
         Token = token;
         FeedbackWebhook = feedbackWebhook;
         OpenWeatherKey = openWeatherKey;
+        AuthorUrl = authorUrl;
     }
 }

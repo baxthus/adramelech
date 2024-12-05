@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Adramelech.Configuration;
 using Adramelech.Events;
 using Adramelech.Logging;

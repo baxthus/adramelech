@@ -1,0 +1,10 @@
+[
+    {
+        "label": "Run Project",
+        "command": "dotnet run"
+    },
+    {
+        "label": "Run Project (Hot Reload)",
+        "command": "dotnet watch run"
+    }
+]

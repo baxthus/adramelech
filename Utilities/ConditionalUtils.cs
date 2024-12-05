@@ -1,4 +1,4 @@
-﻿namespace Adramelech.Utilities;
+namespace Adramelech.Utilities;
 
 /// <summary>
 ///     A collection of utility methods for working with conditional statements.
