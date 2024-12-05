@@ -11,7 +11,7 @@ namespace Adramelech.Extensions;
 public static class InteractionContextExtension
 {
     /// <summary>
-    ///     Respond with a ephemeral error message
+    ///     Respond with an ephemeral error message
     /// </summary>
     /// <param name="context">The interaction context (can be implicit)</param>
     /// <param name="origin">The origin of the interaction</param>
@@ -39,7 +39,7 @@ public static class InteractionContextExtension
                 break;
             case InteractionOrigin.SlashCommandDeferred:
                 // Delete the original because whe need it to be ephemeral
-                // NOTE: Every command that uses a external API should be deferred
+                // NOTE: Every command that uses an external API should be deferred
                 await context.Interaction.FollowupAsync("opps...")
                     .ContinueWith(async x => await x.Result.DeleteAsync());
                 await context.Interaction.FollowupAsync(embed: embed, ephemeral: true);
@@ -62,7 +62,7 @@ public static class InteractionContextExtension
     }
 
     /// <summary>
-    ///     Respond with a ephemeral error message
+    ///     Respond with an ephemeral error message
     /// </summary>
     /// <param name="context">The interaction context (can be implicit)</param>
     /// <param name="description">The description of the error (optional)</param>
@@ -76,7 +76,7 @@ public static class InteractionContextExtension
     }
 
     /// <summary>
-    ///     Respond with a ephemeral error message
+    ///     Respond with an ephemeral error message
     /// </summary>
     /// <param name="context">The interaction context (can be implicit)</param>
     /// <param name="description">The description of the error (optional)</param>

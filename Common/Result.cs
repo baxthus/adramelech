@@ -2,28 +2,28 @@
 
 public class Result
 {
-    protected Result(bool success, Exception? exception)
+    protected Result(bool isSuccess, Exception? exception)
     {
-        switch (success)
+        switch (isSuccess)
         {
             case true when exception is not null:
                 throw new ArgumentException("Success and exception are mutually exclusive");
             case false when exception is null:
                 throw new ArgumentException("Failure must have an exception");
             default:
-                Success = success;
+                IsSuccess = isSuccess;
                 Exception = exception;
                 break;
         }
     }
 
-    public bool Success { get; }
-    public bool IsFailure => !Success;
+    public bool IsSuccess { get; }
+    public bool IsFailure => !IsSuccess;
     public Exception? Exception { get; private set; }
 
-    public static implicit operator Result(bool success)
+    public static implicit operator Result(bool isSuccess)
     {
-        return new Result(success, null);
+        return new Result(isSuccess, null);
     }
 
     public static implicit operator Result(Exception exception)
@@ -34,7 +34,7 @@ public class Result
 
 public class Result<T> : Result
 {
-    private Result(T? value, bool success, Exception? exception) : base(success, exception)
+    private Result(T? value, bool isSuccess, Exception? exception) : base(isSuccess, exception)
     {
         Value = value;
     }

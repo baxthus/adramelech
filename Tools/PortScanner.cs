@@ -30,7 +30,7 @@ public static class PortScanner
 
                 var result = await ErrorUtils.TryAsync(async () =>
                     await tcpClient.ConnectAsync(target, port, cancellationToken));
-                if (result.Success) openPorts.Add(port);
+                if (result.IsSuccess) openPorts.Add(port);
 
                 tcpClient.Close();
             }

@@ -45,8 +45,9 @@ public class Ban : InteractionModuleBase<SocketInteractionContext<SocketSlashCom
                 .Build(),
             ephemeral: ephemeral);
 
-        if ((await ErrorUtils.TryAsync(() =>
-                user.SendMessageAsync($"You have benn banned from {Context.Guild.Name}. Reason: {reason}"))).IsFailure)
+        if (await ErrorUtils.TryAsync(() =>
+                user.SendMessageAsync($"You have benn banned from {Context.Guild.Name}. Reason: {reason}")) is
+            { IsSuccess: false })
             await Context.SendError("Failed to notify the user about the ban");
     }
 }

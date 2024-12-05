@@ -46,7 +46,7 @@ public class Kick : InteractionModuleBase<SocketInteractionContext<SocketSlashCo
 
         if (await ErrorUtils.TryAsync(() =>
                 user.SendMessageAsync($"You have been kicked from {Context.Guild.Name}. Reason: {reason}")) is
-            { Success: false })
+            { IsSuccess: false })
             await Context.SendError("Failed to notify the user about the kick");
     }
 }

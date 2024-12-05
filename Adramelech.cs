@@ -12,7 +12,7 @@ using Serilog.Events;
 
 namespace Adramelech;
 
-internal class Adramelech
+internal static class Adramelech
 {
     private static readonly DiscordSocketConfig ClientConfig = new()
     {

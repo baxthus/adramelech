@@ -164,7 +164,6 @@ public class Github : InteractionModuleBase<SocketInteractionContext<SocketSlash
                 .AddRow(new ActionRowBuilder()
                     .WithButton("Get all Gists", "getAllGists", ButtonStyle.Secondary)
                     // hacky way to get the username in the callback
-                    // is the same id, so Discord will not show the button
                     .WithButton(content.Owner.Login, "_getAllGists", ButtonStyle.Secondary, disabled: true))
                 .Build());
     }
