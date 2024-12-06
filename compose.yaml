@@ -4,5 +4,4 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    environment:
-      - DOPPLER_TOKEN
+    env_file: .env
