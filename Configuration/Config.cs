@@ -42,7 +42,7 @@ public class Config
         if (string.IsNullOrEmpty(authorUrl))
         {
             Log.Warning("No author link found in environment variables.");
-            authorUrl = "https://www.pudim.com.br";
+            authorUrl = "https://www.pudim.com.br"; // References...
         }
 
         Token = token;
