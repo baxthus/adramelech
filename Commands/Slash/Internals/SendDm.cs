@@ -7,7 +7,7 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash.Internals;
 
-public class SendDm : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class SendDm(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("send_dm", "Send a DM to a user")]
     [RequireOwner]
@@ -24,7 +24,7 @@ public class SendDm : InteractionModuleBase<SocketInteractionContext<SocketSlash
 
         await RespondAsync(
             embed: new EmbedBuilder()
-                .WithColor(Config.EmbedColor)
+                .WithColor(config.EmbedColor)
                 .WithTitle("Message sent")
                 .WithDescription($"Message sent successfully to {user.Mention}")
                 .Build(),

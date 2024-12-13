@@ -6,22 +6,14 @@ namespace Adramelech.Configuration;
 public class Config
 {
     public const string UserAgent = "Adramelech (by @baxthus)";
-    private static Config? _instance;
-    public static readonly Color EmbedColor = new(203, 166, 247);
-    public static readonly Game Activity = new("you <3", ActivityType.Watching);
-    public string? FeedbackWebhook;
-    public string? OpenWeatherKey;
-    public string? AuthorUrl;
-    public string Token = null!;
+    public readonly Game Activity = new("you <3", ActivityType.Watching);
+    public readonly string? AuthorUrl;
+    public readonly Color EmbedColor = new(203, 166, 247);
+    public readonly string? FeedbackWebhook;
+    public readonly string? OpenWeatherKey;
+    public readonly string Token;
 
-    private Config()
-    {
-        FetchData();
-    }
-
-    public static Config Instance => _instance ??= new Config();
-
-    private void FetchData()
+    public Config()
     {
         var token = Environment.GetEnvironmentVariable("BOT_TOKEN");
         if (string.IsNullOrEmpty(token))

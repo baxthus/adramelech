@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 
 namespace Adramelech.Commands.Slash;
 
-public class Weather : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Weather(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     private const string OpenWeatherUrl = "https://api.openweathermap.org";
 
@@ -19,7 +19,7 @@ public class Weather : InteractionModuleBase<SocketInteractionContext<SocketSlas
         [Summary("city", "The city to get the weather of")]
         string city)
     {
-        if (Config.Instance.FeedbackWebhook.IsNullOrEmpty())
+        if (config.FeedbackWebhook.IsNullOrEmpty())
         {
             await Context.SendError("The feedback webhook is not set up.");
             return;
@@ -30,7 +30,7 @@ public class Weather : InteractionModuleBase<SocketInteractionContext<SocketSlas
         var coordinates = await OpenWeatherUrl
             .AppendPathSegments("geo", "1.0", "direct")
             .SetQueryParam("q", $"{city},{country}")
-            .SetQueryParam("appid", Config.Instance.OpenWeatherKey)
+            .SetQueryParam("appid", config.OpenWeatherKey)
             .ToString()
             .GetAsync<OpenWeatherGeo[]>();
         if (coordinates.IsDefault()) await Context.SendError("Failed to get the coordinates of the city.");
@@ -39,7 +39,7 @@ public class Weather : InteractionModuleBase<SocketInteractionContext<SocketSlas
             .AppendPathSegments("data", "2.5", "weather")
             .SetQueryParam("lat", coordinates![0].Lat)
             .SetQueryParam("lon", coordinates[0].Lon)
-            .SetQueryParam("appid", Config.Instance.OpenWeatherKey)
+            .SetQueryParam("appid", config.OpenWeatherKey)
             .SetQueryParam("units", "metric")
             .SetQueryParam("lang", "en")
             .ToString()
@@ -71,7 +71,7 @@ public class Weather : InteractionModuleBase<SocketInteractionContext<SocketSlas
                          """;
 
         await FollowupAsync(embed: new EmbedBuilder()
-            .WithColor(Config.EmbedColor)
+            .WithColor(config.EmbedColor)
             .WithTitle($"Weather{(weather.Name.IsNullOrEmpty() ? string.Empty : $" in {weather.Name}")}")
             .AddField("> :zap: Main", mainField)
             .AddField("> :cloud: Weather", weatherField)

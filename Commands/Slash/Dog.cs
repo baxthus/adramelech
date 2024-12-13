@@ -1,4 +1,5 @@
-﻿using Adramelech.Configuration;
+﻿using System.Diagnostics.CodeAnalysis;
+using Adramelech.Configuration;
 using Adramelech.Extensions;
 using Adramelech.Utilities;
 using Discord;
@@ -7,7 +8,7 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class Dog : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Dog(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("dog", "Get a random dog image")]
     public async Task DogAsync()
@@ -22,12 +23,13 @@ public class Dog : InteractionModuleBase<SocketInteractionContext<SocketSlashCom
         }
 
         await FollowupAsync(embed: new EmbedBuilder()
-            .WithColor(Config.EmbedColor)
+            .WithColor(config.EmbedColor)
             .WithImageUrl(response.Message)
             .WithFooter("Powered by dog.ceo")
             .Build());
     }
 
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
     private struct DogResponse
     {
         public string Status { get; set; }

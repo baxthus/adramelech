@@ -3,13 +3,13 @@ using Discord;
 
 namespace Adramelech.Commands.Shared;
 
-public static class Avatar
+public class Avatar(Config config)
 {
-    public static (Embed, MessageComponent) Execute(IUser user)
+    public (Embed, MessageComponent) Execute(IUser user)
     {
         return (
             new EmbedBuilder()
-                .WithColor(Config.EmbedColor)
+                .WithColor(config.EmbedColor)
                 .WithTitle($"Avatar of {user.Username}")
                 .WithImageUrl(user.GetAvatarUrl(size: 2048))
                 .Build(),

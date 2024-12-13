@@ -15,7 +15,7 @@ namespace Adramelech.Commands.Slash;
 public class Anime : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [Group("media", "Anime media commands")]
-    public class Media : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+    public class Media(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
     {
         [SlashCommand("image", "Get a random anime image")]
         public async Task ImageAsync(
@@ -67,7 +67,7 @@ public class Anime : InteractionModuleBase<SocketInteractionContext<SocketSlashC
             footer.Append("Powered by nekosapi.com");
 
             await FollowupAsync(embed: new EmbedBuilder()
-                .WithColor(Config.EmbedColor)
+                .WithColor(config.EmbedColor)
                 .WithImageUrl(data.ImageUrl)
                 .WithFooter(footer.ToString())
                 .Build());
@@ -86,7 +86,7 @@ public class Anime : InteractionModuleBase<SocketInteractionContext<SocketSlashC
             }
 
             await FollowupAsync(embed: new EmbedBuilder()
-                .WithColor(Config.EmbedColor)
+                .WithColor(config.EmbedColor)
                 .WithImageUrl(response.Url)
                 .WithFooter("Powered by nekos.life")
                 .Build());

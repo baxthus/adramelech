@@ -9,7 +9,7 @@ using Discord.WebSocket;
 namespace Adramelech.Commands.Slash;
 
 [Group("port_scan", "Scan ports on a target host")]
-public class PortScan : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class PortScan(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     // list from https://www.speedguide.net/ports_common.php (accessed on 2024-11-22)
     // the list maybe be shorted in the future for performance and resource reasons
@@ -95,7 +95,7 @@ public class PortScan : InteractionModuleBase<SocketInteractionContext<SocketSla
             }
 
             await Context.User.SendMessageAsync(embed: new EmbedBuilder()
-                .WithColor(Config.EmbedColor)
+                .WithColor(config.EmbedColor)
                 .WithTitle($"Port scan on `{target}` completed")
                 .WithDescription("""
                                  The port scan that you requested has been completed, you can find the results below.

@@ -24,6 +24,8 @@ RUN apt-get update && apt-get install -y apt-transport-https ca-certificates cur
     echo "deb [signed-by=/usr/share/keyrings/doppler-archive-keyring.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main" | tee /etc/apt/sources.list.d/doppler-cli.list && \
     apt-get update && \
     apt-get -y install doppler
+# Install libsodium and opus for voice support
+RUN apt-get update && apt-get install -y libsodium-dev libopus0
 
 ENTRYPOINT ["doppler", "run", "--"]
 CMD ["dotnet", "adramelech.dll"]

@@ -4,14 +4,14 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Shared;
 
-public static class UserInfo
+public class UserInfo(Config config)
 {
-    public static Embed Execute(IUser user)
+    public Embed Execute(IUser user)
     {
         var member = user as SocketGuildUser;
 
         var embed = new EmbedBuilder()
-            .WithColor(Config.EmbedColor)
+            .WithColor(config.EmbedColor)
             .WithAuthor(user.Username, user.GetAvatarUrl())
             .WithThumbnailUrl(user.GetAvatarUrl())
             .AddField("> ID", user.Id, true)

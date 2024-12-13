@@ -7,7 +7,7 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class Ban : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Ban(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("ban", "Ban a member")]
     [RequireUserPermission(GuildPermission.BanMembers)]
@@ -37,7 +37,7 @@ public class Ban : InteractionModuleBase<SocketInteractionContext<SocketSlashCom
 
         await RespondAsync(
             embed: new EmbedBuilder()
-                .WithColor(Config.EmbedColor)
+                .WithColor(config.EmbedColor)
                 .WithTitle("Member Banned")
                 .WithDescription($"User {user.Username} has been banned")
                 .AddField("Reason", $"`{reason}`")

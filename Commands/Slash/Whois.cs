@@ -8,7 +8,7 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class Whois : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Whois(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     private static readonly string[] BadStrings =
     {
@@ -36,7 +36,7 @@ public class Whois : InteractionModuleBase<SocketInteractionContext<SocketSlashC
 
         await FollowupWithFileAsync(
             embed: new EmbedBuilder()
-                .WithColor(Config.EmbedColor)
+                .WithColor(config.EmbedColor)
                 .WithTitle("Whois Lookup")
                 .AddField(":link: Target", $"`{target}`")
                 .WithFooter("Powered by da.gd")

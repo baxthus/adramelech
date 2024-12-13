@@ -6,7 +6,7 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class Dice : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Dice(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("dice", "Roll a dice")]
     public async Task DiceAsync([Summary("sides", "The number of sides of the dice")] int sides = 6)
@@ -21,7 +21,7 @@ public class Dice : InteractionModuleBase<SocketInteractionContext<SocketSlashCo
 
         await RespondAsync(
             embed: new EmbedBuilder()
-                .WithColor(Config.EmbedColor)
+                .WithColor(config.EmbedColor)
                 .WithTitle("Dice Roll")
                 .WithDescription($"You rolled a {result} on a {sides}-sided dice")
                 .Build());

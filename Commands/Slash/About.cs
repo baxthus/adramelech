@@ -6,7 +6,7 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class About : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class About(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("about", "Shows information about the bot")]
     [Alias("info")]
@@ -17,7 +17,7 @@ public class About : InteractionModuleBase<SocketInteractionContext<SocketSlashC
 
         await RespondAsync(
             embed: new EmbedBuilder()
-                .WithColor(Config.EmbedColor)
+                .WithColor(config.EmbedColor)
                 .WithTitle("About")
                 .WithDescription("This bot is a simple Discord bot written in C# using Discord.Net")
                 .AddField("Commands", $"> Currently has {commands.Count} commands")
@@ -31,7 +31,7 @@ public class About : InteractionModuleBase<SocketInteractionContext<SocketSlashC
                 .WithFooter($"Bot created by {info.Owner.Username}", info.Owner.GetAvatarUrl())
                 .Build(),
             components: new ComponentBuilder()
-                .WithButton("Author", style: ButtonStyle.Link, url: Config.Instance.AuthorUrl)
+                .WithButton("Author", style: ButtonStyle.Link, url: config.AuthorUrl)
                 .Build(),
             ephemeral: true);
     }

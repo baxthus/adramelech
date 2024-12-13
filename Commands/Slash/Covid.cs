@@ -1,4 +1,5 @@
-﻿using Adramelech.Configuration;
+﻿using System.Diagnostics.CodeAnalysis;
+using Adramelech.Configuration;
 using Adramelech.Extensions;
 using Adramelech.Utilities;
 using Discord;
@@ -8,7 +9,7 @@ using Flurl;
 
 namespace Adramelech.Commands.Slash;
 
-public class Covid : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Covid(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("covid", "Get Covid-19 statistics")]
     public async Task CovidAsync([Summary("country", "Country to get statistics for")] string country = "worldwide")
@@ -36,7 +37,7 @@ public class Covid : InteractionModuleBase<SocketInteractionContext<SocketSlashC
         }
 
         await FollowupAsync(embed: new EmbedBuilder()
-            .WithColor(Config.EmbedColor)
+            .WithColor(config.EmbedColor)
             .WithTitle($"Covid-19 Statistics for {response.Country}")
             .WithDescription($"""
                               **Cases:** `{response.Cases}` (`{response.CasesPerOneMillion}` per million)
@@ -49,6 +50,7 @@ public class Covid : InteractionModuleBase<SocketInteractionContext<SocketSlashC
             .Build());
     }
 
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
     private struct CovidResponse
     {
         public string? Message { get; set; }

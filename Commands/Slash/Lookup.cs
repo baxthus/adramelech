@@ -12,7 +12,7 @@ using Newtonsoft.Json.Serialization;
 
 namespace Adramelech.Commands.Slash;
 
-public class Lookup : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Lookup(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("lookup", "Lookup a ip or domain")]
     public async Task LookupAsync([Summary("target", "The target to lookup")] string target)
@@ -68,7 +68,7 @@ public class Lookup : InteractionModuleBase<SocketInteractionContext<SocketSlash
 
         await FollowupAsync(
             embed: new EmbedBuilder()
-                .WithColor(Config.EmbedColor)
+                .WithColor(config.EmbedColor)
                 .WithTitle("Lookup")
                 .WithDescription("For best results, search by ip")
                 .AddField(":zap: Main", mainField)

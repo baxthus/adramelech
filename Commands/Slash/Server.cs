@@ -5,7 +5,7 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class Server : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Server(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("server", "Display info about the current server")]
     [RequireContext(ContextType.Guild)]
@@ -17,7 +17,7 @@ public class Server : InteractionModuleBase<SocketInteractionContext<SocketSlash
             : $" (Level {Context.Guild.PremiumTier})";
 
         await RespondAsync(embed: new EmbedBuilder()
-            .WithColor(Config.EmbedColor)
+            .WithColor(config.EmbedColor)
             .WithAuthor(Context.Guild.Name, Context.Guild.IconUrl)
             .AddField("> Owner", $"```{Context.Guild.Owner.Username}```", true)
             .AddField("> ID", $"```{Context.Guild.Id}```", true)

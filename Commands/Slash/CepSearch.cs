@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.RegularExpressions;
 using Adramelech.Configuration;
 using Adramelech.Extensions;
 using Adramelech.Utilities;
@@ -9,7 +10,7 @@ using Flurl;
 
 namespace Adramelech.Commands.Slash;
 
-public partial class CepSearch : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public partial class CepSearch(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("cep_search", "Search for a CEP (Brazilian ZIP code)")]
     public async Task CepSearchAsync([Summary("cep", "The CEP to search for")] string cep)
@@ -64,7 +65,7 @@ public partial class CepSearch : InteractionModuleBase<SocketInteractionContext<
 
         await FollowupAsync(
             embed: new EmbedBuilder()
-                .WithColor(Config.EmbedColor)
+                .WithColor(config.EmbedColor)
                 .WithTitle("CEP Search")
                 .AddField(":zap: **Main**", mainField)
                 .AddField(":earth_americas: **Location**", locationField)
@@ -78,6 +79,7 @@ public partial class CepSearch : InteractionModuleBase<SocketInteractionContext<
     [GeneratedRegex(@"^\d{5}-?\d{3}$")]
     private static partial Regex MyRegex();
 
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
     private struct CepResponse
     {
         public string? Name { get; set; }

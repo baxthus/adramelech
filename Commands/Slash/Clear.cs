@@ -8,7 +8,7 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class Clear : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Clear(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("clear", "Clears the chat")]
     [RequireUserPermission(GuildPermission.ManageMessages)]
@@ -38,7 +38,7 @@ public class Clear : InteractionModuleBase<SocketInteractionContext<SocketSlashC
             await Context.SendError("Failed to delete messages");
 
         await FollowupAsync(embed: new EmbedBuilder()
-            .WithColor(Config.EmbedColor)
+            .WithColor(config.EmbedColor)
             .WithTitle("Messages Cleared")
             .WithDescription($"""
                               Successfully cleared {messages.Count()} messages

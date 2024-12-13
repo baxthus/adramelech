@@ -7,7 +7,7 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class Cat : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Cat(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("cat", "Get a random cat image")]
     public async Task CatAsync()
@@ -22,7 +22,7 @@ public class Cat : InteractionModuleBase<SocketInteractionContext<SocketSlashCom
         }
 
         await FollowupAsync(embed: new EmbedBuilder()
-            .WithColor(Config.EmbedColor)
+            .WithColor(config.EmbedColor)
             .WithImageUrl(response!.First().Url)
             .WithFooter("Powered by thecatapi.com")
             .Build());

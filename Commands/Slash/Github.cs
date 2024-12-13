@@ -12,7 +12,7 @@ using Newtonsoft.Json;
 namespace Adramelech.Commands.Slash;
 
 [Group("github", "Get Github information")]
-public class Github : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Github(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     public const string BaseUrl = "https://api.github.com";
 
@@ -56,7 +56,7 @@ public class Github : InteractionModuleBase<SocketInteractionContext<SocketSlash
 
         await FollowupAsync(
             embed: new EmbedBuilder()
-                .WithColor(Config.EmbedColor)
+                .WithColor(config.EmbedColor)
                 .WithTitle("Repository Information")
                 .WithThumbnailUrl(response.Owner.AvatarUrl)
                 .AddField(":zap: **Main**", mainField)
@@ -113,7 +113,7 @@ public class Github : InteractionModuleBase<SocketInteractionContext<SocketSlash
 
         await FollowupAsync(
             embed: new EmbedBuilder()
-                .WithColor(Config.EmbedColor)
+                .WithColor(config.EmbedColor)
                 .WithTitle("User Information")
                 .WithThumbnailUrl(response.AvatarUrl)
                 .AddField(":zap: **Main**", mainField)
@@ -150,7 +150,7 @@ public class Github : InteractionModuleBase<SocketInteractionContext<SocketSlash
 
         await FollowupAsync(
             embed: new EmbedBuilder()
-                .WithColor(Config.EmbedColor)
+                .WithColor(config.EmbedColor)
                 .WithTitle("Gists Information")
                 .WithThumbnailUrl(content.Owner.AvatarUrl)
                 .AddField(":bust_in_silhouette: **User**", userField)

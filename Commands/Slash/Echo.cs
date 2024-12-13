@@ -1,4 +1,5 @@
-﻿using Adramelech.Configuration;
+﻿using System.Diagnostics.CodeAnalysis;
+using Adramelech.Configuration;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
@@ -15,6 +16,7 @@ public class Echo : InteractionModuleBase<SocketInteractionContext<SocketSlashCo
         await RespondWithModalAsync<EchoModal>("echo_modal");
     }
 
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
     public class EchoModal : IModal
     {
         [InputLabel("Message")]
@@ -25,7 +27,7 @@ public class Echo : InteractionModuleBase<SocketInteractionContext<SocketSlashCo
     }
 }
 
-public class EchoModalResponse : InteractionModuleBase<SocketInteractionContext<SocketModal>>
+public class EchoModalResponse(Config config) : InteractionModuleBase<SocketInteractionContext<SocketModal>>
 {
     [ModalInteraction("echo_modal")]
     public async Task ModalAsync(Echo.EchoModal modal)
@@ -38,7 +40,7 @@ public class EchoModalResponse : InteractionModuleBase<SocketInteractionContext<
 
         await RespondAsync(
             embed: new EmbedBuilder()
-                .WithColor(Config.EmbedColor)
+                .WithColor(config.EmbedColor)
                 .WithTitle("Message sent")
                 .Build(),
             ephemeral: true);

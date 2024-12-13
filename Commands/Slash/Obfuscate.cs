@@ -9,7 +9,7 @@ using Newtonsoft.Json.Serialization;
 
 namespace Adramelech.Commands.Slash;
 
-public class Obfuscate : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Obfuscate(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("obfuscate", "Obfuscate a URL")]
     public async Task ObfuscateAsync([Summary("url", "The URL to obfuscate")] string url,
@@ -43,7 +43,7 @@ public class Obfuscate : InteractionModuleBase<SocketInteractionContext<SocketSl
         var removedMetadata = response.Metadata == "IGNORE" ? "Yes" : "No";
 
         await FollowupAsync(embed: new EmbedBuilder()
-            .WithColor(Config.EmbedColor)
+            .WithColor(config.EmbedColor)
             .WithTitle("Obfuscated URL")
             .AddField(":outbox_tray: Destination", $"```{response.Destination}```")
             .AddField(":inbox_tray: Result", $"```{response.Id}```")

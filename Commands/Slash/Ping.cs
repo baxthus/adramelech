@@ -5,24 +5,24 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class Ping : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Ping(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("ping", "Reply with pong!")]
     public async Task PingAsync()
     {
         await RespondAsync(
             embed: new EmbedBuilder()
-                .WithColor(Config.EmbedColor)
+                .WithColor(config.EmbedColor)
                 .WithTitle("Pong!")
                 .Build(),
             components: new ComponentBuilder()
                 .WithButton("Velocity", "velocity")
-                .WithButton("Author", style: ButtonStyle.Link, url: Config.Instance.AuthorUrl)
+                .WithButton("Author", style: ButtonStyle.Link, url: config.AuthorUrl)
                 .Build());
     }
 }
 
-public class Velocity : InteractionModuleBase<SocketInteractionContext<SocketMessageComponent>>
+public class Velocity(Config config) : InteractionModuleBase<SocketInteractionContext<SocketMessageComponent>>
 {
     [ComponentInteraction("velocity")]
     public async Task Button()
@@ -31,13 +31,13 @@ public class Velocity : InteractionModuleBase<SocketInteractionContext<SocketMes
         {
             p.Components = new ComponentBuilder()
                 .WithButton("Velocity", "velocity", ButtonStyle.Success, disabled: true)
-                .WithButton("Author", style: ButtonStyle.Link, url: Config.Instance.AuthorUrl)
+                .WithButton("Author", style: ButtonStyle.Link, url: config.AuthorUrl)
                 .Build();
         });
 
         await ReplyAsync(
             embed: new EmbedBuilder()
-                .WithColor(Config.EmbedColor)
+                .WithColor(config.EmbedColor)
                 .WithTitle("Velocity")
                 .WithDescription($"Latency: {Context.Client.Latency}ms")
                 .Build());

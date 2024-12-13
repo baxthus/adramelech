@@ -7,7 +7,7 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class Kick : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Kick(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("kick", "Kick a user from the server")]
     [RequireUserPermission(GuildPermission.KickMembers)]
@@ -37,7 +37,7 @@ public class Kick : InteractionModuleBase<SocketInteractionContext<SocketSlashCo
 
         await RespondAsync(
             embed: new EmbedBuilder()
-                .WithColor(Config.EmbedColor)
+                .WithColor(config.EmbedColor)
                 .WithTitle("User Kicked")
                 .WithDescription($"User {user.Username} has been kicked")
                 .AddField("Reason", $"`{reason}`")

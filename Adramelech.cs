@@ -1,4 +1,5 @@
 using System.Reflection;
+using Adramelech.Audio;
 using Adramelech.Configuration;
 using Adramelech.Events;
 using Adramelech.Logging;
@@ -20,7 +21,8 @@ internal static class Adramelech
                          GatewayIntents.GuildMembers |
                          GatewayIntents.GuildBans |
                          GatewayIntents.GuildMessages |
-                         GatewayIntents.DirectMessages
+                         GatewayIntents.DirectMessages |
+                         GatewayIntents.GuildVoiceStates
     };
 
     public static Task Main()
@@ -36,15 +38,16 @@ internal static class Adramelech
 
         var services = ConfigureServices();
 
+        var config = services.GetRequiredService<Config>();
         var client = services.GetRequiredService<DiscordSocketClient>();
         var interactionService = services.GetRequiredService<InteractionService>();
 
         client.Log += LogAsync;
         interactionService.Log += LogAsync;
 
-        await client.SetActivityAsync(Config.Activity);
+        await client.SetActivityAsync(config.Activity);
 
-        await client.LoginAsync(TokenType.Bot, Config.Instance.Token);
+        await client.LoginAsync(TokenType.Bot, config.Token);
         await client.StartAsync();
 
         await interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), services);
@@ -58,10 +61,12 @@ internal static class Adramelech
     private static ServiceProvider ConfigureServices()
     {
         return new ServiceCollection()
+            .AddSingleton<Config>()
             .AddSingleton(_ => new DiscordSocketClient(ClientConfig))
             .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
             .AddSingleton<InteractionCreated>()
             .AddSingleton<Ready>()
+            .AddSingleton<AudioService>()
             .BuildServiceProvider();
     }
 

@@ -7,7 +7,7 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class Short : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Short(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("short", "Shortens a URL")]
     public async Task ShortAsync([Summary("url", "The URL to shorten")] string url)
@@ -22,7 +22,7 @@ public class Short : InteractionModuleBase<SocketInteractionContext<SocketSlashC
         }
 
         await FollowupAsync(embed: new EmbedBuilder()
-            .WithColor(Config.EmbedColor)
+            .WithColor(config.EmbedColor)
             .WithTitle("URL Shortened")
             .AddField(":outbox_tray: Original URL", url)
             .AddField(":inbox_tray: Shortened URL", response)
