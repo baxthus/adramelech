@@ -1,5 +1,5 @@
 using System.Reflection;
-using Adramelech.Audio;
+using Adramelech.Common;
 using Adramelech.Configuration;
 using Adramelech.Events;
 using Adramelech.Logging;
@@ -52,22 +52,23 @@ internal static class Adramelech
 
         await interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), services);
 
-        services.GetRequiredService<InteractionCreated>().Initialize();
-        services.GetRequiredService<Ready>().Initialize();
+        services.GetRequiredService<EventsActivator>().Activate();
 
         await Task.Delay(-1);
     }
 
     private static ServiceProvider ConfigureServices()
     {
-        return new ServiceCollection()
+        var serviceCollection = new ServiceCollection()
             .AddSingleton<Config>()
             .AddSingleton(_ => new DiscordSocketClient(ClientConfig))
             .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
             .AddSingleton<InteractionCreated>()
-            .AddSingleton<Ready>()
-            .AddSingleton<AudioService>()
-            .BuildServiceProvider();
+            .AddSingleton<Ready>();
+
+        EventsActivator.Register(serviceCollection);
+
+        return serviceCollection.BuildServiceProvider();
     }
 
     private static async Task LogAsync(LogMessage msg)

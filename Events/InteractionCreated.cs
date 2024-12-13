@@ -1,4 +1,5 @@
-﻿using Adramelech.Utilities;
+﻿using Adramelech.Common;
+using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
@@ -9,9 +10,9 @@ namespace Adramelech.Events;
 public class InteractionCreated(
     DiscordSocketClient client,
     InteractionService interactionService,
-    IServiceProvider services)
+    IServiceProvider services) : Event
 {
-    public void Initialize()
+    public override void Initialize()
     {
         client.InteractionCreated += OnInteractionCreated;
     }

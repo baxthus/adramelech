@@ -1,12 +1,13 @@
-﻿using Discord.Interactions;
+﻿using Adramelech.Common;
+using Discord.Interactions;
 using Discord.WebSocket;
 using Serilog;
 
 namespace Adramelech.Events;
 
-public class Ready(DiscordSocketClient client, InteractionService interactionService)
+public class Ready(DiscordSocketClient client, InteractionService interactionService) : Event
 {
-    public void Initialize()
+    public override void Initialize()
     {
         client.Ready += OnReady;
     }
