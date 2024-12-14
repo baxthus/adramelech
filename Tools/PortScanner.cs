@@ -1,7 +1,6 @@
 ﻿using System.Net.Sockets;
 using Adramelech.Common;
 using Adramelech.Logging;
-using Adramelech.Utilities;
 using Discord.WebSocket;
 
 namespace Adramelech.Tools;
@@ -28,9 +27,16 @@ public static class PortScanner
             {
                 using var tcpClient = new TcpClient();
 
-                var result = await ErrorUtils.TryAsync(async () =>
-                    await tcpClient.ConnectAsync(target, port, cancellationToken));
-                if (result.IsSuccess) openPorts.Add(port);
+                try
+                {
+                    await tcpClient.ConnectAsync(target, port, cancellationToken);
+                }
+                catch
+                {
+                    continue;
+                }
+
+                openPorts.Add(port);
 
                 tcpClient.Close();
             }

@@ -21,8 +21,7 @@ internal static class Adramelech
                          GatewayIntents.GuildMembers |
                          GatewayIntents.GuildBans |
                          GatewayIntents.GuildMessages |
-                         GatewayIntents.DirectMessages |
-                         GatewayIntents.GuildVoiceStates
+                         GatewayIntents.DirectMessages
     };
 
     public static Task Main()

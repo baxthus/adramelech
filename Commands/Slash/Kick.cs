@@ -1,8 +1,8 @@
 ﻿using Adramelech.Configuration;
 using Adramelech.Extensions;
-using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
+using Discord.Net;
 using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
@@ -44,9 +44,14 @@ public class Kick(Config config) : InteractionModuleBase<SocketInteractionContex
                 .AddField("Author", Context.User.Mention)
                 .Build());
 
-        if (await ErrorUtils.TryAsync(() =>
-                user.SendMessageAsync($"You have been kicked from {Context.Guild.Name}. Reason: {reason}")) is
-            { IsSuccess: false })
+        try
+        {
+            // Will throw if the user has DMs disabled
+            await user.SendMessageAsync($"You have been kicked from {Context.Guild.Name}. Reason: {reason}");
+        }
+        catch (HttpException)
+        {
             await Context.SendError("Failed to notify the user about the kick");
+        }
     }
 }

@@ -1,7 +1,7 @@
-﻿using Adramelech.Configuration;
+﻿using Adramelech.Common;
+using Adramelech.Configuration;
 using Adramelech.Extensions;
 using Adramelech.Tools;
-using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
@@ -53,10 +53,10 @@ public class PortScan(Config config) : InteractionModuleBase<SocketInteractionCo
         [Summary("ports", "The ports to can separated by spaces")]
         string ports)
     {
-        var portsList = ErrorUtils.Try(() => ports.Split(' ').Select(int.Parse).ToList());
+        var portsList = ParsePorts(ports);
         if (portsList.IsFailure)
         {
-            await Context.SendError("Invalid format");
+            await Context.SendError(portsList.Exception!.Message);
             return;
         }
 
@@ -71,6 +71,18 @@ public class PortScan(Config config) : InteractionModuleBase<SocketInteractionCo
         RunPortScanAsync(target, CommonOpenPorts);
 
         await RespondAsync(embed: _defaultResponse(target), ephemeral: true);
+    }
+
+    private static Result<List<int>> ParsePorts(string ports)
+    {
+        try
+        {
+            return ports.Split(' ').Select(int.Parse).ToList();
+        }
+        catch
+        {
+            return new Exception("Invalid format");
+        }
     }
 
     private void RunPortScanAsync(string target, List<int> ports)

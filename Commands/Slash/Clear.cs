@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Adramelech.Configuration;
 using Adramelech.Extensions;
-using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
@@ -33,9 +32,16 @@ public class Clear(Config config) : InteractionModuleBase<SocketInteractionConte
             return;
         }
 
-        if ((await ErrorUtils.TryAsync(() =>
-                Context.Guild.GetTextChannel(Context.Channel.Id).DeleteMessagesAsync(messages))).IsFailure)
+        try
+        {
+            // Will throw if the bot doesn't have permission to delete messages
+            await Context.Guild.GetTextChannel(Context.Channel.Id).DeleteMessagesAsync(messages);
+        }
+        catch
+        {
             await Context.SendError("Failed to delete messages");
+            return;
+        }
 
         await FollowupAsync(embed: new EmbedBuilder()
             .WithColor(config.EmbedColor)
@@ -51,6 +57,13 @@ public class Clear(Config config) : InteractionModuleBase<SocketInteractionConte
 
         await Task.Delay(TimeSpan.FromSeconds(timeBeforeDelete));
 
-        await ErrorUtils.TryAsync(DeleteOriginalResponseAsync);
+        try
+        {
+            await DeleteOriginalResponseAsync();
+        }
+        catch
+        {
+            // ignored
+        }
     }
 }

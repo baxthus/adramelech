@@ -1,8 +1,8 @@
 ﻿using Adramelech.Configuration;
 using Adramelech.Extensions;
-using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
+using Discord.Net;
 using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash.Internals;
@@ -15,8 +15,12 @@ public class SendDm(Config config) : InteractionModuleBase<SocketInteractionCont
         [Summary("message", "The message to send")]
         string message)
     {
-        var result = await ErrorUtils.TryAsync(() => user.SendMessageAsync(message));
-        if (result.IsFailure)
+        try
+        {
+            // Will throw if the user has DMs disabled
+            await user.SendMessageAsync(message);
+        }
+        catch (HttpException)
         {
             await Context.SendError("Failed to send the message.");
             return;

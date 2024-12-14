@@ -1,5 +1,4 @@
 ﻿using Adramelech.Common;
-using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
@@ -27,9 +26,16 @@ public class InteractionCreated(
         catch (Exception exception)
         {
             Log.Error("An error occurred while executing an interaction command: {Exception}", exception);
-            // Delete the troublesome message (works sometimes)
-            await ErrorUtils.TryAsync(() =>
-                interaction.GetOriginalResponseAsync().ContinueWith(async msg => await msg.Result.DeleteAsync()));
+            try
+            {
+                // Delete the troublesome message (works sometimes)
+                var originalResponse = await interaction.GetOriginalResponseAsync();
+                await originalResponse.DeleteAsync();
+            }
+            catch
+            {
+                // ignored
+            }
         }
     }
 
