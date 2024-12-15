@@ -5,7 +5,7 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 COPY ["Adramelech/adramelech.csproj", "adramelech/"]
-RUN dotnet restore "adramelech/adramelech.csproj"
+RUN dotnet restore "adramelech/Adramelech.csproj"
 
 COPY . adramelech/
 WORKDIR "/src/adramelech"
@@ -26,4 +26,4 @@ RUN apt-get update && apt-get install -y apt-transport-https ca-certificates cur
     apt-get -y install doppler
 
 ENTRYPOINT ["doppler", "run", "--"]
-CMD ["dotnet", "adramelech.dll"]
+CMD ["dotnet", "Adramelech.dll"]
