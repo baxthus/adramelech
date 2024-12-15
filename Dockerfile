@@ -4,15 +4,15 @@ WORKDIR /app
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-COPY ["adramelech.csproj", "adramelech/"]
+COPY ["Adramelech/adramelech.csproj", "adramelech/"]
 RUN dotnet restore "adramelech/adramelech.csproj"
 
 COPY . adramelech/
 WORKDIR "/src/adramelech"
-RUN dotnet build "adramelech.csproj" -c Release -o /app/build
+RUN dotnet build "Adramelech.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "adramelech.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "Adramelech.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
