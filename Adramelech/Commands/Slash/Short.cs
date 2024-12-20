@@ -7,14 +7,15 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class Short(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Short(Config config, HttpUtils httpUtils)
+    : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("short", "Shortens a URL")]
     public async Task ShortAsync([Summary("url", "The URL to shorten")] string url)
     {
         await DeferAsync();
 
-        var response = await $"https://is.gd/create.php?format=simple&url={url}".GetAsync<string>();
+        var response = await httpUtils.GetAsync<string>($"https://is.gd/create.php?format=simple&url={url}");
         if (response.IsNullOrEmpty() || response!.Trim().StartsWith("Error"))
         {
             await Context.SendError("An error occurred while shortening the URL.", true);

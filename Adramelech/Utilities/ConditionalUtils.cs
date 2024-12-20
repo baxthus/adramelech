@@ -21,7 +21,7 @@ public static class ConditionalUtils
         var methodType = typeof(T);
 
         // Deal with empty strings
-        // Also do whitespace check because of the Github API
+        // Also do whitespace check because of the GitHub API
         if (methodType == typeof(string))
             return string.IsNullOrEmpty(value as string) || string.IsNullOrWhiteSpace(value as string);
 

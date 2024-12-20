@@ -10,7 +10,8 @@ using Flurl;
 
 namespace Adramelech.Commands.Slash;
 
-public partial class CepSearch(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public partial class CepSearch(Config config, HttpUtils httpUtils)
+    : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("cep-search", "Search for a CEP (Brazilian ZIP code)")]
     public async Task CepSearchAsync([Summary("cep", "The CEP to search for")] string cep)
@@ -23,7 +24,7 @@ public partial class CepSearch(Config config) : InteractionModuleBase<SocketInte
             return;
         }
 
-        var response = await $"https://brasilapi.com.br/api/cep/v2/{cep}".GetAsync<CepResponse>();
+        var response = await httpUtils.GetAsync<CepResponse>($"https://brasilapi.com.br/api/cep/v2/{cep}");
         if (response.IsDefault())
         {
             await Context.SendError("Something went wrong while searching for the CEP", true);

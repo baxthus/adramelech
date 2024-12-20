@@ -4,6 +4,7 @@ using Adramelech.Configuration;
 using Adramelech.Events;
 using Adramelech.Logging;
 using Adramelech.Tools;
+using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
@@ -63,7 +64,9 @@ internal static class Adramelech
             .AddSingleton(_ => new DiscordSocketClient(ClientConfig))
             .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
             .AddSingleton<InteractionCreated>()
-            .AddSingleton<Ready>();
+            .AddSingleton<Ready>()
+            .AddHttpClient()
+            .AddSingleton<HttpUtils>();
 
         EventsActivator.Register(serviceCollection);
 

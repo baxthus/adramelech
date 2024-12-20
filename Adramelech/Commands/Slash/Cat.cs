@@ -7,14 +7,15 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class Cat(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Cat(Config config, HttpUtils httpUtils)
+    : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("cat", "Get a random cat image")]
     public async Task CatAsync()
     {
         await DeferAsync();
 
-        var response = await "https://api.thecatapi.com/v1/images/search".GetAsync<CatResponse[]>();
+        var response = await httpUtils.GetAsync<CatResponse[]>("https://api.thecatapi.com/v1/images/search");
         if (response.IsDefault())
         {
             await Context.SendError("Failed to get cat image", true);

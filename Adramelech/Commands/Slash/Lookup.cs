@@ -8,11 +8,11 @@ using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Flurl;
-using Newtonsoft.Json.Serialization;
 
 namespace Adramelech.Commands.Slash;
 
-public class Lookup(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Lookup(Config config, HttpUtils httpUtils)
+    : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("lookup", "Lookup a ip or domain")]
     public async Task LookupAsync([Summary("target", "The target to lookup")] string target)
@@ -28,7 +28,7 @@ public class Lookup(Config config) : InteractionModuleBase<SocketInteractionCont
             return;
         }
 
-        var response = await $"https://ipwho.is/{ip.Value}".GetAsync<Whois>("curl", new SnakeCaseNamingStrategy());
+        var response = await httpUtils.GetAsync<Whois>($"https://ipwho.is/{ip.Value}", "curl");
         if (response.IsDefault() || !response.Success)
         {
             await Context.SendError("Failed to get whois information", true);
@@ -83,9 +83,9 @@ public class Lookup(Config config) : InteractionModuleBase<SocketInteractionCont
                 .Build());
     }
 
-    private static async Task<Result<string>> GetIpFromDomain(string domain)
+    private async Task<Result<string>> GetIpFromDomain(string domain)
     {
-        var response = await $"https://da.gd/host/{domain}".GetAsync<string>();
+        var response = await httpUtils.GetAsync<string>($"https://da.gd/host/{domain}");
         if (response.IsNullOrEmpty()) return new Exception("Failed to get ip from domain");
 
         response = response!.Trim();
@@ -106,8 +106,8 @@ public class Lookup(Config config) : InteractionModuleBase<SocketInteractionCont
         public string CountryCode { get; set; }
         public string Region { get; set; }
         public string City { get; set; }
-        public string Latitude { get; set; }
-        public string Longitude { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
         public string Postal { get; set; }
         public SConnection Connection { get; set; }
         public STimezone Timezone { get; set; }
@@ -129,6 +129,7 @@ public class Lookup(Config config) : InteractionModuleBase<SocketInteractionCont
     }
 }
 
+// ReSharper disable once ClassNeverInstantiated.Global
 internal partial class LookupHelper
 {
     [GeneratedRegex(@"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b")]

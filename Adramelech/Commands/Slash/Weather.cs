@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 using Adramelech.Configuration;
 using Adramelech.Extensions;
 using Adramelech.Utilities;
@@ -6,11 +7,11 @@ using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Flurl;
-using Newtonsoft.Json;
 
 namespace Adramelech.Commands.Slash;
 
-public class Weather(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Weather(Config config, HttpUtils httpUtils)
+    : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     private const string OpenWeatherUrl = "https://api.openweathermap.org";
 
@@ -27,23 +28,21 @@ public class Weather(Config config) : InteractionModuleBase<SocketInteractionCon
 
         await DeferAsync();
 
-        var coordinates = await OpenWeatherUrl
-            .AppendPathSegments("geo", "1.0", "direct")
-            .SetQueryParam("q", $"{city},{country}")
-            .SetQueryParam("appid", config.OpenWeatherKey)
-            .ToString()
-            .GetAsync<OpenWeatherGeo[]>();
+        var coordinates = await httpUtils.GetAsync<OpenWeatherGeo[]>(
+            OpenWeatherUrl.AppendPathSegments("geo", "1.0", "direct")
+                .SetQueryParam("q", $"{city},{country}")
+                .SetQueryParam("appid", config.OpenWeatherKey)
+                .ToString());
         if (coordinates.IsDefault()) await Context.SendError("Failed to get the coordinates of the city.");
 
-        var weather = await OpenWeatherUrl
-            .AppendPathSegments("data", "2.5", "weather")
-            .SetQueryParam("lat", coordinates![0].Lat)
-            .SetQueryParam("lon", coordinates[0].Lon)
-            .SetQueryParam("appid", config.OpenWeatherKey)
-            .SetQueryParam("units", "metric")
-            .SetQueryParam("lang", "en")
-            .ToString()
-            .GetAsync<OpenWeather>();
+        var weather = await httpUtils.GetAsync<OpenWeather>(
+            OpenWeatherUrl.AppendPathSegments("data", "2.5", "weather")
+                .SetQueryParam("lat", coordinates![0].Lat)
+                .SetQueryParam("lon", coordinates[0].Lon)
+                .SetQueryParam("appid", config.OpenWeatherKey)
+                .SetQueryParam("units", "metric")
+                .SetQueryParam("lang", "en")
+                .ToString());
         if (weather.IsDefault())
         {
             await Context.SendError("Failed to get the weather of the city.");
@@ -83,8 +82,8 @@ public class Weather(Config config) : InteractionModuleBase<SocketInteractionCon
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
     private struct OpenWeatherGeo
     {
-        public string Lat { get; set; }
-        public string Lon { get; set; }
+        public double Lat { get; set; }
+        public double Lon { get; set; }
     }
 
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
@@ -104,13 +103,13 @@ public class Weather(Config config) : InteractionModuleBase<SocketInteractionCon
         internal struct SMain
         {
             public double Temp { get; set; }
-            [JsonProperty("feels_like")] public double FeelsLike { get; set; }
-            [JsonProperty("temp_min")] public double TempMin { get; set; }
-            [JsonProperty("temp_max")] public double TempMax { get; set; }
+            public double FeelsLike { get; set; }
+            public double TempMin { get; set; }
+            public double TempMax { get; set; }
             public int Pressure { get; set; }
             public int Humidity { get; set; }
-            [JsonProperty("sea_level")] public int SeaLevel { get; set; }
-            [JsonProperty("grnd_level")] public int GroundLevel { get; set; }
+            public int SeaLevel { get; set; }
+            [JsonPropertyName("grnd_level")] public int GroundLevel { get; set; }
         }
 
         internal struct SWind

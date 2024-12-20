@@ -1,15 +1,16 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using Adramelech.Configuration;
 using Adramelech.Extensions;
 using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
-using Newtonsoft.Json.Serialization;
 
 namespace Adramelech.Commands.Slash;
 
-public class Obfuscate(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Obfuscate(Config config, HttpUtils httpUtils)
+    : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("obfuscate", "Obfuscate a URL")]
     public async Task ObfuscateAsync([Summary("url", "The URL to obfuscate")] string url,
@@ -24,15 +25,16 @@ public class Obfuscate(Config config) : InteractionModuleBase<SocketInteractionC
             return;
         }
 
-        var response = await "https://owo.vc/api/v2/link".PostAsync<ObfuscateData, ObfuscateResponse>(
+        var response = await httpUtils.PostAsync<ObfuscateData, ObfuscateResponse>(
+            "https://owo.vc/api/v2/link",
             new ObfuscateData
             {
                 Link = url,
                 Generator = "sketchy",
                 Metadata = metadata ? "IGNORE" : "PROXY"
             },
-            dataNamingStrategy: new CamelCaseNamingStrategy(),
-            userAgent: Config.UserAgent);
+            Config.UserAgent,
+            responseNamingPolicy: JsonNamingPolicy.CamelCase);
         if (response.IsDefault())
         {
             await Context.SendError("Failed to obfuscate URL", true);

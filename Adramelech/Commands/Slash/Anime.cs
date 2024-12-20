@@ -7,7 +7,6 @@ using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Flurl;
-using Newtonsoft.Json;
 
 namespace Adramelech.Commands.Slash;
 
@@ -15,7 +14,8 @@ namespace Adramelech.Commands.Slash;
 public class Anime : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [Group("media", "Anime media commands")]
-    public class Media(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+    public class Media(Config config, HttpUtils httpUtils)
+        : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
     {
         [SlashCommand("image", "Get a random anime image")]
         public async Task ImageAsync(
@@ -52,7 +52,7 @@ public class Anime : InteractionModuleBase<SocketInteractionContext<SocketSlashC
                 .SetQueryParam("rating", rating)
                 .ToString()!;
 
-            var response = await url.GetAsync<NekosApiResponse>(Config.UserAgent);
+            var response = await httpUtils.GetAsync<NekosApiResponse>(url, Config.UserAgent);
             if (response.IsDefault())
             {
                 await Context.SendError("Failed to fetch image.", true);
@@ -78,7 +78,7 @@ public class Anime : InteractionModuleBase<SocketInteractionContext<SocketSlashC
         {
             await DeferAsync();
 
-            var response = await "https://nekos.life/api/v2/img/neko".GetAsync<NekosLifeResponse>();
+            var response = await httpUtils.GetAsync<NekosLifeResponse>("https://nekos.life/api/v2/img/neko");
             if (response.IsDefault())
             {
                 await Context.SendError("Failed to fetch image.", true);
@@ -99,7 +99,7 @@ public class Anime : InteractionModuleBase<SocketInteractionContext<SocketSlashC
 
             internal struct SItem
             {
-                [JsonProperty("image_url")] public string ImageUrl { get; set; }
+                public string ImageUrl { get; set; }
                 public string? Source { get; set; }
             }
         }

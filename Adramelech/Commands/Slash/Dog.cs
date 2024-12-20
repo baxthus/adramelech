@@ -8,14 +8,15 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class Dog(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Dog(Config config, HttpUtils httpUtils)
+    : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("dog", "Get a random dog image")]
     public async Task DogAsync()
     {
         await DeferAsync();
 
-        var response = await "https://dog.ceo/api/breeds/image/random".GetAsync<DogResponse>();
+        var response = await httpUtils.GetAsync<DogResponse>("https://dog.ceo/api/breeds/image/random");
         if (response.IsDefault() || response.Status != "success")
         {
             await Context.SendError("Failed to fetch dog image", true);

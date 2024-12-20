@@ -1,5 +1,6 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+﻿using System.Text.Json;
+using Serilog;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Adramelech.Utilities;
 
@@ -8,55 +9,62 @@ namespace Adramelech.Utilities;
 /// </summary>
 public static class JsonUtils
 {
-    private static readonly JsonSerializerSettings DefaultSettings = new()
+    private static readonly JsonSerializerOptions DefaultOptions = new()
     {
-        ContractResolver = new DefaultContractResolver
-        {
-            NamingStrategy = new CamelCaseNamingStrategy()
-        }
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
     };
 
     /// <summary>
     ///     Serializes an object to a JSON string.
     /// </summary>
     /// <param name="obj">The object to serialize (can be implicit).</param>
-    /// <param name="namingStrategy">The naming strategy to use for the JSON properties (default is camel case).</param>
+    /// <param name="namingPolicy">The naming policy to use for the JSON properties (default is camel case).</param>
     /// <returns>The JSON string representation of the object.</returns>
-    public static string ToJson(this object obj, NamingStrategy? namingStrategy = null)
+    public static string ToJson(this object obj, JsonNamingPolicy? namingPolicy = null)
     {
-        return JsonConvert.SerializeObject(
-            obj, namingStrategy switch
-            {
-                null => DefaultSettings,
-                _ => new JsonSerializerSettings
+        try
+        {
+            return JsonSerializer.Serialize(
+                obj, namingPolicy switch
                 {
-                    ContractResolver = new DefaultContractResolver
+                    null => DefaultOptions,
+                    _ => new JsonSerializerOptions
                     {
-                        NamingStrategy = namingStrategy
+                        PropertyNamingPolicy = namingPolicy
                     }
-                }
-            });
+                });
+        }
+        catch
+        {
+            Log.Error("Failed to serialize object to JSON: {Object}", obj);
+            return string.Empty;
+        }
     }
 
     /// <summary>
     ///     Deserializes a JSON string to an object.
     /// </summary>
     /// <param name="json">The JSON string to deserialize (can be implicit).</param>
-    /// <param name="namingStrategy">The naming strategy to use for the JSON properties (default is camel case).</param>
+    /// <param name="namingPolicy">The naming policy to use for the JSON properties (default is camel case).</param>
     /// <typeparam name="T">The type of the object to deserialize to (can be implicit).</typeparam>
     /// <returns>The deserialized object.</returns>
-    public static T? FromJson<T>(this string json, NamingStrategy? namingStrategy = null)
+    public static T? FromJson<T>(this string json, JsonNamingPolicy? namingPolicy = null)
     {
-        return JsonConvert.DeserializeObject<T>(json, namingStrategy switch
+        try
         {
-            null => DefaultSettings,
-            _ => new JsonSerializerSettings
+            return JsonSerializer.Deserialize<T>(json, namingPolicy switch
             {
-                ContractResolver = new DefaultContractResolver
+                null => DefaultOptions,
+                _ => new JsonSerializerOptions
                 {
-                    NamingStrategy = namingStrategy
+                    PropertyNamingPolicy = namingPolicy
                 }
-            }
-        });
+            });
+        }
+        catch
+        {
+            Log.Error("Failed to deserialize JSON to object: {Json}", json);
+            return default;
+        }
     }
 }

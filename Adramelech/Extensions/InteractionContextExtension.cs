@@ -40,8 +40,16 @@ public static class InteractionContextExtension
             case InteractionOrigin.SlashCommandDeferred:
                 // Delete the original because whe need it to be ephemeral
                 // NOTE: Every command that uses an external API should be deferred
-                await context.Interaction.FollowupAsync("opps...")
-                    .ContinueWith(async x => await x.Result.DeleteAsync());
+                var msg = context.Interaction.FollowupAsync("opps...");
+                try
+                {
+                    await msg.Result.DeleteAsync();
+                }
+                catch
+                {
+                    // ignored
+                }
+
                 await context.Interaction.FollowupAsync(embed: embed, ephemeral: true);
                 break;
             case InteractionOrigin.Component:

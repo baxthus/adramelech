@@ -8,10 +8,11 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class Whois(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Whois(Config config, HttpUtils httpUtils)
+    : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     private static readonly string[] BadStrings =
-    {
+    [
         "Malformed",
         "Wrong",
         "The queried object does not",
@@ -20,14 +21,14 @@ public class Whois(Config config) : InteractionModuleBase<SocketInteractionConte
         "Domain not",
         "NOT FOUND",
         "Did not get"
-    };
+    ];
 
     [SlashCommand("whois", "Get information about a domain or IP address")]
     public async Task WhoisAsync([Summary("target", "The domain or IP address to look up")] string target)
     {
         await DeferAsync();
 
-        var response = await $"https://da.gd/w/{target}".GetAsync<string>();
+        var response = await httpUtils.GetAsync<string>($"https://da.gd/w/{target}");
         if (response.IsNullOrEmpty() || BadStrings.Any(response!.Trim().Contains))
         {
             await Context.SendError("Error looking up the target", true);

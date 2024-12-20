@@ -7,12 +7,12 @@ using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
-using Newtonsoft.Json;
 
 namespace Adramelech.Commands.Slash;
 
 [Group("github", "Get Github information")]
-public class Github(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Github(Config config, HttpUtils httpUtils)
+    : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     public const string BaseUrl = "https://api.github.com";
 
@@ -23,7 +23,7 @@ public class Github(Config config) : InteractionModuleBase<SocketInteractionCont
     {
         await DeferAsync();
 
-        var response = await $"{BaseUrl}/repos/{user}/{repo}".GetAsync<Repository>(Config.UserAgent);
+        var response = await httpUtils.GetAsync<Repository>($"{BaseUrl}/repos/{user}/{repo}", Config.UserAgent);
         if (repo.IsDefault())
         {
             await Context.SendError("Failed to get repository information", true);
@@ -74,7 +74,7 @@ public class Github(Config config) : InteractionModuleBase<SocketInteractionCont
     {
         await DeferAsync();
 
-        var response = await $"{BaseUrl}/users/{user}".GetAsync<User>(Config.UserAgent);
+        var response = await httpUtils.GetAsync<User>($"{BaseUrl}/users/{user}", Config.UserAgent);
         if (response.IsDefault())
         {
             await Context.SendError("Failed to get user information", true);
@@ -128,7 +128,7 @@ public class Github(Config config) : InteractionModuleBase<SocketInteractionCont
     {
         await DeferAsync();
 
-        var response = await $"{BaseUrl}/users/{user}/gists".GetAsync<Gist[]>(Config.UserAgent);
+        var response = await httpUtils.GetAsync<Gist[]>($"{BaseUrl}/users/{user}/gists", Config.UserAgent);
         if (response.IsDefault())
         {
             await Context.SendError("Failed to get gists information or user has no gists", true);
@@ -168,9 +168,9 @@ public class Github(Config config) : InteractionModuleBase<SocketInteractionCont
                 .Build());
     }
 
-    private static async Task<Result<(List<Social>, string)>> GetSocials(string user)
+    private async Task<Result<(List<Social>, string)>> GetSocials(string user)
     {
-        var response = await $"{BaseUrl}/users/{user}/social_accounts".GetAsync<Social[]>(Config.UserAgent);
+        var response = await httpUtils.GetAsync<Social[]>($"{BaseUrl}/users/{user}/social_accounts", Config.UserAgent);
         if (response.IsDefault())
             return new Exception("User not found");
 
@@ -182,9 +182,9 @@ public class Github(Config config) : InteractionModuleBase<SocketInteractionCont
         return (response.ToList(), builder.ToString().TrimEnd('\n'));
     }
 
-    private static async Task<Result<string>> GetLicense(string key)
+    private async Task<Result<string>> GetLicense(string key)
     {
-        var response = await $"{BaseUrl}/licenses/{key}".GetAsync<License>(Config.UserAgent);
+        var response = await httpUtils.GetAsync<License>($"{BaseUrl}/licenses/{key}", Config.UserAgent);
         if (response.IsDefault())
             return new Exception("License not found");
 
@@ -208,13 +208,13 @@ public class Github(Config config) : InteractionModuleBase<SocketInteractionCont
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        [JsonProperty("html_url")] public string HtmlUrl { get; set; }
+        public string HtmlUrl { get; set; }
         public string Description { get; set; }
-        public string Fork { get; set; }
+        public bool Fork { get; set; }
         public string Language { get; set; }
-        [JsonProperty("stargazers_count")] public int StargazersCount { get; set; }
-        [JsonProperty("watchers_count")] public int WatchersCount { get; set; }
-        [JsonProperty("forks_count")] public int ForksCount { get; set; }
+        public int StargazersCount { get; set; }
+        public int WatchersCount { get; set; }
+        public int ForksCount { get; set; }
         public SOwner Owner { get; set; }
 
         [SuppressMessage("ReSharper", "MemberHidesStaticFromOuterClass")]
@@ -225,7 +225,7 @@ public class Github(Config config) : InteractionModuleBase<SocketInteractionCont
             public string Login { get; set; }
             public int Id { get; set; }
             public string Type { get; set; }
-            [JsonProperty("avatar_url")] public string AvatarUrl { get; set; }
+            public string AvatarUrl { get; set; }
         }
 
         // ReSharper disable once MemberCanBePrivate.Local
@@ -255,18 +255,18 @@ public class Github(Config config) : InteractionModuleBase<SocketInteractionCont
         public string? Blog { get; set; }
         public string? Location { get; set; }
         public string? Bio { get; set; }
-        [JsonProperty("public_repos")] public int PublicRepos { get; set; }
-        [JsonProperty("public_gists")] public int PublicGists { get; set; }
+        public int PublicRepos { get; set; }
+        public int PublicGists { get; set; }
         public int Followers { get; set; }
         public int Following { get; set; }
-        [JsonProperty("avatar_url")] public string AvatarUrl { get; set; }
-        [JsonProperty("html_url")] public string HtmlUrl { get; set; }
+        public string AvatarUrl { get; set; }
+        public string HtmlUrl { get; set; }
     }
 
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
     public struct Gist
     {
-        [JsonProperty("html_url")] public string HtmlUrl { get; set; }
+        public string HtmlUrl { get; set; }
         public string Description { get; set; }
         public string Id { get; set; }
         public int Comments { get; set; }
@@ -277,8 +277,8 @@ public class Github(Config config) : InteractionModuleBase<SocketInteractionCont
             public string Login { get; set; }
             public int Id { get; set; }
             public string Type { get; set; }
-            [JsonProperty("avatar_url")] public string AvatarUrl { get; set; }
-            [JsonProperty("html_url")] public string HtmlUrl { get; set; }
+            public string AvatarUrl { get; set; }
+            public string HtmlUrl { get; set; }
         }
     }
 
@@ -290,7 +290,8 @@ public class Github(Config config) : InteractionModuleBase<SocketInteractionCont
     }
 }
 
-public class GithubComponents : InteractionModuleBase<SocketInteractionContext<SocketMessageComponent>>
+public class GithubComponents(HttpUtils httpUtils)
+    : InteractionModuleBase<SocketInteractionContext<SocketMessageComponent>>
 {
     [ComponentInteraction("getAllGists")]
     public async Task GetAllGistsAsync()
@@ -307,7 +308,8 @@ public class GithubComponents : InteractionModuleBase<SocketInteractionContext<S
 
         var user = (component as ButtonComponent)?.Label;
 
-        var response = await $"{Github.BaseUrl}/users/{user}/gists".GetAsync<Github.Gist[]>(Config.UserAgent);
+        var response =
+            await httpUtils.GetAsync<Github.Gist[]>($"{Github.BaseUrl}/users/{user}/gists", Config.UserAgent);
         if (response.IsDefault())
         {
             await Context.SendError("Failed to get gists information or user has no gists");

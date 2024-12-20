@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using Adramelech.Configuration;
 using Adramelech.Extensions;
 using Adramelech.Utilities;
@@ -9,7 +10,8 @@ using Flurl;
 
 namespace Adramelech.Commands.Slash;
 
-public class Covid(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Covid(Config config, HttpUtils httpUtils)
+    : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("covid", "Get Covid-19 statistics")]
     public async Task CovidAsync([Summary("country", "Country to get statistics for")] string country = "worldwide")
@@ -23,7 +25,7 @@ public class Covid(Config config) : InteractionModuleBase<SocketInteractionConte
         else
             url.AppendPathSegments("countries", country);
 
-        var response = await url.ToString().GetAsync<CovidResponse>();
+        var response = await httpUtils.GetAsync<CovidResponse>(url, namingPolicy: JsonNamingPolicy.CamelCase);
         if (response.IsDefault())
         {
             await Context.SendError("There was an error getting the Covid-19 statistics", true);
@@ -55,14 +57,14 @@ public class Covid(Config config) : InteractionModuleBase<SocketInteractionConte
     {
         public string? Message { get; set; }
         public string? Country { get; set; }
-        public string Cases { get; set; }
-        public string Deaths { get; set; }
-        public string Recovered { get; set; }
-        public string Active { get; set; }
-        public string Critical { get; set; }
-        public string CasesPerOneMillion { get; set; }
-        public string DeathsPerOneMillion { get; set; }
-        public string Tests { get; set; }
-        public string TestsPerOneMillion { get; set; }
+        public double Cases { get; set; }
+        public double Deaths { get; set; }
+        public double Recovered { get; set; }
+        public double Active { get; set; }
+        public double Critical { get; set; }
+        public double CasesPerOneMillion { get; set; }
+        public double DeathsPerOneMillion { get; set; }
+        public double Tests { get; set; }
+        public double TestsPerOneMillion { get; set; }
     }
 }

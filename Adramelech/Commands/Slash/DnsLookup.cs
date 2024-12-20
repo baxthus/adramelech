@@ -9,7 +9,8 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class DnsLookup(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class DnsLookup(Config config, HttpUtils httpUtils)
+    : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("dns-lookup", "Lookup the IP address of a domain")]
     public async Task DnsLookupAsync([Summary("domain", "The domain to lookup")] string domain,
@@ -18,7 +19,7 @@ public class DnsLookup(Config config) : InteractionModuleBase<SocketInteractionC
     {
         await DeferAsync();
 
-        var response = await $"https://da.gd/dns/{domain}".GetAsync<string>();
+        var response = await httpUtils.GetAsync<string>($"https://da.gd/dns/{domain}");
         if (response.IsNullOrEmpty())
         {
             await Context.SendError("Invalid domain", true);
@@ -58,10 +59,10 @@ public class DnsLookup(Config config) : InteractionModuleBase<SocketInteractionC
             };
     }
 
-    private struct DnsRecord
+    private record DnsRecord
     {
-        public string Type { get; init; }
-        public string RevalidateIn { get; init; }
-        public string Content { get; init; }
+        public required string Type { get; init; }
+        public required string RevalidateIn { get; init; }
+        public required string Content { get; init; }
     }
 }
