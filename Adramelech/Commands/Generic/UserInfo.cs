@@ -1,19 +1,41 @@
 ﻿using Adramelech.Configuration;
 using Discord;
+using Discord.Interactions;
 using Discord.WebSocket;
 
-namespace Adramelech.Commands.Shared;
+namespace Adramelech.Commands.Generic;
 
-public class UserInfo(Config config)
+public class UserInfoSlashCommand(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
-    public Embed Execute(IUser user)
+    [SlashCommand("user-info", "Get information about a user")]
+    public async Task UserInfoAsync([Summary("user", "The user to get information about")] SocketUser? user = null)
+    {
+        user ??= Context.User;
+
+        var helper = new UserInfoHelper(config);
+        await helper.Execute(Context, user);
+    }
+}
+
+public class UserInfoUserCommand(Config config) : InteractionModuleBase<SocketInteractionContext<SocketUserCommand>>
+{
+    [UserCommand("User Info")]
+    public async Task UserInfoAsync(IUser user)
+    {
+        var helper = new UserInfoHelper(config);
+        await helper.Execute(Context, user);
+    }
+}
+
+internal class UserInfoHelper(Config config)
+{
+    public Task Execute(IInteractionContext context, IUser user)
     {
         var member = user as SocketGuildUser;
 
         var embed = new EmbedBuilder()
             .WithColor(config.EmbedColor)
             .WithAuthor(user.Username, user.GetAvatarUrl())
-            .WithThumbnailUrl(user.GetAvatarUrl())
             .AddField("> ID", user.Id, true)
             .AddField("> Nickname", member?.Nickname ?? "None", true)
             .AddField("> Created at",
@@ -27,6 +49,6 @@ public class UserInfo(Config config)
             embed.AddField("> Permissions", string.Join(", ", member.GuildPermissions.ToList()));
         }
 
-        return embed.Build();
+        return context.Interaction.RespondAsync(embed: embed.Build());
     }
 }

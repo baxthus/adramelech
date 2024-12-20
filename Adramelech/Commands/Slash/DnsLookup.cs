@@ -11,7 +11,7 @@ namespace Adramelech.Commands.Slash;
 
 public class DnsLookup(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
-    [SlashCommand("dns_lookup", "Lookup the IP address of a domain")]
+    [SlashCommand("dns-lookup", "Lookup the IP address of a domain")]
     public async Task DnsLookupAsync([Summary("domain", "The domain to lookup")] string domain,
         [Summary("separate-rows", "Whether to separate the rows")]
         bool separateRows = false)

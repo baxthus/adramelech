@@ -9,12 +9,22 @@ namespace Adramelech.Commands.Slash.Internals;
 
 public class SendDm(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
-    [SlashCommand("send_dm", "Send a DM to a user")]
+    [SlashCommand("send-dm", "Send a DM to a user")]
+    [RequireContext(ContextType.DM)]
     [RequireOwner]
-    public async Task SendDmAsync([Summary("user", "The user to send the message to")] SocketUser user,
+    public async Task SendDmAsync(
+        [Summary("username", "The username of the user to send the message to")]
+        string username,
         [Summary("message", "The message to send")]
         string message)
     {
+        var user = Context.Client.GetUser(username);
+        if (user == null)
+        {
+            await Context.SendError("User not found.");
+            return;
+        }
+
         try
         {
             // Will throw if the user has DMs disabled

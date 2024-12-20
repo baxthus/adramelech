@@ -12,7 +12,7 @@ namespace Adramelech.Commands.Slash;
 
 public partial class CepSearch(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
-    [SlashCommand("cep_search", "Search for a CEP (Brazilian ZIP code)")]
+    [SlashCommand("cep-search", "Search for a CEP (Brazilian ZIP code)")]
     public async Task CepSearchAsync([Summary("cep", "The CEP to search for")] string cep)
     {
         await DeferAsync();

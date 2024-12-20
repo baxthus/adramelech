@@ -8,7 +8,7 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-[Group("port_scan", "Scan ports on a target host")]
+[Group("port-scan", "Scan ports on a target host")]
 public class PortScan(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     // list from https://www.speedguide.net/ports_common.php (accessed on 2024-11-22)
@@ -34,7 +34,7 @@ public class PortScan(Config config) : InteractionModuleBase<SocketInteractionCo
     }
 
 
-    [SlashCommand("in_range", "Scan ports in a range")]
+    [SlashCommand("in-range", "Scan ports in a range")]
     public async Task InRangeAsync([Summary("host", "The target host")] string target,
         [Summary("start", "The start of the range")] [MinValue(1)] [MaxValue(65535)]
         int start,
@@ -48,7 +48,7 @@ public class PortScan(Config config) : InteractionModuleBase<SocketInteractionCo
         await RespondAsync(embed: _defaultResponse(target), ephemeral: true);
     }
 
-    [SlashCommand("in_list", "Scan ports in a list")]
+    [SlashCommand("in-list", "Scan ports in a list")]
     public async Task InListAsync([Summary("host", "The target host")] string target,
         [Summary("ports", "The ports to can separated by spaces")]
         string ports)
