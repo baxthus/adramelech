@@ -2,6 +2,7 @@
 using System.Text.RegularExpressions;
 using Adramelech.Configuration;
 using Adramelech.Extensions;
+using Adramelech.Services;
 using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
@@ -10,12 +11,13 @@ using Flurl;
 
 namespace Adramelech.Commands.Slash;
 
-public partial class CepSearch(Config config, HttpUtils httpUtils)
+public partial class CepSearch(Config config, HttpUtils httpUtils, CooldownService cooldownService)
     : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("cep-search", "Search for a CEP (Brazilian ZIP code)")]
     public async Task CepSearchAsync([Summary("cep", "The CEP to search for")] string cep)
     {
+        if (await Context.VerifyCooldown(cooldownService)) return;
         await DeferAsync();
 
         if (!MyRegex().IsMatch(cep))
@@ -75,6 +77,7 @@ public partial class CepSearch(Config config, HttpUtils httpUtils)
                 .WithButton("Open in Google Maps", style: ButtonStyle.Link, url: mapsUrl.ToString(),
                     emote: new Emoji("🌎"))
                 .Build());
+        Context.SetCooldown(cooldownService);
     }
 
     [GeneratedRegex(@"^\d{5}-?\d{3}$")]
@@ -97,9 +100,9 @@ public partial class CepSearch(Config config, HttpUtils httpUtils)
         internal struct LocationType
         {
             public string Type { get; set; }
-            public Coordinatestype Coordinates { get; set; }
+            public CoordinatesType Coordinates { get; set; }
 
-            internal struct Coordinatestype
+            internal struct CoordinatesType
             {
                 public string? Latitude { get; set; }
                 public string? Longitude { get; set; }

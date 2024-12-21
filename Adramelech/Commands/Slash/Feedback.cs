@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Adramelech.Configuration;
 using Adramelech.Extensions;
+using Adramelech.Services;
 using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
@@ -9,11 +10,14 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class Feedback(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+[SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
+public class Feedback(Config config, CooldownService cooldownService)
+    : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("feedback", "Send feedback to the bot developers.")]
     public async Task FeedbackAsync()
     {
+        if (await Context.VerifyCooldown(cooldownService)) return;
         if (config.FeedbackWebhook.IsNullOrEmpty())
         {
             await Context.SendError("Feedback webhook is not configured.");
@@ -21,6 +25,7 @@ public class Feedback(Config config) : InteractionModuleBase<SocketInteractionCo
         }
 
         await RespondWithModalAsync<FeedbackModal>("feedback_modal");
+        Context.SetCooldown(cooldownService, TimeSpan.FromDays(1));
     }
 
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
@@ -34,7 +39,7 @@ public class Feedback(Config config) : InteractionModuleBase<SocketInteractionCo
     }
 }
 
-public class FeedbackModalResponse(Config config) : InteractionModuleBase<SocketInteractionContext<SocketModal>>
+public class FeedbackModalHandler(Config config) : InteractionModuleBase<SocketInteractionContext<SocketModal>>
 {
     [ModalInteraction("feedback_modal")]
     public async Task Modal(Feedback.FeedbackModal modal)
@@ -43,7 +48,7 @@ public class FeedbackModalResponse(Config config) : InteractionModuleBase<Socket
 
         if (config.FeedbackWebhook.IsNullOrEmpty())
         {
-            await RespondAsync("Feedback webhook is not configured.");
+            await Context.SendError("Feedback webhook is not configured.");
             return;
         }
 

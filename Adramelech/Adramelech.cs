@@ -1,8 +1,8 @@
 using System.Reflection;
-using Adramelech.Common;
 using Adramelech.Configuration;
 using Adramelech.Events;
 using Adramelech.Logging;
+using Adramelech.Services;
 using Adramelech.Tools;
 using Adramelech.Utilities;
 using Discord;
@@ -52,23 +52,33 @@ internal static class Adramelech
 
         await interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), services);
 
-        services.GetRequiredService<EventsActivator>().Activate();
+        services.GetRequiredService<EventsService>().Activate();
 
-        await Task.Delay(-1);
+        services.GetRequiredService<CancellationTokenSource>().Token.WaitHandle.WaitOne();
+
+        Log.Information("Shutting down...");
+
+        client.Log -= LogAsync; // Remove the log event handler to prevent random errors to be logged to Sentry
+        await client.StopAsync();
+        services.GetRequiredService<CooldownService>().Dispose();
+        await client.DisposeAsync();
+        await Log.CloseAndFlushAsync();
     }
 
     private static ServiceProvider ConfigureServices()
     {
         var serviceCollection = new ServiceCollection()
+            .AddSingleton(new CancellationTokenSource())
             .AddSingleton<Config>()
             .AddSingleton(_ => new DiscordSocketClient(ClientConfig))
             .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
             .AddSingleton<InteractionCreated>()
             .AddSingleton<Ready>()
             .AddHttpClient()
-            .AddSingleton<HttpUtils>();
+            .AddSingleton<HttpUtils>()
+            .AddSingleton<CooldownService>();
 
-        EventsActivator.Register(serviceCollection);
+        EventsService.Register(serviceCollection);
 
         return serviceCollection.BuildServiceProvider();
     }

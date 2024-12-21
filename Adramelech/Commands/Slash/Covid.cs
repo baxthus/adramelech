@@ -2,6 +2,7 @@
 using System.Text.Json;
 using Adramelech.Configuration;
 using Adramelech.Extensions;
+using Adramelech.Services;
 using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
@@ -10,12 +11,13 @@ using Flurl;
 
 namespace Adramelech.Commands.Slash;
 
-public class Covid(Config config, HttpUtils httpUtils)
+public class Covid(Config config, HttpUtils httpUtils, CooldownService cooldownService)
     : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("covid", "Get Covid-19 statistics")]
     public async Task CovidAsync([Summary("country", "Country to get statistics for")] string country = "worldwide")
     {
+        if (await Context.VerifyCooldown(cooldownService)) return;
         await DeferAsync();
 
         var url = new Url("https://disease.sh/v3/covid-19");
@@ -50,6 +52,7 @@ public class Covid(Config config, HttpUtils httpUtils)
                               """)
             .WithFooter("Powered by disease.sh")
             .Build());
+        Context.SetCooldown(cooldownService);
     }
 
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]

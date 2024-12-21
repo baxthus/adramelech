@@ -2,6 +2,7 @@
 using System.Text.Json;
 using Adramelech.Configuration;
 using Adramelech.Extensions;
+using Adramelech.Services;
 using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
@@ -9,7 +10,7 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class Obfuscate(Config config, HttpUtils httpUtils)
+public class Obfuscate(Config config, HttpUtils httpUtils, CooldownService cooldownService)
     : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("obfuscate", "Obfuscate a URL")]
@@ -17,6 +18,7 @@ public class Obfuscate(Config config, HttpUtils httpUtils)
         [Summary("metadata", "Whether to remove metadata")]
         bool metadata = false)
     {
+        if (await Context.VerifyCooldown(cooldownService)) return;
         await DeferAsync();
 
         if (!url.StartsWith("http"))
@@ -54,6 +56,7 @@ public class Obfuscate(Config config, HttpUtils httpUtils)
             .AddField(":clock1: Created At", $"<t:{createdAt.ToUnixTimeSeconds()}>", true)
             .WithFooter("Powered by owo.vc")
             .Build());
+        Context.SetCooldown(cooldownService);
     }
 
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]

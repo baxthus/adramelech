@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Adramelech.Configuration;
 using Adramelech.Extensions;
+using Adramelech.Services;
 using Adramelech.Tools;
 using Adramelech.Utilities;
 using Discord;
@@ -9,7 +10,7 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class DnsLookup(Config config, HttpUtils httpUtils)
+public class DnsLookup(Config config, HttpUtils httpUtils, CooldownService cooldownService)
     : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("dns-lookup", "Lookup the IP address of a domain")]
@@ -17,6 +18,7 @@ public class DnsLookup(Config config, HttpUtils httpUtils)
         [Summary("separate-rows", "Whether to separate the rows")]
         bool separateRows = false)
     {
+        if (await Context.VerifyCooldown(cooldownService)) return;
         await DeferAsync();
 
         var response = await httpUtils.GetAsync<string>($"https://da.gd/dns/{domain}");
@@ -28,11 +30,20 @@ public class DnsLookup(Config config, HttpUtils httpUtils)
 
         var records = ParseResponse(response!).ToList();
 
-        var content = new UnicodeSheet(separateRows)
-            .AddColumn("Type", records.Select(x => x.Type))
-            .AddColumn("Revalidate In", records.Select(x => x.RevalidateIn))
-            .AddColumn("Content", records.Select(x => x.Content))
-            .Build();
+        string content;
+        try
+        {
+            content = new UnicodeSheet(separateRows)
+                .AddColumn("Type", records.Select(x => x.Type))
+                .AddColumn("Revalidate In", records.Select(x => x.RevalidateIn))
+                .AddColumn("Content", records.Select(x => x.Content))
+                .Build();
+        }
+        catch
+        {
+            await Context.SendError("An error occurred while building the sheet", true);
+            return;
+        }
 
         await FollowupWithFileAsync(
             embed: new EmbedBuilder()
@@ -43,6 +54,7 @@ public class DnsLookup(Config config, HttpUtils httpUtils)
                 .Build(),
             fileName: "domain.zone",
             fileStream: new MemoryStream(Encoding.UTF8.GetBytes(content)));
+        Context.SetCooldown(cooldownService);
     }
 
     // Format: <DOMAIN> <REVALIDATE_IN> IN <TYPE> <CONTENT>

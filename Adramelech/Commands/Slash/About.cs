@@ -8,7 +8,7 @@ namespace Adramelech.Commands.Slash;
 
 public class About(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
-    // prey that the url doesn't change, because I won't remember to update it
+    // Pray that the url doesn't change, because I won't remember to update it
     private const string DiscordNetIconUrl = "https://docs.discordnet.dev/marketing/logo/PackageLogo.png";
 
     [SlashCommand("about", "Shows information about the bot")]

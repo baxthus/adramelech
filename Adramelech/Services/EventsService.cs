@@ -1,8 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Adramelech.Common;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace Adramelech.Common;
+namespace Adramelech.Services;
 
-public class EventsActivator(IEnumerable<Event> events)
+public class EventsService(IEnumerable<Event> events)
 {
     public void Activate()
     {
@@ -15,6 +16,6 @@ public class EventsActivator(IEnumerable<Event> events)
             if (typeof(Event).IsAssignableFrom(type) && !type.IsAbstract)
                 services.AddSingleton(typeof(Event), type);
 
-        services.AddSingleton(typeof(EventsActivator));
+        services.AddSingleton(typeof(EventsService));
     }
 }

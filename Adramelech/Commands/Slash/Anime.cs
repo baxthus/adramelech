@@ -2,6 +2,7 @@
 using System.Text;
 using Adramelech.Configuration;
 using Adramelech.Extensions;
+using Adramelech.Services;
 using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
@@ -14,7 +15,7 @@ namespace Adramelech.Commands.Slash;
 public class Anime : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [Group("media", "Anime media commands")]
-    public class Media(Config config, HttpUtils httpUtils)
+    public class Media(Config config, HttpUtils httpUtils, CooldownService cooldownService)
         : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
     {
         [SlashCommand("image", "Get a random anime image")]
@@ -22,6 +23,7 @@ public class Anime : InteractionModuleBase<SocketInteractionContext<SocketSlashC
             [Summary("age-rating", "The age rating of the image")] [Choice("SFW", "sfw")] [Choice("NSFW", "nsfw")]
             string ageRating = "sfw")
         {
+            if (await Context.VerifyCooldown(cooldownService)) return;
             await DeferAsync();
 
             string[] rating;
@@ -71,11 +73,14 @@ public class Anime : InteractionModuleBase<SocketInteractionContext<SocketSlashC
                 .WithImageUrl(data.ImageUrl)
                 .WithFooter(footer.ToString())
                 .Build());
+
+            Context.SetCooldown(cooldownService);
         }
 
         [SlashCommand("neko", "Get a random neko image")]
         public async Task NekoAsync()
         {
+            if (await Context.VerifyCooldown(cooldownService)) return;
             await DeferAsync();
 
             var response = await httpUtils.GetAsync<NekosLifeResponse>("https://nekos.life/api/v2/img/neko");
@@ -90,6 +95,7 @@ public class Anime : InteractionModuleBase<SocketInteractionContext<SocketSlashC
                 .WithImageUrl(response.Url)
                 .WithFooter("Powered by nekos.life")
                 .Build());
+            Context.SetCooldown(cooldownService);
         }
 
         [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]

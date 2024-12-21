@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Adramelech.Common;
 using Adramelech.Configuration;
 using Adramelech.Extensions;
+using Adramelech.Services;
 using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
@@ -11,12 +12,13 @@ using Flurl;
 
 namespace Adramelech.Commands.Slash;
 
-public class Lookup(Config config, HttpUtils httpUtils)
+public class Lookup(Config config, HttpUtils httpUtils, CooldownService cooldownService)
     : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("lookup", "Lookup a ip or domain")]
     public async Task LookupAsync([Summary("target", "The target to lookup")] string target)
     {
+        if (await Context.VerifyCooldown(cooldownService)) return;
         await DeferAsync();
 
         var ip = LookupHelper.IpRegex().Match(target).Success
@@ -81,6 +83,7 @@ public class Lookup(Config config, HttpUtils httpUtils)
                 .WithButton("Open in Google Maps", style: ButtonStyle.Link, url: mapsUrl.ToString(),
                     emote: new Emoji("🌎"))
                 .Build());
+        Context.SetCooldown(cooldownService);
     }
 
     private async Task<Result<string>> GetIpFromDomain(string domain)

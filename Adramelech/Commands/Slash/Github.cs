@@ -3,6 +3,7 @@ using System.Text;
 using Adramelech.Common;
 using Adramelech.Configuration;
 using Adramelech.Extensions;
+using Adramelech.Services;
 using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
@@ -11,7 +12,8 @@ using Discord.WebSocket;
 namespace Adramelech.Commands.Slash;
 
 [Group("github", "Get Github information")]
-public class Github(Config config, HttpUtils httpUtils)
+// ReSharper disable once ClassNeverInstantiated.Global
+public class Github(Config config, HttpUtils httpUtils, CooldownService cooldownService)
     : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     public const string BaseUrl = "https://api.github.com";
@@ -21,6 +23,7 @@ public class Github(Config config, HttpUtils httpUtils)
         [Summary("repo", "The repository name")]
         string repo)
     {
+        if (await Context.VerifyCooldown(cooldownService)) return;
         await DeferAsync();
 
         var response = await httpUtils.GetAsync<Repository>($"{BaseUrl}/repos/{user}/{repo}", Config.UserAgent);
@@ -67,11 +70,13 @@ public class Github(Config config, HttpUtils httpUtils)
                 .WithButton("Repository", style: ButtonStyle.Link, url: response.HtmlUrl)
                 .WithButton("Owner", style: ButtonStyle.Link, url: $"https://github.com/{response.Owner.Login}")
                 .Build());
+        Context.SetCooldown(cooldownService);
     }
 
     [SlashCommand("user", "Get information about a user")]
     public async Task UserAsync([Summary("user", "The github user")] string user)
     {
+        if (await Context.VerifyCooldown(cooldownService)) return;
         await DeferAsync();
 
         var response = await httpUtils.GetAsync<User>($"{BaseUrl}/users/{user}", Config.UserAgent);
@@ -121,11 +126,13 @@ public class Github(Config config, HttpUtils httpUtils)
                 .AddField(":link: **Socials**", socialField)
                 .Build(),
             components: components.Build());
+        Context.SetCooldown(cooldownService);
     }
 
     [SlashCommand("gists", "Get information about a gists")]
     public async Task GistsAsync([Summary("user", "The github user")] string user)
     {
+        if (await Context.VerifyCooldown(cooldownService)) return;
         await DeferAsync();
 
         var response = await httpUtils.GetAsync<Gist[]>($"{BaseUrl}/users/{user}/gists", Config.UserAgent);
@@ -166,6 +173,7 @@ public class Github(Config config, HttpUtils httpUtils)
                     // hacky way to get the username in the callback
                     .WithButton(content.Owner.Login, "_getAllGists", ButtonStyle.Secondary, disabled: true))
                 .Build());
+        Context.SetCooldown(cooldownService);
     }
 
     private async Task<Result<(List<Social>, string)>> GetSocials(string user)

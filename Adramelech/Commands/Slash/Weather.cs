@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using Adramelech.Configuration;
 using Adramelech.Extensions;
+using Adramelech.Services;
 using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
@@ -10,7 +11,7 @@ using Flurl;
 
 namespace Adramelech.Commands.Slash;
 
-public class Weather(Config config, HttpUtils httpUtils)
+public class Weather(Config config, HttpUtils httpUtils, CooldownService cooldownService)
     : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     private const string OpenWeatherUrl = "https://api.openweathermap.org";
@@ -20,6 +21,7 @@ public class Weather(Config config, HttpUtils httpUtils)
         [Summary("city", "The city to get the weather of")]
         string city)
     {
+        if (await Context.VerifyCooldown(cooldownService)) return;
         if (config.FeedbackWebhook.IsNullOrEmpty())
         {
             await Context.SendError("The feedback webhook is not set up.");
@@ -77,6 +79,7 @@ public class Weather(Config config, HttpUtils httpUtils)
             .AddField("> :dash: Wind", windField)
             .WithFooter("Powered by openweathermap.org")
             .Build());
+        Context.SetCooldown(cooldownService, TimeSpan.FromMinutes(10));
     }
 
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]

@@ -16,29 +16,43 @@ public static class PortScanner
             return new Exception("Invalid target address");
 
         var logger = Loggers.UserContext.ForContext("User", user);
-
         logger.Debug("User started a port scan on {Target}", target);
 
         while (!cancellationToken.IsCancellationRequested)
         {
             var openPorts = new List<int>();
 
-            foreach (var port in ports)
+            try
             {
-                using var tcpClient = new TcpClient();
-
-                try
+                foreach (var port in ports)
                 {
-                    await tcpClient.ConnectAsync(target, port, cancellationToken);
-                }
-                catch
-                {
-                    continue;
-                }
+                    using var tcpClient = new TcpClient();
 
-                openPorts.Add(port);
+                    try
+                    {
+                        await tcpClient.ConnectAsync(target, port, cancellationToken);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
+                    }
+                    catch
+                    {
+                        continue;
+                    }
 
-                tcpClient.Close();
+                    openPorts.Add(port);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                logger.Debug("Port scan on {Target} was cancelled", target);
+                return new TaskCanceledException();
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, "Port scan on {Target} failed", target);
+                return e;
             }
 
             logger.Debug("Port scan on {Target} completed", target);

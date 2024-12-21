@@ -1,12 +1,13 @@
 ﻿using System.Text;
 using System.Text.Json;
+using Adramelech.Configuration;
 
 namespace Adramelech.Utilities;
 
 /// <summary>
 ///     A collection of utility methods for working with HTTP requests.
 /// </summary>
-public class HttpUtils(IHttpClientFactory clientFactory)
+public class HttpUtils(IHttpClientFactory clientFactory, Config config)
 {
     /// <summary>
     ///     Sends a GET request to the specified URL.
@@ -23,13 +24,21 @@ public class HttpUtils(IHttpClientFactory clientFactory)
         JsonNamingPolicy? namingPolicy = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         using var client = clientFactory.CreateClient();
-        if (timeout.HasValue)
-            client.Timeout = timeout.Value;
+        client.Timeout = timeout ?? config.DefaultRequestTimeout;
 
         if (userAgent is not null)
             client.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
 
-        var response = await client.GetAsync(url, cancellationToken).ConfigureAwait(false);
+        HttpResponseMessage? response;
+        try
+        {
+            response = await client.GetAsync(url, cancellationToken).ConfigureAwait(false);
+        }
+        catch (TaskCanceledException) // Timeout
+        {
+            return default;
+        }
+
         if (!response.IsSuccessStatusCode)
             return default;
 
@@ -54,15 +63,23 @@ public class HttpUtils(IHttpClientFactory clientFactory)
         TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         using var client = clientFactory.CreateClient();
-        if (timeout.HasValue)
-            client.Timeout = timeout.Value;
+        client.Timeout = timeout ?? config.DefaultRequestTimeout;
 
         if (userAgent is not null)
             client.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
 
         using var httpContent = CreateHttpContent(data, dataNamingPolicy);
 
-        var response = await client.PostAsync(url, httpContent, cancellationToken).ConfigureAwait(false);
+        HttpResponseMessage? response;
+        try
+        {
+            response = await client.PostAsync(url, httpContent, cancellationToken).ConfigureAwait(false);
+        }
+        catch (TaskCanceledException) // Timeout
+        {
+            return default;
+        }
+
         if (!response.IsSuccessStatusCode)
             return default;
 

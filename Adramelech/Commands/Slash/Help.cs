@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Adramelech.Extensions;
 using Adramelech.Tools;
+using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 
@@ -18,10 +19,22 @@ public class Help : InteractionModuleBase<SocketInteractionContext<SocketSlashCo
             return;
         }
 
-        var content = new UnicodeSheet(separateRows)
-            .AddColumn("Command", commands.Select(x => x.Name))
-            .AddColumn("Description", commands.Select(x => x.Description))
-            .Build();
+        // Remove user commands
+        commands = commands.Where(x => x.Type != ApplicationCommandType.User).ToList();
+
+        string content;
+        try
+        {
+            content = new UnicodeSheet(separateRows)
+                .AddColumn("Command", commands.Select(x => x.Name))
+                .AddColumn("Description", commands.Select(x => x.Description))
+                .Build();
+        }
+        catch
+        {
+            await Context.SendError("An error occurred while building the sheet");
+            return;
+        }
 
         await RespondWithFileAsync(
             text: "> ## Help",

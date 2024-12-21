@@ -1,6 +1,7 @@
 ﻿using Adramelech.Common;
 using Adramelech.Configuration;
 using Adramelech.Extensions;
+using Adramelech.Services;
 using Adramelech.Tools;
 using Discord;
 using Discord.Interactions;
@@ -9,7 +10,8 @@ using Discord.WebSocket;
 namespace Adramelech.Commands.Slash;
 
 [Group("port-scan", "Scan ports on a target host")]
-public class PortScan(Config config) : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class PortScan(Config config, CooldownService cooldownService)
+    : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     // list from https://www.speedguide.net/ports_common.php (accessed on 2024-11-22)
     // the list maybe be shorted in the future for performance and resource reasons
@@ -20,6 +22,8 @@ public class PortScan(Config config) : InteractionModuleBase<SocketInteractionCo
         445, 139, 7547, 111, 135, 110, 1024, 7676, 1025, 30005, 44158, 389, 4444, 1026, 5678, 20, 28960, 27374, 29900,
         18067, 1027, 1029, 1028, 1002, 113, 1050, 8594, 1863, 4
     ];
+
+    private readonly TimeSpan _cooldown = TimeSpan.FromMinutes(30);
 
     private static Embed _defaultResponse(string target)
     {
@@ -41,11 +45,13 @@ public class PortScan(Config config) : InteractionModuleBase<SocketInteractionCo
         [Summary("end", "The end of the range")] [MinValue(1)] [MaxValue(65535)]
         int end)
     {
+        if (await Context.VerifyCooldown(cooldownService)) return;
         var ports = Enumerable.Range(start, end - start + 1).ToList();
 
         RunPortScanAsync(target, ports);
 
         await RespondAsync(embed: _defaultResponse(target), ephemeral: true);
+        Context.SetCooldown(cooldownService, _cooldown);
     }
 
     [SlashCommand("in-list", "Scan ports in a list")]
@@ -53,6 +59,7 @@ public class PortScan(Config config) : InteractionModuleBase<SocketInteractionCo
         [Summary("ports", "The ports to can separated by spaces")]
         string ports)
     {
+        if (await Context.VerifyCooldown(cooldownService)) return;
         var portsList = ParsePorts(ports);
         if (portsList.IsFailure)
         {
@@ -63,14 +70,17 @@ public class PortScan(Config config) : InteractionModuleBase<SocketInteractionCo
         RunPortScanAsync(target, portsList.Value!);
 
         await RespondAsync(embed: _defaultResponse(target), ephemeral: true);
+        Context.SetCooldown(cooldownService, _cooldown);
     }
 
     [SlashCommand("common", "Scan common ports")]
     public async Task CommonAsync([Summary("host", "The target host")] string target)
     {
+        if (await Context.VerifyCooldown(cooldownService)) return;
         RunPortScanAsync(target, CommonOpenPorts);
 
         await RespondAsync(embed: _defaultResponse(target), ephemeral: true);
+        Context.SetCooldown(cooldownService, _cooldown);
     }
 
     private static Result<List<int>> ParsePorts(string ports)

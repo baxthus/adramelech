@@ -8,10 +8,15 @@ public static class DotEnv
 
         if (!File.Exists(filePath)) return;
 
-        foreach (var line in File.ReadAllLines(filePath))
+        foreach (var line in File.ReadLines(filePath))
         {
+            var trimmed = line.Trim();
+
+            // Skip empty lines and comments
+            if (string.IsNullOrWhiteSpace(trimmed) || trimmed.StartsWith('#')) continue;
+
             // Split just the first =
-            var parts = line.Split('=', 2);
+            var parts = trimmed.Split('=', 2);
             if (parts.Length != 2) continue;
 
             Format(ref parts[1]);

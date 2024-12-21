@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Adramelech.Configuration;
 using Adramelech.Extensions;
+using Adramelech.Services;
 using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
@@ -8,7 +9,7 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class Whois(Config config, HttpUtils httpUtils)
+public class Whois(Config config, HttpUtils httpUtils, CooldownService cooldownService)
     : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     private static readonly string[] BadStrings =
@@ -26,6 +27,7 @@ public class Whois(Config config, HttpUtils httpUtils)
     [SlashCommand("whois", "Get information about a domain or IP address")]
     public async Task WhoisAsync([Summary("target", "The domain or IP address to look up")] string target)
     {
+        if (await Context.VerifyCooldown(cooldownService)) return;
         await DeferAsync();
 
         var response = await httpUtils.GetAsync<string>($"https://da.gd/w/{target}");
@@ -44,5 +46,6 @@ public class Whois(Config config, HttpUtils httpUtils)
                 .Build(),
             fileName: $"{target}.txt",
             fileStream: new MemoryStream(Encoding.UTF8.GetBytes(response)));
+        Context.SetCooldown(cooldownService);
     }
 }

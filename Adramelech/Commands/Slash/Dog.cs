@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Adramelech.Configuration;
 using Adramelech.Extensions;
+using Adramelech.Services;
 using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
@@ -8,12 +9,13 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class Dog(Config config, HttpUtils httpUtils)
+public class Dog(Config config, HttpUtils httpUtils, CooldownService cooldownService)
     : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("dog", "Get a random dog image")]
     public async Task DogAsync()
     {
+        if (await Context.VerifyCooldown(cooldownService)) return;
         await DeferAsync();
 
         var response = await httpUtils.GetAsync<DogResponse>("https://dog.ceo/api/breeds/image/random");
@@ -28,6 +30,7 @@ public class Dog(Config config, HttpUtils httpUtils)
             .WithImageUrl(response.Message)
             .WithFooter("Powered by dog.ceo")
             .Build());
+        Context.SetCooldown(cooldownService);
     }
 
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]

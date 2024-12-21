@@ -1,5 +1,6 @@
 ﻿using Adramelech.Configuration;
 using Adramelech.Extensions;
+using Adramelech.Services;
 using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
@@ -7,12 +8,13 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
-public class Cat(Config config, HttpUtils httpUtils)
+public class Cat(Config config, HttpUtils httpUtils, CooldownService cooldownService)
     : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("cat", "Get a random cat image")]
     public async Task CatAsync()
     {
+        if (await Context.VerifyCooldown(cooldownService)) return;
         await DeferAsync();
 
         var response = await httpUtils.GetAsync<CatResponse[]>("https://api.thecatapi.com/v1/images/search");
@@ -27,6 +29,7 @@ public class Cat(Config config, HttpUtils httpUtils)
             .WithImageUrl(response!.First().Url)
             .WithFooter("Powered by thecatapi.com")
             .Build());
+        Context.SetCooldown(cooldownService);
     }
 
     private struct CatResponse
