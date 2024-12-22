@@ -6,6 +6,7 @@ using Discord.WebSocket;
 
 namespace Adramelech.Commands.Slash;
 
+[SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
 public class Echo : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("echo", "Echoes a message.")]

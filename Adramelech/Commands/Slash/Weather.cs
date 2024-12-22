@@ -8,6 +8,7 @@ using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Flurl;
+using Humanizer;
 
 namespace Adramelech.Commands.Slash;
 
@@ -63,7 +64,7 @@ public class Weather(Config config, HttpUtils httpUtils, CooldownService cooldow
                          """;
         var weatherField = $"""
                             **Main**: {weather.Weather[0].Main}
-                            **Description**: {weather.Weather[0].Description}
+                            **Description**: {weather.Weather[0].Description.Humanize(LetterCasing.Sentence)}
                             """;
         var windField = $"""
                          **Speed**: {weather.Wind.Speed}m/s

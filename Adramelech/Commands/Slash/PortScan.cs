@@ -6,6 +6,7 @@ using Adramelech.Tools;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Humanizer;
 
 namespace Adramelech.Commands.Slash;
 
@@ -124,7 +125,7 @@ public class PortScan(Config config, CooldownService cooldownService)
                                  Be aware that some ports may be closed, but still show up as open.
                                  Also, rate limiting may cause some ports to not be scanned.
                                  """)
-                .AddField(":unlock: Open ports", $"```{string.Join(", ", result.Value)} ```")
+                .AddField(":unlock: Open ports", $"```{result.Value.Humanize()} ```")
                 .Build());
         });
     }

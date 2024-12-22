@@ -2,6 +2,7 @@
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Humanizer;
 
 namespace Adramelech.Commands.Generic;
 
@@ -46,7 +47,8 @@ internal class UserInfoHelper(Config config)
         if (member != null)
         {
             embed.AddField($"> Cargos [{member.Roles.Count}]", string.Join(", ", member.Roles.Select(x => x.Mention)));
-            embed.AddField("> Permissions", string.Join(", ", member.GuildPermissions.ToList()));
+            embed.AddField("> Permissions",
+                string.Join(", ", member.GuildPermissions.ToList().Humanize(p => p.Humanize(LetterCasing.Title))));
         }
 
         return context.Interaction.RespondAsync(embed: embed.Build());

@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json;
 using Adramelech.Configuration;
+using Serilog;
 
 namespace Adramelech.Utilities;
 
@@ -36,6 +37,7 @@ public class HttpUtils(IHttpClientFactory clientFactory, Config config)
         }
         catch (TaskCanceledException) // Timeout
         {
+            Log.Debug("Request to {Url} timed out", url);
             return default;
         }
 
@@ -77,6 +79,7 @@ public class HttpUtils(IHttpClientFactory clientFactory, Config config)
         }
         catch (TaskCanceledException) // Timeout
         {
+            Log.Debug("Request to {Url} timed out", url);
             return default;
         }
 

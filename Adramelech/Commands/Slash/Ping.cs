@@ -2,6 +2,7 @@ using Adramelech.Configuration;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Humanizer;
 
 namespace Adramelech.Commands.Slash;
 
@@ -39,7 +40,7 @@ public class Velocity(Config config) : InteractionModuleBase<SocketInteractionCo
             embed: new EmbedBuilder()
                 .WithColor(config.EmbedColor)
                 .WithTitle("Velocity")
-                .WithDescription($"Latency: {Context.Client.Latency}ms")
+                .WithDescription($"Latency: {Context.Client.Latency.Milliseconds().Humanize()}")
                 .Build());
     }
 }

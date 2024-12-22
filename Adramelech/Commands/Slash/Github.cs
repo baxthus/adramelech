@@ -8,6 +8,7 @@ using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Humanizer;
 
 namespace Adramelech.Commands.Slash;
 
@@ -198,17 +199,10 @@ public class Github(Config config, HttpUtils httpUtils, CooldownService cooldown
 
         return $"""
                 **Name:** {response.Name}
-                **Permissions:** {FormatArray(response.Permissions)}
-                **Conditions:** {FormatArray(response.Conditions)}
-                **Limitations:** {FormatArray(response.Limitations)}
+                **Permissions:** {response.Permissions.Humanize().Capitalize()}
+                **Conditions:** {response.Conditions.Humanize().Capitalize()}
+                **Limitations:** {response.Limitations.Humanize().Capitalize()}
                 """;
-    }
-
-    private static string FormatArray(string[] array)
-    {
-        return string.Join(", ", array
-            .Select(x => x.Capitalize())
-            .Select(x => x.Replace("-", " ")));
     }
 
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]

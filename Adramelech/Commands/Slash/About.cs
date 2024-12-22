@@ -31,7 +31,7 @@ public class About(Config config) : InteractionModuleBase<SocketInteractionConte
                     $"> {(info.VerificationState == ApplicationVerificationState.Succeeded ? ":white_check_mark: Verified" : ":x: Not verified")}")
                 .AddField("Visibility",
                     $"> {(info.IsBotPublic ?? false ? ":globe_with_meridians: Public" : ":lock: Private")}")
-                .WithFooter("Made with \u2764\ufe0f with Discord.Net", DiscordNetIconUrl)
+                .WithFooter("Made with ❤️ with Discord.Net", DiscordNetIconUrl)
                 .Build(),
             components: new ComponentBuilder()
                 .WithButton("Author", style: ButtonStyle.Link, url: config.AuthorUrl)

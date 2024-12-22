@@ -46,7 +46,7 @@ public class FeedbackModalHandler(Config config) : InteractionModuleBase<SocketI
     {
         var message = modal.Message;
 
-        if (config.FeedbackWebhook.IsNullOrEmpty())
+        if (config.FeedbackWebhook == null)
         {
             await Context.SendError("Feedback webhook is not configured.");
             return;

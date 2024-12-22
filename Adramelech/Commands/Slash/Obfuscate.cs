@@ -7,6 +7,7 @@ using Adramelech.Utilities;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Humanizer;
 
 namespace Adramelech.Commands.Slash;
 
@@ -51,7 +52,7 @@ public class Obfuscate(Config config, HttpUtils httpUtils, CooldownService coold
             .WithTitle("Obfuscated URL")
             .AddField(":outbox_tray: Destination", $"```{response.Destination}```")
             .AddField(":inbox_tray: Result", $"```{response.Id}```")
-            .AddField(":wrench: Method", $"```{response.Method}```")
+            .AddField(":wrench: Method", $"```{response.Method.Transform(To.LowerCase, To.TitleCase)}```")
             .AddField(":information_source: Metadata Removed", $"```{removedMetadata}```", true)
             .AddField(":clock1: Created At", $"<t:{createdAt.ToUnixTimeSeconds()}>", true)
             .WithFooter("Powered by owo.vc")
