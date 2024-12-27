@@ -11,7 +11,7 @@ using Flurl;
 
 namespace Adramelech.Commands.Slash;
 
-public partial class CepSearch(Config config, HttpUtils httpUtils, CooldownService cooldownService)
+public class CepSearch(Config config, HttpUtils httpUtils, CooldownService cooldownService)
     : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     [SlashCommand("cep-search", "Search for a CEP (Brazilian ZIP code)")]
@@ -20,7 +20,7 @@ public partial class CepSearch(Config config, HttpUtils httpUtils, CooldownServi
         if (await Context.VerifyCooldown(cooldownService)) return;
         await DeferAsync();
 
-        if (!MyRegex().IsMatch(cep))
+        if (!CepSearchHelper.MyRegex().IsMatch(cep))
         {
             await Context.SendError("Invalid CEP format", true);
             return;
@@ -80,9 +80,6 @@ public partial class CepSearch(Config config, HttpUtils httpUtils, CooldownServi
         Context.SetCooldown(cooldownService);
     }
 
-    [GeneratedRegex(@"^\d{5}-?\d{3}$")]
-    private static partial Regex MyRegex();
-
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
     private struct CepResponse
     {
@@ -109,4 +106,10 @@ public partial class CepSearch(Config config, HttpUtils httpUtils, CooldownServi
             }
         }
     }
+}
+
+public static partial class CepSearchHelper
+{
+    [GeneratedRegex(@"^\d{5}-?\d{3}$")]
+    public static partial Regex MyRegex();
 }

@@ -12,7 +12,6 @@ public class About(Config config) : InteractionModuleBase<SocketInteractionConte
     private const string DiscordNetIconUrl = "https://docs.discordnet.dev/marketing/logo/PackageLogo.png";
 
     [SlashCommand("about", "Shows information about the bot")]
-    [Alias("info")]
     public async Task AboutAsync()
     {
         var commands = await Context.Client.GetGlobalApplicationCommandsAsync();

@@ -1,6 +1,9 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using Adramelech.Configuration;
 using Serilog;
+
+#pragma warning disable CS0162 // Unreachable code detected
 
 namespace Adramelech.Services;
 
@@ -28,9 +31,14 @@ public class CooldownService : IDisposable
         _cancellationTokenSource.Dispose();
     }
 
+    [SuppressMessage("ReSharper", "HeuristicUnreachableCode")]
     public bool IsOnCooldown(string command, ulong userId, out TimeSpan remaining)
     {
         remaining = TimeSpan.Zero;
+#if DEBUG
+        // Bypass cooldowns in debug mode
+        return false;
+#endif
         if (!_cooldowns.TryGetValue(command, out var users) ||
             !users.TryGetValue(userId, out var expiration)) return false;
         remaining = expiration.Subtract(DateTime.UtcNow);

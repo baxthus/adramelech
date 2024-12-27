@@ -219,7 +219,7 @@ public class Github(Config config, HttpUtils httpUtils, CooldownService cooldown
         public int ForksCount { get; set; }
         public SOwner Owner { get; set; }
 
-        [SuppressMessage("ReSharper", "MemberHidesStaticFromOuterClass")]
+        // ReSharper disable once MemberHidesStaticFromOuterClass
         public SLicense? License { get; set; }
 
         internal struct SOwner

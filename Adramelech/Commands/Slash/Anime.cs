@@ -12,7 +12,7 @@ using Flurl;
 namespace Adramelech.Commands.Slash;
 
 [Group("anime", "Anime commands")]
-public class Anime : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
+public class Anime : InteractionModuleBase<SocketInteractionContext>
 {
     [Group("media", "Anime media commands")]
     public class Media(Config config, HttpUtils httpUtils, CooldownService cooldownService)
