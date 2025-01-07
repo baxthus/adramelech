@@ -12,8 +12,7 @@ public class AvatarSlashCommand(Config config) : InteractionModuleBase<SocketInt
     {
         user ??= Context.User;
 
-        var helper = new AvatarHelper(config);
-        await helper.Execute(Context, user);
+        await new AvatarHelper(config).Execute(Context, user);
     }
 }
 
@@ -22,8 +21,7 @@ public class AvatarUserCommand(Config config) : InteractionModuleBase<SocketInte
     [UserCommand("Avatar")]
     public async Task AvatarAsync(IUser user)
     {
-        var helper = new AvatarHelper(config);
-        await helper.Execute(Context, user);
+        await new AvatarHelper(config).Execute(Context, user);
     }
 }
 

@@ -17,33 +17,34 @@ public class Echo : InteractionModuleBase<SocketInteractionContext<SocketSlashCo
         await RespondWithModalAsync<EchoModal>("echo_modal");
     }
 
-    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
     public class EchoModal : IModal
     {
         [InputLabel("Message")]
         [ModalTextInput("message", TextInputStyle.Paragraph, "Enter the message to echo.")]
+        // ReSharper disable once UnusedAutoPropertyAccessor.Global
         public required string Message { get; set; }
 
         public string Title => "Echo";
     }
-}
 
-public class EchoModalResponse(Config config) : InteractionModuleBase<SocketInteractionContext<SocketModal>>
-{
-    [ModalInteraction("echo_modal")]
-    public async Task ModalAsync(Echo.EchoModal modal)
+
+    public class EchoHandler(Config config) : InteractionModuleBase<SocketInteractionContext<SocketModal>>
     {
-        var message = modal.Message;
+        [ModalInteraction("echo_modal")]
+        public async Task ModalAsync(EchoModal modal)
+        {
+            var message = modal.Message;
 
-        var final = $"{message}\n\n\\- {Context.User.Mention}";
+            var final = $"{message}\n\n\\- {Context.User.Mention}";
 
-        await ReplyAsync(final);
+            await ReplyAsync(final);
 
-        await RespondAsync(
-            embed: new EmbedBuilder()
-                .WithColor(config.EmbedColor)
-                .WithTitle("Message sent")
-                .Build(),
-            ephemeral: true);
+            await RespondAsync(
+                embed: new EmbedBuilder()
+                    .WithColor(config.EmbedColor)
+                    .WithTitle("Message sent")
+                    .Build(),
+                ephemeral: true);
+        }
     }
 }

@@ -13,8 +13,7 @@ public class UserInfoSlashCommand(Config config) : InteractionModuleBase<SocketI
     {
         user ??= Context.User;
 
-        var helper = new UserInfoHelper(config);
-        await helper.Execute(Context, user);
+        await new UserInfoHelper(config).Execute(Context, user);
     }
 }
 
@@ -23,8 +22,7 @@ public class UserInfoUserCommand(Config config) : InteractionModuleBase<SocketIn
     [UserCommand("User Info")]
     public async Task UserInfoAsync(IUser user)
     {
-        var helper = new UserInfoHelper(config);
-        await helper.Execute(Context, user);
+        await new UserInfoHelper(config).Execute(Context, user);
     }
 }
 
