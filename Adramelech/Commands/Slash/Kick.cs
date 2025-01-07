@@ -16,8 +16,6 @@ public class Kick(Config config) : InteractionModuleBase<SocketInteractionContex
     public async Task KickAsync([Summary("user", "The user to kick")] SocketGuildUser user,
         [Summary("reason", "The reason for the kick")]
         string reason = "No reason provided",
-        [Summary("prune_days", "The number of days to prune messages")]
-        int pruneDays = 0,
         [Summary("ephemeral", "Whether the response should be ephemeral")]
         bool ephemeral = false)
     {
@@ -33,7 +31,7 @@ public class Kick(Config config) : InteractionModuleBase<SocketInteractionContex
             return;
         }
 
-        await user.BanAsync(pruneDays, reason);
+        await user.KickAsync(reason);
 
         await RespondAsync(
             embed: new EmbedBuilder()
@@ -42,7 +40,8 @@ public class Kick(Config config) : InteractionModuleBase<SocketInteractionContex
                 .WithDescription($"User {user.Username} has been kicked")
                 .AddField("Reason", $"`{reason}`")
                 .AddField("Author", Context.User.Mention)
-                .Build());
+                .Build(),
+            ephemeral: ephemeral);
 
         try
         {

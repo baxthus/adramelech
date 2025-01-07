@@ -108,7 +108,7 @@ public class CepSearch(Config config, HttpUtils httpUtils, CooldownService coold
     }
 }
 
-public static partial class CepSearchHelper
+internal static partial class CepSearchHelper
 {
     [GeneratedRegex(@"^\d{5}-?\d{3}$")]
     public static partial Regex MyRegex();
