@@ -1,0 +1,17 @@
+language: csharp
+mono: none
+dotnet: 9.0.101
+
+install:
+  - dotnet restore
+
+script:
+  - dotnet build
+
+branches: 
+  only:
+    - main
+
+cache:
+  directories:
+    - $HOME/.nuget/packages
