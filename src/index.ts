@@ -9,6 +9,7 @@ import env from '~/env';
 import logger from '~/logger';
 import registerCommands from '~/utils/registerCommands';
 import { loadModules } from '~/loader';
+import api from '#api';
 
 export class CustomClient extends Client {
   commands: Collection<string, Command> = new Collection();
@@ -18,7 +19,7 @@ export class CustomClient extends Client {
   cooldowns: Collection<string, Collection<string, number>> = new Collection();
 }
 
-const client = new CustomClient({
+export const client = new CustomClient({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
@@ -38,7 +39,10 @@ const client = new CustomClient({
 
 await loadModules(client);
 
-if (client.commands.size > 0) await registerCommands(client);
-else logger.warn('No commands found. Skipping command registration');
+// if (client.commands.size > 0) await registerCommands(client);
+// else logger.warn('No commands found. Skipping command registration');
 
-client.login(env.BOT_TOKEN);
+await client.login(env.BOT_TOKEN);
+api.listen(51964, (server) => {
+  logger.info(`🦊 Elysia is running at ${server.hostname}:${server.port}`);
+});
