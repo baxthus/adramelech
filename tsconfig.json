@@ -24,11 +24,16 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false,
 
+    "baseUrl": "./",
     "paths": {
-      "~": ["./src/index.ts"],
-      "~/*": ["./src/*"],
-      "#api": ["./api/index.ts"],
-      "#api/*": ["./api/*"]
+      "~/*": ["src/*"],
+      "#bot": ["src/bot/index.ts"],
+      "#bot/*": ["src/bot/*"],
+      "#api": ["src/api/index.ts"],
+      "#api/*": ["src/api/*"],
+      "#db": ["src/database/index.ts"],
+      "#db/*": ["src/database/*"],
+      "#env": ["src/env.ts"]
     }
   }
 }

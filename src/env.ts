@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import logger from './logger';
+import logger from '~/logger';
 import { ActivityType } from 'discord.js';
 import kleur from 'kleur';
 
@@ -19,10 +19,15 @@ const envSchema = z.object({
   FEEDBACK_WEBHOOK: z.string().url().optional(),
   USER_AGENT: z.string().default('adramelech'),
   OPENWEATHER_KEY: z.string().optional(),
+  DB_FILE_NAME: z
+    .string()
+    .regex(/^file:/)
+    .default('file:database.sqlite'),
+  API_PORT: z.string().nonempty().transform(Number).default('51964'),
 });
 
 function validateEnv() {
-  const result = envSchema.passthrough().safeParse(Bun.env);
+  const result = envSchema.passthrough().safeParse(process.env);
   if (!result.success) {
     const u = kleur.underline;
     for (const error of result.error.errors) {
