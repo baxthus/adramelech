@@ -4,6 +4,8 @@ import type { Command } from '#bot/types/command';
 import type { Modal } from '#bot/types/modal';
 import env from '#env';
 import type { Component } from '#bot/types/component';
+import registerCommands from '#bot/utils/registerCommands';
+import logger from '~/logger';
 
 export class CustomClient extends Client {
   commands: Collection<string, Command> = new Collection();
@@ -33,7 +35,7 @@ export const client = new CustomClient({
 
 await loadModules(client);
 
-// if (client.commands.size > 0) await registerCommands(client);
-// else logger.warn('No commands found. Skipping command registration');
+if (client.commands.size > 0) await registerCommands(client);
+else logger.warn('No commands found. Skipping command registration');
 
 await client.login(env.BOT_TOKEN);

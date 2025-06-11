@@ -4,8 +4,8 @@ import env from '#env';
 export default defineConfig({
   out: './drizzle',
   schema: './src/database/schema.ts',
-  dialect: 'sqlite',
+  dialect: 'postgresql',
   dbCredentials: {
-    url: env.DB_FILE_NAME,
+    url: env.DATABASE_URL,
   },
 });

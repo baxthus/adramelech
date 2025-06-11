@@ -19,10 +19,10 @@ const envSchema = z.object({
   FEEDBACK_WEBHOOK: z.string().url().optional(),
   USER_AGENT: z.string().default('adramelech'),
   OPENWEATHER_KEY: z.string().optional(),
-  DB_FILE_NAME: z
+  DATABASE_URL: z
     .string()
-    .regex(/^file:/)
-    .default('file:database.sqlite'),
+    .url()
+    .default('postgres://postgres:hunter2@localhost/adramelech'),
   API_PORT: z.string().nonempty().transform(Number).default('51964'),
 });
 

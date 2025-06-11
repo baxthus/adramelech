@@ -1,18 +1,28 @@
-import { ComponentType, MessageFlags, SlashCommandBuilder } from 'discord.js';
+import {
+  ChatInputCommandInteraction,
+  ComponentType,
+  MessageFlags,
+  SlashCommandBuilder,
+} from 'discord.js';
 import env from '#env';
 import type { Command } from '#bot/types/command';
-import loadPhrases from '#bot/utils/loadPhrases';
-
-const phrases = await loadPhrases();
+import db from '#db';
+import { sendError } from '~/bot/utils/sendError';
+import { sql } from 'drizzle-orm';
 
 export const command = <Command>{
   data: new SlashCommandBuilder()
     .setName('phrase')
     .setDescription('Get a random phrase'),
-  async execute(interaction) {
-    const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+  async execute(intr: ChatInputCommandInteraction) {
+    await intr.deferReply();
 
-    await interaction.reply({
+    const phrase = await db.query.phrases.findFirst({
+      orderBy: sql`RANDOM()`,
+    });
+    if (!phrase) return sendError(intr, 'No phrases found in the database');
+
+    await intr.followUp({
       flags: MessageFlags.IsComponentsV2,
       components: [
         {
