@@ -18,6 +18,10 @@ export const command = <Command>{
     await intr.deferReply();
 
     const phrase = await db.query.phrases.findFirst({
+      columns: {
+        content: true,
+        source: true,
+      },
       orderBy: sql`RANDOM()`,
     });
     if (!phrase) return sendError(intr, 'No phrases found in the database');

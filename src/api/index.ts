@@ -1,6 +1,7 @@
 import swagger from '@elysiajs/swagger';
 import Elysia from 'elysia';
 import path from 'path';
+import { client } from '~/bot';
 import env from '~/env';
 import logger from '~/logger';
 import findRecursively from '~/utils/findRecursively';
@@ -62,4 +63,12 @@ app.listen(env.API_PORT, (server) => {
   logger.info(
     `🦊 Elysia is running at http://${server.hostname}:${server.port}`
   );
+
+  setInterval(() => {
+    const data = {
+      type: 'data',
+      latency: client.ws.ping,
+    };
+    server.publish('latency', JSON.stringify(data));
+  }, 5000);
 });
