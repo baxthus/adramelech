@@ -3,6 +3,7 @@ import {
   Colors,
   CommandInteraction,
   ComponentType,
+  InteractionType,
   MessageComponentInteraction,
   MessageFlags,
   type BaseInteraction,
@@ -46,10 +47,15 @@ export async function sendError(
   if (interaction.isRepliable()) {
     try {
       if (intr.deferred || intr.replied) {
-        // Delete the original response, because we need it to be ephemeral
-        // This has the drawback of losing the mention of the invoked command
-        const msg = await intr.followUp('opps...');
-        await msg.delete();
+        if (
+          intr.type === InteractionType.ApplicationCommand &&
+          !intr.ephemeral
+        ) {
+          // Delete the original response, because we need it to be ephemeral
+          // This has the drawback of losing the mention of the invoked command
+          const msg = await intr.followUp('opps...');
+          await msg.delete();
+        }
         await intr.followUp(response);
       } else {
         await intr.reply(response);
