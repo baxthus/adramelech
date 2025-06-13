@@ -4,10 +4,8 @@ export default new Elysia({
   prefix: 'telemetry',
   tags: ['telemetry'],
   websocket: {
-    idleTimeout: 30,
+    idleTimeout: 30 + 10, // 30 seconds + 10 seconds grace period
     maxPayloadLength: 1024 * 1024, // 1 MB
-    backpressureLimit: 1024 * 1024 * 16, // 16 MB
-    closeOnBackpressureLimit: false,
   },
 }).ws('/latency', {
   open(ws) {
