@@ -64,7 +64,7 @@ async function handleCommands(intr: CommandInteraction, client: CustomClient) {
       intr.commandName,
       intr.commandType,
       commandType,
-      intr
+      intr,
     );
     return;
   }
@@ -73,13 +73,13 @@ async function handleCommands(intr: CommandInteraction, client: CustomClient) {
     'command',
     intr.commandName,
     () => command.execute(intr),
-    intr
+    intr,
   );
 }
 
 async function handleComponents(
   intr: ComponentInteraction,
-  client: CustomClient
+  client: CustomClient,
 ) {
   const component = client.components.get(intr.customId);
   if (!component) {
@@ -96,7 +96,7 @@ async function handleComponents(
       intr.customId,
       intr.componentType,
       component.type,
-      intr
+      intr,
     );
     return;
   }
@@ -105,13 +105,13 @@ async function handleComponents(
     'component',
     intr.customId,
     () => component.execute(intr),
-    intr
+    intr,
   );
 }
 
 async function handleModals(
   intr: ModalSubmitInteraction,
-  client: CustomClient
+  client: CustomClient,
 ) {
   const modal = client.modals.get(intr.customId);
   if (!modal) {
@@ -128,7 +128,7 @@ async function handleModals(
       intr.customId,
       intr.type,
       InteractionType.ModalSubmit,
-      intr
+      intr,
     );
     return;
   }
@@ -137,13 +137,13 @@ async function handleModals(
     'modal',
     intr.customId,
     () => modal.execute(intr),
-    intr
+    intr,
   );
 }
 
 async function handlePreconditions(
   intr: CommandInteraction | ComponentInteraction | ModalSubmitInteraction,
-  item: Command | Component | Modal
+  item: Command | Component | Modal,
 ): Promise<boolean> {
   if (item.preconditions) {
     for (const precondition of item.preconditions) {
@@ -157,7 +157,7 @@ function isOnCooldown(
   client: CustomClient,
   intr: Interaction,
   item: Command | Component | Modal,
-  name: string
+  name: string,
 ): boolean {
   if (!item.cooldown || Bun.env.NODE_ENV === 'development') return false;
 
@@ -188,12 +188,12 @@ async function handleTypeMismatch(
   name: unknown,
   actualType: unknown,
   expectedType: unknown,
-  intr: Interaction
+  intr: Interaction,
 ) {
   await sendError(intr, `${interactionType} type mismatch`);
   logger.error(`Error executing ${interactionType} ${name}`);
   logger.error(
-    `󱞩 ${interactionType} type mismatch: ${actualType} !== ${expectedType}`
+    `󱞩 ${interactionType} type mismatch: ${actualType} !== ${expectedType}`,
   );
 }
 
@@ -201,7 +201,7 @@ async function executeInteraction(
   interactionType: string,
   name: string,
   fn: () => Promise<void>,
-  intr: Interaction
+  intr: Interaction,
 ) {
   try {
     await fn();

@@ -26,16 +26,16 @@ export const command = <Command>{
         .setDescription('The amount of messages to clear')
         .setMinValue(1)
         .setMaxValue(100)
-        .setRequired(true)
+        .setRequired(true),
     )
     .addNumberOption((option) =>
       option
         .setName('seconds-before-auto-delete')
         .setDescription(
-          'The amount of seconds before the bot response is auto-deleted'
+          'The amount of seconds before the bot response is auto-deleted',
         )
         .setMinValue(0)
-        .setMaxValue(10)
+        .setMaxValue(10),
     ),
   async execute(intr: ChatInputCommandInteraction) {
     await intr.deferReply();
@@ -74,8 +74,8 @@ export const command = <Command>{
       message.appendLine(
         `### This message will be auto-deleted ${time(
           Math.floor(Date.now() / 1000) + secondsBeforeAutoDelete,
-          TimestampStyles.RelativeTime
-        )}`
+          TimestampStyles.RelativeTime,
+        )}`,
       );
     message.appendLine(`> Command executed by ${intr.user}`);
 

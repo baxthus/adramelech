@@ -16,7 +16,7 @@ export const command = <Command>{
     .setName('short')
     .setDescription('Short a URL')
     .addStringOption((option) =>
-      option.setName('url').setDescription('URL to short').setRequired(true)
+      option.setName('url').setDescription('URL to short').setRequired(true),
     ),
   cooldown: true,
   uses: ['is.gd'],
@@ -28,7 +28,7 @@ export const command = <Command>{
     if (!match.success) return await sendError(intr, 'Invalid URL');
 
     const response = await ky(
-      `https://is.gd/create.php?format=simple&url=${url}`
+      `https://is.gd/create.php?format=simple&url=${url}`,
     ).text();
     if (!response || response.startsWith('Error'))
       return await sendError(intr, 'Failed to short URL');

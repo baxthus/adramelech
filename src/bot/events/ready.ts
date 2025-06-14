@@ -18,7 +18,7 @@ export const event = <Event>{
     logger.log(`󱞩 API Version: ${client.options.rest?.version}`);
     const presence = client.user!.presence.activities[0];
     logger.log(
-      kleur.blue(`󱞩 Presence: ${ActivityType[presence.type]} ${presence.name}`)
+      kleur.blue(`󱞩 Presence: ${ActivityType[presence.type]} ${presence.name}`),
     );
   },
 };

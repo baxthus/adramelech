@@ -70,7 +70,7 @@ const socialsSchema = z.array(
   z.object({
     provider: z.string().transform((value) => v.titleCase(value)),
     url: z.string().url(),
-  })
+  }),
 );
 type Socials = z.infer<typeof socialsSchema>;
 
@@ -86,14 +86,14 @@ export const command = <Command>{
           option
             .setName('user')
             .setDescription('The user or organization name')
-            .setRequired(true)
+            .setRequired(true),
         )
         .addStringOption((option) =>
           option
             .setName('repo')
             .setDescription('The repository name')
-            .setRequired(true)
-        )
+            .setRequired(true),
+        ),
     )
     .addSubcommand((subCommand) =>
       subCommand
@@ -103,8 +103,8 @@ export const command = <Command>{
           option
             .setName('user')
             .setDescription('The user name')
-            .setRequired(true)
-        )
+            .setRequired(true),
+        ),
     ),
   uses: ['GitHub API'],
   cooldown: true,
@@ -131,7 +131,7 @@ async function repo(intr: ChatInputCommandInteraction) {
 
   const response = await fetchGitHubData(
     `/repos/${user}/${repo}`,
-    repositorySchema
+    repositorySchema,
   );
   if (response.error)
     return await sendError(intr, 'Failed to get repository data');
@@ -384,7 +384,7 @@ async function getLicense(key: string): Promise<
 async function getSocials(user: string): Promise<Result<Socials>> {
   const result = await fetchGitHubData(
     `/users/${user}/social_accounts`,
-    socialsSchema
+    socialsSchema,
   );
   if (result.error) return result;
 
@@ -393,7 +393,7 @@ async function getSocials(user: string): Promise<Result<Socials>> {
 
 async function fetchGitHubData<T>(
   endpoint: string,
-  schema: z.ZodSchema<T>
+  schema: z.ZodSchema<T>,
 ): Promise<Result<T>> {
   try {
     const response = await ky

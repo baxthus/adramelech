@@ -67,7 +67,7 @@ export const command = <Command>{
                 ### Uptime
                 ${time(
                   Math.floor(Date.now() / 1000 - process.uptime()),
-                  TimestampStyles.RelativeTime
+                  TimestampStyles.RelativeTime,
                 )}
                 ### Memory Usage
                 \`${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)} MB\`

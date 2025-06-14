@@ -13,7 +13,7 @@ import {
 export async function sendError(
   interaction: BaseInteraction,
   description: string = 'An error occurred while executing the command.',
-  toDm = false
+  toDm = false,
 ) {
   const response: InteractionReplyOptions = {
     flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],

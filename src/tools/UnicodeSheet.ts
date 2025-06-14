@@ -60,8 +60,8 @@ export default class UnicodeSheet {
           '║',
           '║',
           this.columns.map((c) => c.title),
-          columnsLength
-        )
+          columnsLength,
+        ),
       );
       rows.push(this.buildLine('╠', '╬', '╣', columnsLength, '═'));
     } else {
@@ -72,8 +72,8 @@ export default class UnicodeSheet {
           '│',
           '│',
           this.columns.map((c) => c.title),
-          columnsLength
-        )
+          columnsLength,
+        ),
       );
       rows.push(this.buildLine('├', '┼', '┤', columnsLength));
     }
@@ -83,7 +83,7 @@ export default class UnicodeSheet {
 
   private getMaxColumnsLength(): number[] {
     return this.columns.map((c) =>
-      Math.max(c.title.length, Math.max(...c.values.map((v) => v.length)))
+      Math.max(c.title.length, Math.max(...c.values.map((v) => v.length))),
     );
   }
 
@@ -92,7 +92,7 @@ export default class UnicodeSheet {
     middle: string,
     right: string,
     columnsLength: number[],
-    separator: string = '─'
+    separator: string = '─',
   ): string {
     let line = left;
     for (let i = 0; i < this.columns.length; i++) {
@@ -108,7 +108,7 @@ export default class UnicodeSheet {
     middle: string,
     right: string,
     values: string[],
-    columnsLength: number[]
+    columnsLength: number[],
   ): string {
     let line = left;
     for (let i = 0; i < this.columns.length; i++) {

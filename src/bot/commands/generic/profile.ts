@@ -34,8 +34,8 @@ export const commands = <Command[]>[
           .addUserOption((option) =>
             option
               .setName('user')
-              .setDescription('To view the profile of another user')
-          )
+              .setDescription('To view the profile of another user'),
+          ),
       ),
     async execute(intr: ChatInputCommandInteraction) {
       switch (intr.options.getSubcommand()) {
@@ -105,7 +105,7 @@ async function view(intr: CommandInteraction, user: DiscordUser) {
 
 async function verifyUser(
   intr: CommandInteraction,
-  user: DiscordUser
+  user: DiscordUser,
 ): Promise<User | void> {
   const data = await db.query.users.findFirst({
     where: eq(users.discord_id, user.id),
@@ -115,7 +115,7 @@ async function verifyUser(
   if (intr.user.id !== user.id)
     return await sendError(
       intr,
-      `The user \`${user.username}\` does not have a profile!`
+      `The user \`${user.username}\` does not have a profile!`,
     );
 
   if (!intr.ephemeral) {

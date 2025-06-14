@@ -25,7 +25,7 @@ const weatherSchema = z.object({
     z.object({
       main: z.string(),
       description: z.string(),
-    })
+    }),
   ),
   main: z.object({
     temp: z.number(),
@@ -52,13 +52,13 @@ export const command = <Command>{
       option
         .setName('city')
         .setDescription('The city you want to get the weather of')
-        .setRequired(true)
+        .setRequired(true),
     )
     .addStringOption((option) =>
       option
         .setName('country')
         .setDescription('The country of the city')
-        .setRequired(true)
+        .setRequired(true),
     ),
   cooldown: 10 * 60, // 10 minutes, because the API is expensive and I'm not rich
   uses: ['OpenWeatherMap'],
@@ -93,7 +93,7 @@ export const command = <Command>{
     if (error)
       return await sendError(
         intr,
-        'An error occurred while fetching the weather data'
+        'An error occurred while fetching the weather data',
       );
 
     await intr.followUp({

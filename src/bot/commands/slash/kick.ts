@@ -21,15 +21,15 @@ export const command = <Command>{
       option
         .setName('user')
         .setDescription('The user to kick')
-        .setRequired(true)
+        .setRequired(true),
     )
     .addStringOption((option) =>
-      option.setName('reason').setDescription('The reason for the kick')
+      option.setName('reason').setDescription('The reason for the kick'),
     )
     .addBooleanOption((option) =>
       option
         .setName('ephemeral')
-        .setDescription('Whether to show the response only to the executor')
+        .setDescription('Whether to show the response only to the executor'),
     )
     .setContexts(InteractionContextType.Guild)
     .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers),

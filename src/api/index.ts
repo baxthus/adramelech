@@ -21,7 +21,7 @@ const app = new Elysia()
           description: 'Recommended pulling rate of 1 request per 5 seconds',
         },
       },
-    })
+    }),
   )
   .onRequest(({ set }) => {
     // Nuke cache headers
@@ -54,14 +54,14 @@ const routes = await Promise.all(
   files.map(async (file) => {
     const module = await import(file);
     return module.default;
-  })
+  }),
 );
 
 routes.forEach((route) => app.use(route));
 
 app.listen(env.API_PORT, (server) => {
   logger.info(
-    `🦊 Elysia is running at http://${server.hostname}:${server.port}`
+    `🦊 Elysia is running at http://${server.hostname}:${server.port}`,
   );
 
   setInterval(() => {

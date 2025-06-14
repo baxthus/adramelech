@@ -19,7 +19,7 @@ export const commands = <Array<Command>>[
       .setName('avatar')
       .setDescription('Get the avatar of a user')
       .addUserOption((option) =>
-        option.setName('user').setDescription('The user to get the avatar of')
+        option.setName('user').setDescription('The user to get the avatar of'),
       ),
     async execute(intr: ChatInputCommandInteraction) {
       const user = intr.options.getUser('user') ?? intr.user;

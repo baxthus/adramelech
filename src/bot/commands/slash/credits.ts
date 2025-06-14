@@ -18,7 +18,7 @@ export const command = <Command>{
     .addBooleanOption((option) =>
       option
         .setName('separate-rows')
-        .setDescription('Whether to separate the APIs into individual rows')
+        .setDescription('Whether to separate the APIs into individual rows'),
     ),
   async execute(intr: ChatInputCommandInteraction) {
     await intr.deferReply();
@@ -40,11 +40,11 @@ export const command = <Command>{
       content = new UnicodeSheet(separateRows)
         .addColumn(
           'Command',
-          credits.map((cmd) => cmd.name)
+          credits.map((cmd) => cmd.name),
         )
         .addColumn(
           'Uses',
-          credits.map((cmd) => cmd.uses)
+          credits.map((cmd) => cmd.uses),
         )
         .build();
     } catch {

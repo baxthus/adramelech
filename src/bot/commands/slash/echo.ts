@@ -30,7 +30,7 @@ export const command = <Command>{
             customId: 'message',
             label: 'Message',
             style: TextInputStyle.Paragraph,
-          })
+          }),
         ),
       ],
     });

@@ -45,7 +45,7 @@ export const command = <Command>{
       option
         .setName('target')
         .setDescription('The domain or IP address to lookup')
-        .setRequired(true)
+        .setRequired(true),
     ),
   cooldown: true,
   uses: ['ipwhois.io', 'da.gd'],

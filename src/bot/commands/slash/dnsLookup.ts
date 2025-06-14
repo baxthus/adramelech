@@ -25,12 +25,12 @@ export const command = <Command>{
       option
         .setName('domain')
         .setDescription('The domain to lookup')
-        .setRequired(true)
+        .setRequired(true),
     )
     .addBooleanOption((option) =>
       option
         .setName('separate-rows')
-        .setDescription('Whether to separate the records into individual rows')
+        .setDescription('Whether to separate the records into individual rows'),
     ),
   uses: ['da.gd'],
   cooldown: true,
@@ -51,15 +51,15 @@ export const command = <Command>{
       content = new UnicodeSheet(separateRows)
         .addColumn(
           'Type',
-          records.map((record) => record.type)
+          records.map((record) => record.type),
         )
         .addColumn(
           'Revalidate In',
-          records.map((record) => record.revalidateIn)
+          records.map((record) => record.revalidateIn),
         )
         .addColumn(
           'Content',
-          records.map((record) => record.content)
+          records.map((record) => record.content),
         )
         .build();
     } catch {

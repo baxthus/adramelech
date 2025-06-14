@@ -30,7 +30,7 @@ export const command = <Command>{
       option
         .setName('target')
         .setDescription('The domain or IP address to get information about')
-        .setRequired(true)
+        .setRequired(true),
     ),
   cooldown: true,
   uses: ['da.gd'],

@@ -30,7 +30,7 @@ export const commands = <Array<Command>>[
       .addUserOption((option) =>
         option
           .setName('user')
-          .setDescription('The user to get information about')
+          .setDescription('The user to get information about'),
       ),
     execute: async (intr: ChatInputCommandInteraction) =>
       await helper(intr, intr.options.getUser('user') ?? intr.user),
@@ -68,7 +68,7 @@ async function helper(intr: CommandInteraction, user: User) {
             ### **Created At**
             ${`${time(createdAt, TimestampStyles.ShortDateTime)} (${time(
               createdAt,
-              TimestampStyles.RelativeTime
+              TimestampStyles.RelativeTime,
             )})`}
             ### Download the raw user data below
             `,
@@ -92,7 +92,7 @@ async function helper(intr: CommandInteraction, user: User) {
 
   const userFile = new AttachmentBuilder(
     Buffer.from(JSON.stringify(user.toJSON(), null, 2)),
-    { name: 'user.json' }
+    { name: 'user.json' },
   );
 
   if (!member) {
@@ -115,7 +115,7 @@ async function helper(intr: CommandInteraction, user: User) {
       ### **Joined At**
       ${`${time(joinedAt, TimestampStyles.ShortDateTime)} (${time(
         joinedAt,
-        TimestampStyles.RelativeTime
+        TimestampStyles.RelativeTime,
       )})`}
       ### **Roles**
       ${roles.length > 0 ? roles.join(', ') : 'None'}
@@ -131,12 +131,12 @@ async function helper(intr: CommandInteraction, user: User) {
       file: {
         url: 'attachment://guild.json',
       },
-    })
+    }),
   );
 
   const guildFile = new AttachmentBuilder(
     Buffer.from(JSON.stringify(member.toJSON(), null, 2)),
-    { name: 'guild.json' }
+    { name: 'guild.json' },
   );
 
   await intr.reply({

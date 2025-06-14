@@ -23,7 +23,7 @@ const animeImageSchema = z.array(
   z.object({
     url: z.string().url(),
     source_url: z.string().nullish(),
-  })
+  }),
 );
 
 const nekoImageSchema = z.object({
@@ -50,13 +50,13 @@ export const command = <Command>{
                   Object.entries(AnimeImageAgeRating).map(([key, value]) => ({
                     name: key,
                     value,
-                  }))
-                )
-            )
+                  })),
+                ),
+            ),
         )
         .addSubcommand((subcommand) =>
-          subcommand.setName('neko').setDescription('Get a random neko image')
-        )
+          subcommand.setName('neko').setDescription('Get a random neko image'),
+        ),
     ),
   cooldown: true,
   uses: ['nekosapi.com', 'nekos.life'],
@@ -96,7 +96,7 @@ async function animeImage(intr: ChatInputCommandInteraction) {
   )
     return await sendError(
       intr,
-      'This command can only be used in NSFW channels'
+      'This command can only be used in NSFW channels',
     );
 
   const response = await ky('https://api.nekosapi.com/v4/images/random', {

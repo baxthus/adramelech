@@ -18,20 +18,23 @@ export const command = <Command>{
     .setName('ban')
     .setDescription('Ban a member')
     .addUserOption((option) =>
-      option.setName('user').setDescription('The user to ban').setRequired(true)
+      option
+        .setName('user')
+        .setDescription('The user to ban')
+        .setRequired(true),
     )
     .addStringOption((option) =>
-      option.setName('reason').setDescription('The reason for the ban')
+      option.setName('reason').setDescription('The reason for the ban'),
     )
     .addIntegerOption((option) =>
       option
         .setName('prune-days')
-        .setDescription('The number of days to prune messages')
+        .setDescription('The number of days to prune messages'),
     )
     .addBooleanOption((option) =>
       option
         .setName('ephemeral')
-        .setDescription('Whether to show the response only to the executor')
+        .setDescription('Whether to show the response only to the executor'),
     )
     .setContexts(InteractionContextType.Guild)
     .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),

@@ -12,7 +12,7 @@ const ICONS = {
 type LogParams = [message?: unknown, ...params: unknown[]];
 
 function prepareSentryExtra(
-  data: unknown
+  data: unknown,
 ): Record<string, unknown> | undefined {
   if (data === undefined || (Array.isArray(data) && data.length === 0))
     return undefined;

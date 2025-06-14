@@ -28,7 +28,7 @@ export default class StringBuilder implements IStringBuilder {
   constructor(
     value?: string,
     capacity: number = 16,
-    maxCapacity = this._maxCapacity
+    maxCapacity = this._maxCapacity,
   ) {
     this._capacity = capacity;
     this._maxCapacity = maxCapacity;

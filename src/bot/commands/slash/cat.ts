@@ -7,7 +7,7 @@ import type { Command } from '#bot/types/command';
 const schema = z.array(
   z.object({
     url: z.string().url(),
-  })
+  }),
 );
 
 export const command = <Command>{

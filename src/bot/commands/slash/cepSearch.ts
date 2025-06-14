@@ -39,7 +39,7 @@ export const command = <Command>{
       option
         .setName('cep')
         .setDescription('The CEP to search for')
-        .setRequired(true)
+        .setRequired(true),
     ),
   uses: ['BrasilAPI'],
   cooldown: true,
@@ -67,7 +67,7 @@ export const command = <Command>{
       !data.location.coordinates.latitude ||
         !data.location.coordinates.longitude
         ? `${data.street}, ${data.city}, ${data.state}`
-        : `${data.location.coordinates.latitude},${data.location.coordinates.longitude}`
+        : `${data.location.coordinates.latitude},${data.location.coordinates.longitude}`,
     );
 
     await intr.followUp({

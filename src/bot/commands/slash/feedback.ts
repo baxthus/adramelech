@@ -34,7 +34,7 @@ export const command = <Command>{
             label: 'Message',
             style: TextInputStyle.Paragraph,
             placeholder: 'Enter your feedback here',
-          })
+          }),
         ),
       ],
     });

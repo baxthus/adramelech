@@ -54,7 +54,7 @@ export const command = <Command>{
                   ### **Created At**
                   ${time(createdAt, TimestampStyles.LongDateTime)} (${time(
                     createdAt,
-                    TimestampStyles.RelativeTime
+                    TimestampStyles.RelativeTime,
                   )})
                   ### Download the raw guild data below
                   `,
@@ -79,7 +79,7 @@ export const command = <Command>{
       files: [
         new AttachmentBuilder(
           Buffer.from(JSON.stringify(intr.guild?.toJSON(), null, 2)),
-          { name: 'guild.json' }
+          { name: 'guild.json' },
         ),
       ],
     });

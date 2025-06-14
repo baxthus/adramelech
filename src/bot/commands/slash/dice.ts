@@ -16,7 +16,7 @@ export const command = <Command>{
         .setName('sides')
         .setDescription('Number of sides')
         .setMinValue(2)
-        .setMaxValue(100)
+        .setMaxValue(100),
     ),
   async execute(intr: ChatInputCommandInteraction) {
     const sides = intr.options.getInteger('sides') ?? 6;

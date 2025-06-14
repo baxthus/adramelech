@@ -15,7 +15,7 @@ export default async function findRecursively(dir: string): Promise<string[]> {
       } else if (file.name.endsWith('.ts')) {
         tsFiles.push(filePath);
       }
-    })
+    }),
   );
 
   return tsFiles;

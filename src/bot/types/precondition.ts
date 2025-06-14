@@ -8,5 +8,5 @@ export type Precondition = (
   interaction:
     | CommandInteraction
     | ComponentInteraction
-    | ModalSubmitInteraction
+    | ModalSubmitInteraction,
 ) => Promise<boolean>;

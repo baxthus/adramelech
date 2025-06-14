@@ -5,7 +5,7 @@ export default {
   printWidth: 80,
   semi: true,
   singleQuote: true,
-  trailingComma: 'es5',
+  trailingComma: 'all',
   bracketSpacing: true,
   arrowParens: 'always',
   endOfLine: 'lf',

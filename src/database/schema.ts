@@ -16,7 +16,7 @@ export const users = t.pgTable(
     bio: t.text(),
     created_at: t.timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [t.uniqueIndex('discord_id_idx').on(table.discord_id)]
+  (table) => [t.uniqueIndex('discord_id_idx').on(table.discord_id)],
 );
 export type User = typeof users.$inferSelect;
 

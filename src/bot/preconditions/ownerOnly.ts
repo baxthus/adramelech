@@ -7,7 +7,7 @@ const execute: Precondition = async (intr) => {
   if (intr.user.id !== owner.id) {
     await sendError(
       intr,
-      'You must be the owner of the bot to use this command.'
+      'You must be the owner of the bot to use this command.',
     );
     return false;
   }

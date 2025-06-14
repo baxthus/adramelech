@@ -35,8 +35,8 @@ function validateEnv() {
       if (error.code === 'invalid_type')
         logger.log(
           kleur.dim(
-            `󱞩 Expected: ${u().green(error.expected)} | Received: ${u().red(error.received)}`
-          )
+            `󱞩 Expected: ${u().green(error.expected)} | Received: ${u().red(error.received)}`,
+          ),
         );
     }
     process.exit(1);
