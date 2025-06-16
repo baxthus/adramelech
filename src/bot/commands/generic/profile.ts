@@ -87,12 +87,14 @@ async function view(intr: CommandInteraction, user: DiscordUser) {
                 # ${user.username}
                 ### **ID**
                 \`${data.id}\`
-                ### **Registered At**
+                ### **Registered At (Bot)**
                 ${time(registeredAt, TimestampStyles.ShortDateTime)} (${time(registeredAt, TimestampStyles.RelativeTime)})
                 ### **Nickname**
                 \`${data.nickname ?? 'None'}\`
                 ### **Bio**
                 \`\`\`${data.bio ?? 'None'}\`\`\`
+
+                > For information about the user discord profile, use /user-info or 'User Info' context menu command.
                 `,
               },
             ],
