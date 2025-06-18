@@ -11,7 +11,7 @@ export const users = t.pgTable(
   'users',
   {
     id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
-    discord_id: t.varchar({ length: 18 }).notNull().unique(), // Discord user ID
+    discord_id: t.varchar({ length: 19 }).notNull().unique(), // Discord user ID
     nickname: t.text(),
     bio: t.text(),
     created_at: t.timestamp({ withTimezone: true }).notNull().defaultNow(),
