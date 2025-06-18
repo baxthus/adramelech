@@ -1,7 +1,9 @@
-import type {
-  CommandInteraction,
-  ContextMenuCommandBuilder,
-  SlashCommandBuilder,
+import {
+  AutocompleteInteraction,
+  ChatInputCommandInteraction,
+  type CommandInteraction,
+  type ContextMenuCommandBuilder,
+  type SlashCommandBuilder,
 } from 'discord.js';
 import { z } from 'zod';
 import type { Precondition } from './precondition';
@@ -15,6 +17,21 @@ export const commandSchema = z.object({
     .function()
     .args(z.custom<CommandInteraction>())
     .returns(z.promise(z.void())),
+  autocomplete: z
+    .function()
+    .args(z.custom<AutocompleteInteraction>())
+    .returns(z.promise(z.void()))
+    .optional(),
 });
 
 export type Command = z.infer<typeof commandSchema>;
+
+export type SubcommandExecutor = (
+  intr: ChatInputCommandInteraction,
+) => Promise<void>;
+export type CommandExecutors = {
+  [subcommand: string]: SubcommandExecutor;
+};
+export type CommandGroupExecutors = {
+  [key: string]: SubcommandExecutor | CommandExecutors;
+};

@@ -1,4 +1,5 @@
 import {
+  AutocompleteInteraction,
   ButtonInteraction,
   ChatInputCommandInteraction,
   Collection,
@@ -39,6 +40,9 @@ export const event = <Event>{
         break;
       case InteractionType.ModalSubmit:
         await handleModals(intr, client);
+        break;
+      case InteractionType.ApplicationCommandAutocomplete:
+        await handleAutocomplete(intr, client);
         break;
       default:
         await sendError(intr, 'Unknown interaction type');
@@ -141,8 +145,32 @@ async function handleModals(
   );
 }
 
+async function handleAutocomplete(
+  intr: AutocompleteInteraction,
+  client: CustomClient,
+) {
+  const command = client.commands.get(intr.commandName);
+  if (!command || !command.autocomplete) return;
+
+  // Don't use cooldowns for autocomplete interactions
+  if (!(await handlePreconditions(intr, command))) return; // May not be necessary
+
+  // No need to check for command type, as only chat input commands can have autocomplete interactions
+
+  await executeInteraction(
+    'autocomplete',
+    intr.commandName,
+    () => command.autocomplete!(intr),
+    intr,
+  );
+}
+
 async function handlePreconditions(
-  intr: CommandInteraction | ComponentInteraction | ModalSubmitInteraction,
+  intr:
+    | CommandInteraction
+    | ComponentInteraction
+    | ModalSubmitInteraction
+    | AutocompleteInteraction,
   item: Command | Component | Modal,
 ): Promise<boolean> {
   if (item.preconditions) {

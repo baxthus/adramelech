@@ -1,4 +1,7 @@
-import type { ModalSubmitInteraction } from 'discord.js';
+import type {
+  AutocompleteInteraction,
+  ModalSubmitInteraction,
+} from 'discord.js';
 import type {
   CommandInteraction,
   ComponentInteraction,
@@ -8,5 +11,6 @@ export type Precondition = (
   interaction:
     | CommandInteraction
     | ComponentInteraction
-    | ModalSubmitInteraction,
+    | ModalSubmitInteraction
+    | AutocompleteInteraction, // Controversial
 ) => Promise<boolean>;
