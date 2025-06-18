@@ -40,3 +40,5 @@ export const socialsLinksRelations = relations(socialsLinks, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+// auth

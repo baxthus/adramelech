@@ -24,6 +24,7 @@ const envSchema = z.object({
     .url()
     .default('postgres://postgres:hunter2@localhost/adramelech'),
   API_PORT: z.string().nonempty().transform(Number).default('51964'),
+  ALLOW_API_SIGNUP: z.coerce.boolean().default(false),
 });
 
 function validateEnv() {

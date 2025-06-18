@@ -1,4 +1,5 @@
 import Elysia from 'elysia';
+import auth from '#api/macros/auth';
 
 export default new Elysia({
   prefix: 'telemetry',
@@ -7,24 +8,28 @@ export default new Elysia({
     idleTimeout: 30 + 10, // 30 seconds + 10 seconds grace period
     maxPayloadLength: 1024 * 1024, // 1 MB
   },
-}).ws('/latency', {
-  open(ws) {
-    ws.subscribe('latency');
+})
+  .use(auth)
+  .ws('/latency', {
+    auth: true,
 
-    ws.send({
-      type: 'connected',
-      message: 'Connection established',
-    });
-  },
+    open(ws) {
+      ws.subscribe('latency');
 
-  message(ws, message) {
-    ws.send({
-      type: 'ack',
-      data: message,
-    });
-  },
+      ws.send({
+        type: 'connected',
+        message: 'Connection established',
+      });
+    },
 
-  close(ws) {
-    ws.unsubscribe('latency');
-  },
-});
+    message(ws, message) {
+      ws.send({
+        type: 'ack',
+        data: message,
+      });
+    },
+
+    close(ws) {
+      ws.unsubscribe('latency');
+    },
+  });

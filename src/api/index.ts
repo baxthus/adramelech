@@ -1,12 +1,16 @@
 import swagger from '@elysiajs/swagger';
 import Elysia from 'elysia';
 import path from 'path';
-import { client } from '~/bot';
-import env from '~/env';
+import { client } from '#bot';
+import env from '#env';
 import logger from '~/logger';
 import findRecursively from '~/utils/findRecursively';
+import { auth, OpenAPI } from '~/utils/auth';
 
-const app = new Elysia()
+const app = new Elysia({
+  tags: ['API'],
+})
+  .mount('/auth', auth.handler)
   .use(
     swagger({
       path: '/docs',
@@ -20,6 +24,8 @@ const app = new Elysia()
           version: 'rolling-release',
           description: 'Recommended pulling rate of 1 request per 5 seconds',
         },
+        components: await OpenAPI.components,
+        paths: await OpenAPI.getPaths(),
       },
     }),
   )
