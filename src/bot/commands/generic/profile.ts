@@ -50,6 +50,9 @@ export const commands = <Command[]>[
               .setDescription('To view the profile of another user'),
           ),
       )
+      .addSubcommand((subcommand) =>
+        subcommand.setName('delete').setDescription('Delete your profile'),
+      )
       .addSubcommandGroup((group) =>
         group
           .setName('set')
@@ -165,15 +168,16 @@ export const commands = <Command[]>[
       .setName('Profile')
       .setType(ApplicationCommandType.User),
     execute: async (intr: UserContextMenuCommandInteraction) =>
-      await view(intr, intr.targetUser),
+      await viewProfile(intr, intr.targetUser),
   },
 ];
 
 const executors: CommandGroupExecutors = {
   view: async (intr: ChatInputCommandInteraction) => {
     const user = intr.options.getUser('user') ?? intr.user;
-    await view(intr, user);
+    await viewProfile(intr, user);
   },
+  delete: deleteProfile,
   set: {
     bio: setBio,
     nickname: setNickname,
@@ -186,7 +190,7 @@ const executors: CommandGroupExecutors = {
   },
 };
 
-async function view(intr: CommandInteraction, user: DiscordUser) {
+async function viewProfile(intr: CommandInteraction, user: DiscordUser) {
   await intr.deferReply();
 
   const data = await verifyUser(intr, user);
@@ -257,6 +261,47 @@ async function view(intr: CommandInteraction, user: DiscordUser) {
   });
 }
 
+async function deleteProfile(intr: ChatInputCommandInteraction) {
+  await intr.deferReply({ flags: MessageFlags.Ephemeral });
+
+  const data = await verifyUser(intr, intr.user);
+  if (!data) return;
+
+  // Same stuff as setBio, we can trust the user is the one editing their profile
+
+  await intr.followUp({
+    flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+    components: [
+      {
+        type: ComponentType.Container,
+        accent_color: env.EMBED_COLOR,
+        components: [
+          {
+            type: ComponentType.TextDisplay,
+            content: stripIndents`
+            ### Are you sure you want to delete your profile?
+            This action is irreversible and will delete all your profile information.
+            `,
+          },
+          { type: ComponentType.Separator, divider: false },
+          {
+            type: ComponentType.ActionRow,
+            components: [
+              {
+                type: ComponentType.Button,
+                custom_id: 'delete-profile-button',
+                label: 'Confirm',
+                style: ButtonStyle.Danger,
+                emoji: { name: '🗑️' },
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+}
+
 async function setBio(intr: ChatInputCommandInteraction) {
   const data = await verifyUser(intr, intr.user);
   if (!data) return;
@@ -289,7 +334,7 @@ async function setNickname(intr: ChatInputCommandInteraction) {
   const data = await verifyUser(intr, intr.user);
   if (!data) return;
 
-  // Same stuff as editBio, we can trust the user is the one editing their profile
+  // Same stuff as setBio, we can trust the user is the one editing their profile
 
   const nickname = intr.options.getString('nickname', true)?.trim();
 
@@ -336,7 +381,7 @@ async function addSocial(intr: ChatInputCommandInteraction) {
       'You can only have up to 5 social links in your profile.',
     );
 
-  // Same stuff as editBio, we can trust the user is the one editing their profile
+  // Same stuff as setBio, we can trust the user is the one editing their profile
 
   const name = intr.options.getString('name', true).trim();
   const link = intr.options.getString('link', true).trim();
@@ -521,39 +566,72 @@ async function verifyUser(
   else await intr.reply(payload);
 }
 
-export const component = <Component>{
-  type: ComponentType.Button,
-  customId: 'register-profile-button',
-  async execute(intr) {
-    await intr.deferReply({ flags: MessageFlags.Ephemeral });
+export const components = <Array<Component>>[
+  {
+    type: ComponentType.Button,
+    customId: 'register-profile-button',
+    async execute(intr) {
+      await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-    const user = await db
-      .insert(users)
-      .values({
-        discord_id: intr.user.id,
-      })
-      .returning({ id: users.id }) // Just to check if successful
-      .onConflictDoNothing();
-    if (user.length === 0)
-      return await sendError(intr, 'You already have a profile!');
+      const user = await db
+        .insert(users)
+        .values({
+          discord_id: intr.user.id,
+        })
+        .returning({ id: users.id }) // Just to check if successful
+        .onConflictDoNothing();
+      if (user.length === 0)
+        return await sendError(intr, 'You already have a profile!');
 
-    await intr.followUp({
-      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      components: [
-        {
-          type: ComponentType.Container,
-          accent_color: env.EMBED_COLOR,
-          components: [
-            {
-              type: ComponentType.TextDisplay,
-              content: `# Your profile has been created!`,
-            },
-          ],
-        },
-      ],
-    });
+      await intr.followUp({
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        components: [
+          {
+            type: ComponentType.Container,
+            accent_color: env.EMBED_COLOR,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: '# Your profile has been created!',
+              },
+            ],
+          },
+        ],
+      });
+    },
   },
-};
+  {
+    type: ComponentType.Button,
+    customId: 'delete-profile-button',
+    async execute(intr) {
+      await intr.deferReply({ flags: MessageFlags.Ephemeral });
+
+      const deleted = await db
+        .delete(users)
+        .where(eq(users.discord_id, intr.user.id))
+        .returning({ id: users.id }); // Just to check if successful
+
+      if (deleted.length === 0)
+        return await sendError(intr, 'Failed to delete your profile.');
+
+      await intr.followUp({
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        components: [
+          {
+            type: ComponentType.Container,
+            accent_color: env.EMBED_COLOR,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: '# Your profile has been deleted!',
+              },
+            ],
+          },
+        ],
+      });
+    },
+  },
+];
 
 export const modal = <Modal>{
   customId: 'edit-bio-modal',
