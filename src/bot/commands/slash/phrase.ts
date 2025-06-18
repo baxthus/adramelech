@@ -19,8 +19,7 @@ export const command = <Command>{
 
     const phrase = await db.query.phrases.findFirst({
       columns: {
-        content: true,
-        source: true,
+        id: false,
       },
       orderBy: sql`RANDOM()`,
     });
