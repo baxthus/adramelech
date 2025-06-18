@@ -8,12 +8,7 @@ import type { Component } from '#bot/types/component';
 import type { Modal } from '#bot/types/modal';
 import { sendError } from '#bot/utils/sendError';
 import db from '#db';
-import {
-  socialsLinks,
-  users,
-  type User,
-  type UserWithSocials,
-} from '#db/schema';
+import { socialsLinks, users, type User } from '#db/schema';
 import env from '#env';
 import { stripIndents } from 'common-tags';
 import {
@@ -33,6 +28,7 @@ import {
   TimestampStyles,
   UserContextMenuCommandInteraction,
   type User as DiscordUser,
+  type InteractionReplyOptions,
   type ModalActionRowComponentBuilder,
 } from 'discord.js';
 import { and, eq } from 'drizzle-orm';
@@ -481,21 +477,19 @@ async function removeSocial(intr: ChatInputCommandInteraction) {
 async function verifyUser(
   intr: CommandInteraction | ModalSubmitInteraction,
   user: DiscordUser,
-): Promise<User | UserWithSocials | void> {
+): Promise<User | void> {
   const data = await db.query.users.findFirst({
     where: eq(users.discord_id, user.id),
   });
   if (data) return data;
 
-  if (!intr.ephemeral && intr.replied) {
+  if (!intr.ephemeral && intr.deferred) {
     // Delete the initial reply because we need it to be ephemeral
     const msg = await intr.followUp('opps...');
     await msg.delete().catch(() => null);
   }
 
-  const action = intr.replied ? intr.followUp : intr.reply;
-
-  await action({
+  const payload = <InteractionReplyOptions>{
     flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
     components: [
       {
@@ -521,7 +515,10 @@ async function verifyUser(
         ],
       },
     ],
-  });
+  };
+
+  if (intr.deferred) await intr.followUp(payload);
+  else await intr.reply(payload);
 }
 
 export const component = <Component>{
