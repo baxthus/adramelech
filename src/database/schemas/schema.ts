@@ -24,15 +24,19 @@ export const usersRelations = relations(users, ({ many }) => ({
   socials: many(socialsLinks),
 }));
 
-export const socialsLinks = t.pgTable('socials_links', {
-  id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
-  user_id: t
-    .integer()
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  name: t.text().notNull(),
-  url: t.text().notNull(),
-});
+export const socialsLinks = t.pgTable(
+  'socials_links',
+  {
+    id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
+    user_id: t
+      .integer()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: t.text().notNull(),
+    url: t.text().notNull(),
+  },
+  (table) => [t.index('user_id_idx').on(table.user_id)],
+);
 
 export const socialsLinksRelations = relations(socialsLinks, ({ one }) => ({
   user: one(users, {
@@ -40,5 +44,3 @@ export const socialsLinksRelations = relations(socialsLinks, ({ one }) => ({
     references: [users.id],
   }),
 }));
-
-// auth
