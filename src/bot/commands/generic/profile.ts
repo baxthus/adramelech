@@ -8,7 +8,7 @@ import type { Component } from '#bot/types/component';
 import type { Modal } from '#bot/types/modal';
 import { sendError } from '#bot/utils/sendError';
 import db from '#db';
-import { socialsLinks, users, type User } from '#db/schemas/schema';
+import { socialsLinks, users } from '#db/schemas/schema';
 import env from '#env';
 import { stripIndents } from 'common-tags';
 import {
@@ -28,10 +28,9 @@ import {
   TimestampStyles,
   UserContextMenuCommandInteraction,
   type User as DiscordUser,
-  type InteractionReplyOptions,
   type ModalActionRowComponentBuilder,
 } from 'discord.js';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, like, sql } from 'drizzle-orm';
 import { z } from 'zod/v4';
 import toUnixTimestamps from '~/utils/toUnixTimestamps';
 
@@ -49,6 +48,9 @@ export const commands = <Command[]>[
               .setName('user')
               .setDescription('To view the profile of another user'),
           ),
+      )
+      .addSubcommand((subcommand) =>
+        subcommand.setName('create').setDescription('Create your profile'),
       )
       .addSubcommand((subcommand) =>
         subcommand.setName('delete').setDescription('Delete your profile'),
@@ -146,17 +148,16 @@ export const commands = <Command[]>[
         columns: { id: true }, // The minimum possible
         where: eq(users.discord_id, intr.user.id),
         with: {
-          socials: true,
+          socials: {
+            columns: { name: true },
+            where: like(socialsLinks.name, `%${focused}%`),
+          },
         },
       });
       if (!user) return await intr.respond([]);
 
-      const filtered = user.socials.filter((social) =>
-        social.name.toLowerCase().includes(focused.toLowerCase()),
-      );
-
       await intr.respond(
-        filtered.map((social) => ({
+        user.socials.map((social) => ({
           name: social.name,
           value: social.name,
         })),
@@ -177,6 +178,7 @@ const executors: CommandGroupExecutors = {
     const user = intr.options.getUser('user') ?? intr.user;
     await viewProfile(intr, user);
   },
+  create: createProfile,
   delete: deleteProfile,
   set: {
     bio: setBio,
@@ -193,14 +195,18 @@ const executors: CommandGroupExecutors = {
 async function viewProfile(intr: CommandInteraction, user: DiscordUser) {
   await intr.deferReply();
 
-  const data = await verifyUser(intr, user);
-  if (!data) return;
-
-  const socials = await db.query.socialsLinks.findMany({
-    columns: { name: true, url: true },
-    where: eq(socialsLinks.user_id, data.id),
+  const data = await db.query.users.findFirst({
+    columns: { discord_id: false },
+    where: eq(users.discord_id, user.id),
+    with: {
+      socials: {
+        columns: { name: true, url: true },
+      },
+    },
   });
-  const haveSocials = socials.length > 0;
+  if (!data) return await sendError(intr, 'This user does not have a profile');
+
+  const haveSocials = data.socials.length > 0;
 
   const registeredAt = toUnixTimestamps(data.created_at.getTime());
 
@@ -243,7 +249,7 @@ async function viewProfile(intr: CommandInteraction, user: DiscordUser) {
               ? ComponentType.ActionRow
               : ComponentType.TextDisplay,
             content: haveSocials ? '' : '`No social links found`',
-            components: socials.map((social) => ({
+            components: data.socials.map((social) => ({
               type: ComponentType.Button,
               label: social.name,
               style: ButtonStyle.Link,
@@ -261,13 +267,41 @@ async function viewProfile(intr: CommandInteraction, user: DiscordUser) {
   });
 }
 
+async function createProfile(intr: ChatInputCommandInteraction) {
+  await intr.deferReply({ flags: MessageFlags.Ephemeral });
+
+  const user = await db
+    .insert(users)
+    .values({
+      discord_id: intr.user.id,
+    })
+    .returning({ id: users.id })
+    .onConflictDoNothing();
+  if (user.length === 0)
+    return await sendError(intr, 'You already have a profile!');
+
+  await intr.followUp({
+    flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+    components: [
+      {
+        type: ComponentType.Container,
+        accent_color: env.EMBED_COLOR,
+        components: [
+          {
+            type: ComponentType.TextDisplay,
+            content: '# Your profile has been created!',
+          },
+        ],
+      },
+    ],
+  });
+}
+
 async function deleteProfile(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const data = await verifyUser(intr, intr.user);
-  if (!data) return;
-
-  // Same stuff as setBio, we can trust the user is the one editing their profile
+  if (!(await userExists(intr)))
+    return await sendError(intr, 'You do not have a profile to delete');
 
   await intr.followUp({
     flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -280,7 +314,7 @@ async function deleteProfile(intr: ChatInputCommandInteraction) {
             type: ComponentType.TextDisplay,
             content: stripIndents`
             ### Are you sure you want to delete your profile?
-            This action is irreversible and will delete all your profile information.
+            This action is irreversible and will delete all your profile information
             `,
           },
           { type: ComponentType.Separator, divider: false },
@@ -303,14 +337,9 @@ async function deleteProfile(intr: ChatInputCommandInteraction) {
 }
 
 async function setBio(intr: ChatInputCommandInteraction) {
-  const data = await verifyUser(intr, intr.user);
-  if (!data) return;
+  if (!(await userExists(intr)))
+    return await sendError(intr, 'You do not have a profile to edit');
 
-  // In another occasion, a check to ensure the user is the one editing their profile would be needed.
-  // But this command does not accept any user input, so we can skip that.
-  // **But what if Discord is lying to us??? :O**
-
-  // Use modal because the bio can be multiline
   await intr.showModal({
     title: 'Edit Bio',
     customId: 'edit-bio-modal',
@@ -331,10 +360,11 @@ async function setBio(intr: ChatInputCommandInteraction) {
 async function setNickname(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const data = await verifyUser(intr, intr.user);
-  if (!data) return;
-
-  // Same stuff as setBio, we can trust the user is the one editing their profile
+  const data = await db.query.users.findFirst({
+    columns: { id: true },
+    where: eq(users.discord_id, intr.user.id),
+  });
+  if (!data) return await sendError(intr, 'You do not have a profile to edit');
 
   const nickname = intr.options.getString('nickname', true)?.trim();
 
@@ -342,10 +372,9 @@ async function setNickname(intr: ChatInputCommandInteraction) {
     .update(users)
     .set({ nickname: nickname })
     .where(eq(users.id, data.id))
-    .returning({ id: users.id }); // Just to check if successful
-
+    .returning({ id: users.id });
   if (updated.length === 0)
-    return await sendError(intr, 'Failed to update your nickname.');
+    return await sendError(intr, 'Failed to update your nickname');
 
   await intr.followUp({
     flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -367,43 +396,45 @@ async function setNickname(intr: ChatInputCommandInteraction) {
 async function addSocial(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const data = await verifyUser(intr, intr.user);
-  if (!data) return;
-
-  const socials = await db.query.socialsLinks.findMany({
-    columns: { id: true, name: true }, // The minimum possible
-    where: eq(socialsLinks.user_id, data.id),
-  });
-
-  if (socials.length >= 5)
-    return await sendError(
-      intr,
-      'You can only have up to 5 social links in your profile.',
-    );
-
-  // Same stuff as setBio, we can trust the user is the one editing their profile
-
   const name = intr.options.getString('name', true).trim();
   const link = intr.options.getString('link', true).trim();
 
+  if (!z.url().safeParse(link).success)
+    return await sendError(intr, 'The provided link is not a valid URL');
+
+  const data = await db.query.users.findFirst({
+    columns: { id: true },
+    where: eq(users.discord_id, intr.user.id),
+    with: {
+      socials: {
+        columns: { name: true },
+      },
+    },
+  });
+  if (!data) return await sendError(intr, 'You do not have a profile to edit');
+
+  if (data.socials.length >= 5)
+    return await sendError(
+      intr,
+      'You can only have up to 5 social links in your profile',
+    );
+
   if (
-    socials.some((social) => social.name.toLowerCase() === name.toLowerCase())
+    data.socials.some(
+      (social) => social.name.toLowerCase() === name.toLowerCase(),
+    )
   )
     return await sendError(
       intr,
-      `You already have a social link with the name \`${name}\`. Please choose a different name.`,
+      `You already have a social link with the name \`${name}\`. Please choose a different name`,
     );
-
-  if (!z.url().safeParse(link).success)
-    return await sendError(intr, 'The provided link is not a valid URL.');
 
   const inserted = await db
     .insert(socialsLinks)
     .values({ name, url: link, user_id: data.id })
-    .returning({ id: socialsLinks.id }); // Just to check if successful
-
+    .returning({ id: socialsLinks.id });
   if (inserted.length === 0)
-    return await sendError(intr, 'Failed to add the social link.');
+    return await sendError(intr, 'Failed to add the social link');
 
   await intr.followUp({
     flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -425,17 +456,21 @@ async function addSocial(intr: ChatInputCommandInteraction) {
 async function removeBio(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const data = await verifyUser(intr, intr.user);
-  if (!data) return;
+  const data = await db.query.users.findFirst({
+    columns: { id: true, bio: true },
+    where: eq(users.discord_id, intr.user.id),
+  });
+  if (!data) return await sendError(intr, 'You do not have a profile to edit');
+  if (!data.bio)
+    return await sendError(intr, 'You do not have a bio to remove');
 
   const updated = await db
     .update(users)
     .set({ bio: null })
     .where(eq(users.id, data.id))
-    .returning({ id: users.id }); // Just to check if successful
-
+    .returning({ id: users.id });
   if (updated.length === 0)
-    return await sendError(intr, 'Failed to remove your bio.');
+    return await sendError(intr, 'Failed to remove your bio');
 
   await intr.followUp({
     flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -457,17 +492,21 @@ async function removeBio(intr: ChatInputCommandInteraction) {
 async function removeNickname(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const data = await verifyUser(intr, intr.user);
-  if (!data) return;
+  const data = await db.query.users.findFirst({
+    columns: { id: true, nickname: true },
+    where: eq(users.discord_id, intr.user.id),
+  });
+  if (!data) return await sendError(intr, 'You do not have a profile to edit');
+  if (!data.nickname)
+    return await sendError(intr, 'You do not have a nickname to remove');
 
   const updated = await db
     .update(users)
     .set({ nickname: null })
     .where(eq(users.id, data.id))
-    .returning({ id: users.id }); // Just to check if successful
-
+    .returning({ id: users.id });
   if (updated.length === 0)
-    return await sendError(intr, 'Failed to remove your nickname.');
+    return await sendError(intr, 'Failed to remove your nickname');
 
   await intr.followUp({
     flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -489,18 +528,31 @@ async function removeNickname(intr: ChatInputCommandInteraction) {
 async function removeSocial(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const data = await verifyUser(intr, intr.user);
-  if (!data) return;
-
   const name = intr.options.getString('name', true).trim();
+
+  const data = await db.query.users.findFirst({
+    columns: { id: true },
+    where: eq(users.discord_id, intr.user.id),
+    with: {
+      socials: {
+        columns: { name: true },
+        where: eq(socialsLinks.name, name),
+      },
+    },
+  });
+  if (!data) return await sendError(intr, 'You do not have a profile to edit');
+  if (data.socials.length === 0)
+    return await sendError(
+      intr,
+      'You do not have a social link with that name to remove',
+    );
 
   const deleted = await db
     .delete(socialsLinks)
     .where(and(eq(socialsLinks.user_id, data.id), eq(socialsLinks.name, name)))
-    .returning({ id: socialsLinks.id }); // Just to check if successful
-
+    .returning({ id: socialsLinks.id });
   if (deleted.length === 0)
-    return await sendError(intr, 'Failed to remove the social link.');
+    return await sendError(intr, 'Failed to remove the social link');
 
   await intr.followUp({
     flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -519,119 +571,50 @@ async function removeSocial(intr: ChatInputCommandInteraction) {
   });
 }
 
-async function verifyUser(
+async function userExists(
   intr: CommandInteraction | ModalSubmitInteraction,
-  user: DiscordUser,
-): Promise<User | void> {
-  const data = await db.query.users.findFirst({
-    where: eq(users.discord_id, user.id),
-  });
-  if (data) return data;
-
-  if (!intr.ephemeral && intr.deferred) {
-    // Delete the initial reply because we need it to be ephemeral
-    const msg = await intr.followUp('opps...');
-    await msg.delete().catch(() => null);
-  }
-
-  const payload = <InteractionReplyOptions>{
-    flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-    components: [
-      {
-        type: ComponentType.Container,
-        accent_color: env.EMBED_COLOR,
-        components: [
-          {
-            type: ComponentType.TextDisplay,
-            content: '# You need to register yourself first!',
-          },
-          {
-            type: ComponentType.ActionRow,
-            components: [
-              {
-                type: ComponentType.Button,
-                custom_id: 'register-profile-button',
-                label: 'Register',
-                style: ButtonStyle.Primary,
-                emoji: { name: '📝' },
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  };
-
-  if (intr.deferred) await intr.followUp(payload);
-  else await intr.reply(payload);
+): Promise<boolean> {
+  // Technically the most performant way to check if a user exists in the database
+  // See: https://github.com/drizzle-team/drizzle-orm/issues/1689#issuecomment-1872275976
+  return (
+    (
+      await db.execute(
+        sql`SELECT 1 FROM users WHERE discord_id = ${intr.user.id} LIMIT 1`,
+      )
+    ).length > 0
+  );
 }
 
-export const components = <Array<Component>>[
-  {
-    type: ComponentType.Button,
-    customId: 'register-profile-button',
-    async execute(intr) {
-      await intr.deferReply({ flags: MessageFlags.Ephemeral });
+export const component = <Component>{
+  type: ComponentType.Button,
+  customId: 'delete-profile-button',
+  async execute(intr) {
+    await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-      const user = await db
-        .insert(users)
-        .values({
-          discord_id: intr.user.id,
-        })
-        .returning({ id: users.id }) // Just to check if successful
-        .onConflictDoNothing();
-      if (user.length === 0)
-        return await sendError(intr, 'You already have a profile!');
+    const deleted = await db
+      .delete(users)
+      .where(eq(users.discord_id, intr.user.id))
+      .returning({ id: users.id });
+    if (deleted.length === 0)
+      return await sendError(intr, 'Failed to delete your profile');
 
-      await intr.followUp({
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        components: [
-          {
-            type: ComponentType.Container,
-            accent_color: env.EMBED_COLOR,
-            components: [
-              {
-                type: ComponentType.TextDisplay,
-                content: '# Your profile has been created!',
-              },
-            ],
-          },
-        ],
-      });
-    },
+    await intr.followUp({
+      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+      components: [
+        {
+          type: ComponentType.Container,
+          accent_color: env.EMBED_COLOR,
+          components: [
+            {
+              type: ComponentType.TextDisplay,
+              content: '# Your profile has been deleted!',
+            },
+          ],
+        },
+      ],
+    });
   },
-  {
-    type: ComponentType.Button,
-    customId: 'delete-profile-button',
-    async execute(intr) {
-      await intr.deferReply({ flags: MessageFlags.Ephemeral });
-
-      const deleted = await db
-        .delete(users)
-        .where(eq(users.discord_id, intr.user.id))
-        .returning({ id: users.id }); // Just to check if successful
-
-      if (deleted.length === 0)
-        return await sendError(intr, 'Failed to delete your profile.');
-
-      await intr.followUp({
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        components: [
-          {
-            type: ComponentType.Container,
-            accent_color: env.EMBED_COLOR,
-            components: [
-              {
-                type: ComponentType.TextDisplay,
-                content: '# Your profile has been deleted!',
-              },
-            ],
-          },
-        ],
-      });
-    },
-  },
-];
+};
 
 export const modal = <Modal>{
   customId: 'edit-bio-modal',
@@ -640,19 +623,13 @@ export const modal = <Modal>{
 
     const content = intr.fields.getTextInputValue('content').trim();
 
-    // Ideally, we would check if the user exists in the database,
-    // but this modal is only shown after the user has been verified,
-    // so let's trust that the user has a profile
-    // Doing this we avoid an extra database query
-
     const updated = await db
       .update(users)
       .set({ bio: content })
       .where(eq(users.discord_id, intr.user.id))
-      .returning({ id: users.id }); // Just to check if successful
-
+      .returning({ id: users.id });
     if (updated.length === 0)
-      return await sendError(intr, 'Failed to update your bio.');
+      return await sendError(intr, 'Failed to update your bio');
 
     await intr.followUp({
       flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
