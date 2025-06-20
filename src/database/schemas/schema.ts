@@ -22,6 +22,7 @@ export type User = typeof users.$inferSelect;
 
 export const usersRelations = relations(users, ({ many }) => ({
   socials: many(socialsLinks),
+  feedbacks: many(feedbacks),
 }));
 
 export const socialsLinks = t.pgTable(
@@ -41,6 +42,36 @@ export const socialsLinks = t.pgTable(
 export const socialsLinksRelations = relations(socialsLinks, ({ one }) => ({
   user: one(users, {
     fields: [socialsLinks.user_id],
+    references: [users.id],
+  }),
+}));
+
+export const feedbackStatuses = t.pgEnum('feedback_statuses', [
+  'open',
+  'acknowledged',
+  'closed',
+  'resolved',
+  'accepted',
+  'rejected',
+]);
+
+export const feedbacks = t.pgTable('feedbacks', {
+  id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
+  user_id: t
+    .integer()
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  title: t.text().notNull(),
+  content: t.text().notNull(),
+  status: feedbackStatuses().notNull().default('open'),
+  response: t.text(),
+  created_at: t.timestamp({ withTimezone: true }).notNull().defaultNow(),
+  updated_at: t.timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+export const feedbacksRelations = relations(feedbacks, ({ one }) => ({
+  user: one(users, {
+    fields: [feedbacks.user_id],
     references: [users.id],
   }),
 }));
