@@ -6,10 +6,12 @@ import env from '#env';
 import logger from '~/logger';
 import findRecursively from '~/utils/findRecursively';
 import { auth, OpenAPI } from '~/utils/auth';
+import { cors } from '@elysiajs/cors';
 
 const app = new Elysia({
   tags: ['API'],
 })
+  .use(cors())
   .mount('/auth', auth.handler)
   .use(
     swagger({
