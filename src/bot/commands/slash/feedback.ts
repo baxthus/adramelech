@@ -14,7 +14,7 @@ import type { Command, CommandExecutors } from '#bot/types/command';
 import type { Modal } from '#bot/types/modal';
 import { sendError } from '#bot/utils/sendError';
 import db from '#db';
-import { feedbacks, users } from '#db/schemas/schema';
+import { feedbacks, users } from '~/database/schema';
 import { and, eq, inArray, like, sql } from 'drizzle-orm';
 import v from 'voca';
 import toUnixTimestamps from '~/utils/toUnixTimestamps';

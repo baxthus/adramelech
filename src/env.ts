@@ -16,7 +16,6 @@ const envSchema = z.object({
   AUTHOR_URL: z.string().url().default('https://www.pudim.com.br'),
   REPOSITORY_URL: z.string().url(),
   DEFAULT_COOLDOWN_SECONDS: z.string().nonempty().transform(Number),
-  FEEDBACK_WEBHOOK: z.string().url().optional(),
   USER_AGENT: z.string().default('adramelech'),
   OPENWEATHER_KEY: z.string().optional(),
   DATABASE_URL: z
@@ -24,7 +23,6 @@ const envSchema = z.object({
     .url()
     .default('postgres://postgres:hunter2@localhost/adramelech'),
   API_PORT: z.string().nonempty().transform(Number).default('51964'),
-  ALLOW_API_SIGNUP: z.coerce.boolean().default(false),
 });
 
 function validateEnv() {

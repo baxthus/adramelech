@@ -8,7 +8,7 @@ import type { Component } from '#bot/types/component';
 import type { Modal } from '#bot/types/modal';
 import { sendError } from '#bot/utils/sendError';
 import db from '#db';
-import { socialsLinks, users } from '#db/schemas/schema';
+import { socialsLinks, users } from '~/database/schema';
 import env from '#env';
 import { stripIndents } from 'common-tags';
 import {
