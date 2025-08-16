@@ -1,0 +1,20 @@
+{
+  "name": "adramelech",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "database",
+    "dashboard",
+    "bot"
+  ],
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "trustedDependencies": [
+    "@tailwindcss/oxide"
+  ]
+}
