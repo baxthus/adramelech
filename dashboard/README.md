@@ -1,38 +1,75 @@
-# sv
+# Nuxt Minimal Starter
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
-## Creating a project
+## Setup
 
-If you're seeing this, you've probably already done this step. Congrats!
+Make sure to install dependencies:
 
-```sh
-# create a new project in the current directory
-npx sv create
+```bash
+# npm
+npm install
 
-# create a new project in my-app
-npx sv create my-app
+# pnpm
+pnpm install
+
+# yarn
+yarn install
+
+# bun
+bun install
 ```
 
-## Developing
+## Development Server
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Start the development server on `http://localhost:3000`:
 
-```sh
+```bash
+# npm
 npm run dev
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+# pnpm
+pnpm dev
+
+# yarn
+yarn dev
+
+# bun
+bun run dev
 ```
 
-## Building
+## Production
 
-To create a production version of your app:
+Build the application for production:
 
-```sh
+```bash
+# npm
 npm run build
+
+# pnpm
+pnpm build
+
+# yarn
+yarn build
+
+# bun
+bun run build
 ```
 
-You can preview the production build with `npm run preview`.
+Locally preview production build:
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+```bash
+# npm
+npm run preview
+
+# pnpm
+pnpm preview
+
+# yarn
+yarn preview
+
+# bun
+bun run preview
+```
+
+Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
