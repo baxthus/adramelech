@@ -16,5 +16,8 @@
   },
   "trustedDependencies": [
     "@tailwindcss/oxide"
-  ]
+  ],
+  "dependencies": {
+    "zod": "^4.0.17"
+  }
 }
