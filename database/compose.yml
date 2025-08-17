@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  psql:
+    image: docker.io/postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: hunter2
+      POSTGRES_DB: adramelech
+    ports:
+      - '5432:5432'
+    volumes:
+      - psql_data:/var/lib/postgresql/data
+
+volumes:
+  psql_data:

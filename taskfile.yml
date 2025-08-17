@@ -1,0 +1,30 @@
+version: '3'
+
+dotenv: ['.env']
+
+vars:
+  DASHBOARD: '{{.USER_WORKING_DIR}}/dashboard'
+  DATABASE: '{{.USER_WORKING_DIR}}/database'
+
+tasks:
+  dashboard:
+    dir: '{{.DASHBOARD}}'
+    cmds:
+      - bun run dev
+
+  up:
+    dir: '{{.DATABASE}}'
+    cmds:
+      - podman-compose up -d
+  down:
+    dir: '{{.DATABASE}}'
+    cmds:
+      - podman-compose down
+  studio:
+    dir: '{{.DATABASE}}'
+    cmds:
+      - bun run drizzle-kit studio
+  push:
+    dir: '{{.DATABASE}}'
+    cmds:
+      - bun run drizzle-kit push
