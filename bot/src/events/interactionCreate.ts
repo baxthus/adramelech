@@ -1,0 +1,246 @@
+import {
+  AutocompleteInteraction,
+  Collection,
+  Events,
+  InteractionType,
+  ModalSubmitInteraction,
+  PrimaryEntryPointCommandInteraction,
+  type AnySelectMenuInteraction,
+  type ButtonInteraction,
+  type ChatInputCommandInteraction,
+  type Interaction,
+  type MessageContextMenuCommandInteraction,
+  type UserContextMenuCommandInteraction,
+} from 'discord.js';
+import logger from '~/logger';
+import { sendError } from '~/utils/sendError';
+import type { CustomClient } from '..';
+import type { Command } from '~/types/command';
+import type { Component } from '~/types/component';
+import type { Modal } from '~/types/modal';
+import config from '~/config';
+import type { Event } from '~/types/event';
+
+export type CommandInteraction =
+  | ChatInputCommandInteraction
+  | MessageContextMenuCommandInteraction
+  | UserContextMenuCommandInteraction
+  | PrimaryEntryPointCommandInteraction; // Don't know what this is
+export type ComponentInteraction = AnySelectMenuInteraction | ButtonInteraction;
+
+export const event = <Event>{
+  name: Events.InteractionCreate,
+  async execute(intr: Interaction) {
+    const client = intr.client as CustomClient;
+
+    switch (intr.type) {
+      case InteractionType.ApplicationCommand:
+        await handleCommands(intr, client);
+        break;
+      case InteractionType.MessageComponent:
+        await handleComponents(intr, client);
+        break;
+      case InteractionType.ModalSubmit:
+        await handleModals(intr, client);
+        break;
+      case InteractionType.ApplicationCommandAutocomplete:
+        await handleAutocomplete(intr, client);
+        break;
+      default:
+        await sendError(intr, 'Unknown interaction type');
+        break;
+    }
+  },
+};
+
+async function handleCommands(intr: CommandInteraction, client: CustomClient) {
+  const command = client.commands.get(intr.commandName);
+  if (!command) {
+    await sendError(intr, 'Command not found');
+    return;
+  }
+
+  if (isOnCooldown(client, intr, command, intr.commandName)) return;
+  if (!(await handlePreconditions(intr, command))) return;
+
+  const commandType = command.data.toJSON().type;
+  if (intr.commandType !== commandType) {
+    await handleTypeMismatch(
+      'command',
+      intr.commandName,
+      intr.commandType,
+      commandType,
+      intr,
+    );
+    return;
+  }
+
+  await executeInteraction(
+    'command',
+    intr.commandName,
+    () => command.execute(intr),
+    intr,
+  );
+}
+
+async function handleComponents(
+  intr: ComponentInteraction,
+  client: CustomClient,
+) {
+  const component = client.components.get(intr.customId);
+  if (!component) {
+    await sendError(intr, 'Component not found');
+    return;
+  }
+
+  if (isOnCooldown(client, intr, component, intr.customId)) return;
+  if (!(await handlePreconditions(intr, component))) return;
+
+  if (intr.componentType !== component.type) {
+    await handleTypeMismatch(
+      'component',
+      intr.customId,
+      intr.componentType,
+      component.type,
+      intr,
+    );
+    return;
+  }
+
+  await executeInteraction(
+    'component',
+    intr.customId,
+    () => component.execute(intr),
+    intr,
+  );
+}
+
+async function handleModals(
+  intr: ModalSubmitInteraction,
+  client: CustomClient,
+) {
+  const modal = client.modals.get(intr.customId);
+  if (!modal) {
+    await sendError(intr, 'Modal not found');
+    return;
+  }
+
+  if (isOnCooldown(client, intr, modal, intr.customId)) return;
+  if (!(await handlePreconditions(intr, modal))) return;
+
+  if (intr.type !== InteractionType.ModalSubmit) {
+    await handleTypeMismatch(
+      'modal',
+      intr.customId,
+      intr.type,
+      InteractionType.ModalSubmit,
+      intr,
+    );
+    return;
+  }
+
+  await executeInteraction(
+    'modal',
+    intr.customId,
+    () => modal.execute(intr),
+    intr,
+  );
+}
+
+async function handleAutocomplete(
+  intr: AutocompleteInteraction,
+  client: CustomClient,
+) {
+  const command = client.commands.get(intr.commandName);
+  if (!command || !command.autocomplete) return;
+
+  // Don't use cooldowns for autocomplete interactions
+  if (!(await handlePreconditions(intr, command))) return; // May not be necessary
+
+  // No need to check for command type, as only chat input commands can have autocomplete interactions
+
+  await executeInteraction(
+    'autocomplete',
+    intr.commandName,
+    () => command.autocomplete!(intr),
+    intr,
+  );
+}
+
+async function handlePreconditions(
+  intr:
+    | CommandInteraction
+    | ComponentInteraction
+    | ModalSubmitInteraction
+    | AutocompleteInteraction,
+  item: Command | Component | Modal,
+): Promise<boolean> {
+  if (item.preconditions) {
+    for (const precondition of item.preconditions) {
+      if (!(await precondition(intr))) return false;
+    }
+  }
+  return true;
+}
+
+function isOnCooldown(
+  client: CustomClient,
+  intr: Interaction,
+  item: Command | Component | Modal,
+  name: string,
+): boolean {
+  if (!item.cooldown || Bun.env.NODE_ENV === 'development') return false;
+
+  const cooldowns = client.cooldowns.get(name) ?? new Collection();
+  client.cooldowns.set(name, cooldowns);
+
+  const now = Date.now();
+  const timestamps = client.cooldowns.get(name)!;
+  const cooldownAmount =
+    (typeof item.cooldown === 'boolean'
+      ? config.DEFAULT_COOLDOWN_SECONDS
+      : item.cooldown) * 1000;
+
+  const userCooldown = timestamps.get(intr.user.id);
+  if (userCooldown && now < userCooldown) {
+    const remainingTime = Math.round((userCooldown - now) / 1000);
+    sendError(intr, `Your on cooldown for ${remainingTime} seconds`);
+    return true;
+  }
+
+  cooldowns.set(intr.user.id, now + cooldownAmount);
+  setTimeout(() => timestamps.delete(intr.user.id), cooldownAmount);
+  return false;
+}
+
+async function handleTypeMismatch(
+  interactionType: string,
+  name: unknown,
+  actualType: unknown,
+  expectedType: unknown,
+  intr: Interaction,
+) {
+  await sendError(intr, `${interactionType} type mismatch`);
+  logger.error(`Error executing ${interactionType} ${name}`);
+  logger.error(
+    `󱞩 ${interactionType} type mismatch: ${actualType} !== ${expectedType}`,
+  );
+}
+
+async function executeInteraction(
+  interactionType: string,
+  name: string,
+  fn: () => Promise<void>,
+  intr: Interaction,
+) {
+  try {
+    await fn();
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    error: any
+  ) {
+    await sendError(intr, error.message);
+    logger.error(`Error executing ${interactionType} ${name}`);
+    logger.error(error);
+  }
+}

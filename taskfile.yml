@@ -5,10 +5,15 @@ dotenv: ['.env']
 vars:
   DASHBOARD: '{{.USER_WORKING_DIR}}/dashboard'
   DATABASE: '{{.USER_WORKING_DIR}}/database'
+  BOT: '{{.USER_WORKING_DIR}}/bot'
 
 tasks:
   dashboard:
     dir: '{{.DASHBOARD}}'
+    cmds:
+      - bun run dev
+  bot:
+    dir: '{{.BOT}}'
     cmds:
       - bun run dev
 
