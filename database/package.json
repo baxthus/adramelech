@@ -11,7 +11,6 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "drizzle-orm": "^0.44.4",
     "pg": "^8.16.3"
   }
 }
