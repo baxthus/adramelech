@@ -1,5 +1,5 @@
-import { readdir } from "fs/promises";
-import path from "path";
+import { readdir } from 'fs/promises';
+import path from 'path';
 
 export default async function findRecursively(dir: string): Promise<string[]> {
   const files = await readdir(dir, { withFileTypes: true });
@@ -12,7 +12,7 @@ export default async function findRecursively(dir: string): Promise<string[]> {
       if (file.isDirectory()) {
         const nestedFiles = await findRecursively(filePath);
         tsFiles.push(...nestedFiles);
-      } else if (file.name.endsWith(".ts")) {
+      } else if (file.name.endsWith('.ts')) {
         tsFiles.push(filePath);
       }
     }),

@@ -1,7 +1,7 @@
-import z from "zod/v3";
-import { customId } from "./customId";
-import type { Precondition } from "./precondition";
-import type { ModalSubmitInteraction } from "discord.js";
+import z from 'zod/v3';
+import { customId } from './customId';
+import type { Precondition } from './precondition';
+import type { ModalSubmitInteraction } from 'discord.js';
 
 export const modalSchema = z.object({
   customId: customId,

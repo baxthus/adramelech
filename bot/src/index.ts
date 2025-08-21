@@ -1,15 +1,15 @@
-import "~/instrument"; // Sentry, import this first
+import '~/instrument'; // Sentry, import this first
 
-import "#db"; // Preload
-import { Client, Collection, GatewayIntentBits } from "discord.js";
-import type { Command } from "~/types/command";
-import type { Event } from "~/types/event";
-import type { Component } from "~/types/component";
-import type { Modal } from "~/types/modal";
-import config from "~/config";
-import { loadModules } from "~/loader";
-import registerCommands from "~/utils/registerCommands";
-import logger from "~/logger";
+import '#db'; // Preload
+import { Client, Collection, GatewayIntentBits } from 'discord.js';
+import type { Command } from '~/types/command';
+import type { Event } from '~/types/event';
+import type { Component } from '~/types/component';
+import type { Modal } from '~/types/modal';
+import config from '~/config';
+import { loadModules } from '~/loader';
+import registerCommands from '~/utils/registerCommands';
+import logger from '~/logger';
 
 export class CustomClient extends Client {
   commands: Collection<string, Command> = new Collection();
@@ -40,6 +40,6 @@ export const client = new CustomClient({
 await loadModules(client);
 
 if (client.commands.size > 0) await registerCommands(client);
-else logger.warn("No commands found. Skipping command refreshing");
+else logger.warn('No commands found. Skipping command refreshing');
 
 await client.login(config.BOT_TOKEN);

@@ -1,5 +1,5 @@
-import type { Client, Events, Interaction } from "discord.js";
-import z from "zod/v3";
+import type { Client, Events, Interaction } from 'discord.js';
+import z from 'zod/v3';
 
 export const eventSchema = z.object({
   name: z.custom<Events>(),

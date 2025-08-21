@@ -1,7 +1,7 @@
-import z from "zod/v3";
-import { customId } from "./customId";
-import type { ComponentType, MessageComponentInteraction } from "discord.js";
-import type { Precondition } from "./precondition";
+import z from 'zod/v3';
+import { customId } from './customId';
+import type { ComponentType, MessageComponentInteraction } from 'discord.js';
+import type { Precondition } from './precondition';
 
 export const componentSchema = z.object({
   customId: customId,

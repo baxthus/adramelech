@@ -1,7 +1,7 @@
-import { REST, Routes } from "discord.js";
-import type { CustomClient } from "~";
-import config from "~/config";
-import logger from "~/logger";
+import { REST, Routes } from 'discord.js';
+import type { CustomClient } from '~';
+import config from '~/config';
+import logger from '~/logger';
 
 export default async function registerCommands(client: CustomClient) {
   const commands = client.commands.map((command) => command.data.toJSON());
@@ -14,7 +14,7 @@ export default async function registerCommands(client: CustomClient) {
 
     logger.success(`${data.length} commands registered`);
   } catch (error) {
-    logger.error("Error refreshing application commands", error);
+    logger.error('Error refreshing application commands', error);
     throw error;
   }
 }

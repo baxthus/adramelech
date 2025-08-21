@@ -4,9 +4,9 @@ import {
   CommandInteraction,
   ContextMenuCommandBuilder,
   SlashCommandBuilder,
-} from "discord.js";
-import z from "zod/v3";
-import type { Precondition } from "./precondition";
+} from 'discord.js';
+import z from 'zod/v3';
+import type { Precondition } from './precondition';
 
 export const commandSchema = z.object({
   data: z.custom<SlashCommandBuilder | ContextMenuCommandBuilder>(),

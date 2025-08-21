@@ -1,28 +1,28 @@
-import type { CustomClient } from ".";
-import { commandSchema, type Command } from "~/types/command";
-import { componentSchema } from "~/types/component";
-import { eventSchema } from "~/types/event";
-import { modalSchema } from "~/types/modal";
-import logger from "~/logger";
-import type { ClientEvents } from "discord.js";
-import path from "path";
-import findRecursively from "~/utils/findRecursively";
+import type { CustomClient } from '.';
+import { commandSchema, type Command } from '~/types/command';
+import { componentSchema } from '~/types/component';
+import { eventSchema } from '~/types/event';
+import { modalSchema } from '~/types/modal';
+import logger from '~/logger';
+import type { ClientEvents } from 'discord.js';
+import path from 'path';
+import findRecursively from '~/utils/findRecursively';
 
 // Be aware that this way of doing things allows for loading anything from any folder
 // Please respect the structure of the folders
 // Events only in events folder
 
-const FOLDERS_TO_LOAD = ["commands", "events"];
+const FOLDERS_TO_LOAD = ['commands', 'events'];
 
 const EXPORT_TYPES = {
-  command: { singular: "command", plural: "commands", schema: commandSchema },
-  event: { singular: "event", plural: "events", schema: eventSchema },
+  command: { singular: 'command', plural: 'commands', schema: commandSchema },
+  event: { singular: 'event', plural: 'events', schema: eventSchema },
   component: {
-    singular: "component",
-    plural: "components",
+    singular: 'component',
+    plural: 'components',
     schema: componentSchema,
   },
-  modal: { singular: "modal", plural: "modals", schema: modalSchema },
+  modal: { singular: 'modal', plural: 'modals', schema: modalSchema },
 } as const;
 
 function addCommand(client: CustomClient, rawCommand: unknown, file: string) {

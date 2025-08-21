@@ -1,12 +1,12 @@
-import { captureException, captureMessage } from "@sentry/bun";
-import kleur from "kleur";
-import { format } from "util";
+import { captureException, captureMessage } from '@sentry/bun';
+import kleur from 'kleur';
+import { format } from 'util';
 
 const ICONS = {
-  info: "",
-  success: "",
-  warn: "",
-  error: "",
+  info: '',
+  success: '',
+  warn: '',
+  error: '',
 };
 
 type LogParams = [message?: unknown, ...params: unknown[]];
@@ -38,7 +38,7 @@ function warn(...params: LogParams) {
   log(kleur.yellow(ICONS.warn), ...params);
 
   const message = format(...params);
-  captureMessage(`Warning: ${message}`, { level: "warning" });
+  captureMessage(`Warning: ${message}`, { level: 'warning' });
 }
 function error(...params: LogParams) {
   log(kleur.red(ICONS.error), ...params);
@@ -51,7 +51,7 @@ function error(...params: LogParams) {
     captureException(firstParam, { extra: extraData });
   } else {
     const message = format(...params);
-    captureException(new Error(message), { level: "error" });
+    captureException(new Error(message), { level: 'error' });
   }
 }
 

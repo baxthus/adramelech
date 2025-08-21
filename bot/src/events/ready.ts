@@ -1,8 +1,8 @@
-import { ActivityType, Events, version } from "discord.js";
-import type { Event } from "~/types/event";
-import type { CustomClient } from "~";
-import logger from "~/logger";
-import kleur from "kleur";
+import { ActivityType, Events, version } from 'discord.js';
+import type { Event } from '~/types/event';
+import type { CustomClient } from '~';
+import logger from '~/logger';
+import kleur from 'kleur';
 
 export const event = <Event>{
   name: Events.ClientReady,
@@ -10,8 +10,8 @@ export const event = <Event>{
   async execute(client: CustomClient) {
     logger.log();
 
-    const library = `${kleur.magenta(" Discord.js")} ${kleur.dim(version)}`;
-    const runtime = `${kleur.yellow(" Bun")} ${kleur.dim(Bun.version)}`;
+    const library = `${kleur.magenta(' Discord.js')} ${kleur.dim(version)}`;
+    const runtime = `${kleur.yellow(' Bun')} ${kleur.dim(Bun.version)}`;
     logger.log(`${library} | ${runtime}`);
 
     logger.log(kleur.green(` Online as ${kleur.bold(client.user!.tag)}`));
