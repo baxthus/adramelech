@@ -7,6 +7,7 @@ import {
 } from 'discord.js';
 import z from 'zod/v3';
 import type { Precondition } from './precondition';
+import { sendError } from '~/utils/sendError';
 
 export const commandSchema = z.object({
   data: z.custom<SlashCommandBuilder | ContextMenuCommandBuilder>(),
@@ -34,3 +35,25 @@ export type CommandExecutors = {
 export type CommandGroupExecutors = {
   [key: string]: SubcommandExecutor | CommandExecutors;
 };
+
+export async function executeCommandFromTree(
+  tree: CommandGroupExecutors,
+  intr: ChatInputCommandInteraction,
+) {
+  const groupName = intr.options.getSubcommandGroup(false);
+  const subcommandName = intr.options.getSubcommand();
+
+  let executor: SubcommandExecutor | undefined;
+
+  if (groupName) {
+    const group = tree[groupName];
+    if (group && typeof group === 'object' && !Array.isArray(group))
+      executor = group[subcommandName];
+  } else {
+    const directExecutor = tree[subcommandName];
+    if (typeof directExecutor === 'function') executor = directExecutor;
+  }
+
+  if (executor) await executor(intr);
+  else await sendError(intr, 'Unknown subcommand');
+}

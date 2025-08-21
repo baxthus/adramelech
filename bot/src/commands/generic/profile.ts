@@ -16,10 +16,10 @@ import {
   ApplicationCommandType,
   UserContextMenuCommandInteraction,
 } from 'discord.js';
-import type {
-  Command,
-  CommandGroupExecutors,
-  SubcommandExecutor,
+import {
+  executeCommandFromTree,
+  type Command,
+  type CommandGroupExecutors,
 } from '~/types/command';
 import { sendError } from '~/utils/sendError';
 import toUnixTimestamps from '~/utils/toUnixTimestamps';
@@ -114,24 +114,8 @@ export const commands = <Command[]>[
               ),
           ),
       ),
-    async execute(interaction: ChatInputCommandInteraction) {
-      const groupName = interaction.options.getSubcommandGroup(false);
-      const subcommandName = interaction.options.getSubcommand();
-
-      let executor: SubcommandExecutor | undefined;
-
-      if (groupName) {
-        const group = executors[groupName];
-        if (group && typeof group === 'object' && !Array.isArray(group))
-          executor = group[subcommandName];
-      } else {
-        const directExecutor = executors[subcommandName];
-        if (typeof directExecutor === 'function') executor = directExecutor;
-      }
-
-      if (executor) await executor(interaction);
-      else await sendError(interaction, 'Unknown subcommand');
-    },
+    execute: async (interaction: ChatInputCommandInteraction) =>
+      await executeCommandFromTree(executors, interaction),
     async autocomplete(interaction) {
       if (
         interaction.options.getSubcommandGroup(false) !== 'remove' ||
