@@ -17,13 +17,15 @@
     "database": "workspace:*",
     "discord.js": "^14.21.0",
     "kleur": "^4.1.5",
-    "ky": "^1.9.0"
+    "ky": "^1.9.0",
+    "voca": "^1.4.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
     "@types/bun": "latest",
     "@types/common-tags": "^1.8.4",
     "@types/node": "^24.3.0",
+    "@types/voca": "^1.4.6",
     "eslint": "^9.33.0",
     "globals": "^16.3.0",
     "prettier": "^3.6.2",

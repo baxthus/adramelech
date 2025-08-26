@@ -54,9 +54,9 @@ export const feedbackStatuses = t.pgEnum('feedback_statuses', [
 export const feedbacks = t.pgTable('feedbacks', {
   id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
   user_id: t
-    .integer()
+    .varchar({ length: 19 })
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => users.discord_id, { onDelete: 'cascade' }),
   title: t.text().notNull(),
   content: t.text().notNull(),
   status: feedbackStatuses().notNull().default('open'),
@@ -68,6 +68,6 @@ export const feedbacks = t.pgTable('feedbacks', {
 export const feedbacksRelations = relations(feedbacks, ({ one }) => ({
   user: one(users, {
     fields: [feedbacks.user_id],
-    references: [users.id],
+    references: [users.discord_id],
   }),
 }));
