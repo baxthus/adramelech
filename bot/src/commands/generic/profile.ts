@@ -28,8 +28,9 @@ import { stripIndents } from 'common-tags';
 import { z } from 'zod/mini';
 import type { Component } from '~/types/component';
 import type { Modal } from '~/types/modal';
-import { ProfileService } from '~/services/ProfileService';
 import { UIBuilder } from '~/services/UIBuilder';
+import SocialsService from 'database/services/SocialsService';
+import ProfileService from 'database/services/ProfileService';
 
 export const commands = <Command[]>[
   {
@@ -116,22 +117,22 @@ export const commands = <Command[]>[
       ),
     execute: async (interaction: ChatInputCommandInteraction) =>
       await executeCommandFromTree(executors, interaction),
-    async autocomplete(interaction) {
+    async autocomplete(intr) {
       if (
-        interaction.options.getSubcommandGroup(false) !== 'remove' ||
-        interaction.options.getSubcommand() !== 'social'
+        intr.options.getSubcommandGroup(false) !== 'remove' ||
+        intr.options.getSubcommand() !== 'social'
       )
         return;
 
-      const focused = interaction.options.getFocused();
-      const socials = await ProfileService.findSocialLink(
-        interaction.user.id,
+      const focused = intr.options.getFocused();
+      const socials = await SocialsService.findSocialsByName(
+        intr.user.id,
         focused,
         false,
       );
-      if (!socials) return await interaction.respond([]);
+      if (!socials) return await intr.respond([]);
 
-      await interaction.respond(
+      await intr.respond(
         socials.map((social) => ({
           name: social.name,
           value: social.name,
@@ -170,10 +171,11 @@ const executors: CommandGroupExecutors = {
 async function viewProfile(intr: CommandInteraction, user: User) {
   await intr.deferReply();
 
-  const data = await ProfileService.findUserProfile(user.id, true);
+  const data = await ProfileService.findProfileByDiscordId(user.id);
   if (!data) return await sendError(intr, 'This user does not have a profile');
+  const socials = await SocialsService.listSocialsByDiscordId(user.id);
 
-  const haveSocials = data.socials.length > 0;
+  const haveSocials = socials.length > 0;
 
   const registeredAt = toUnixTimestamps(data.created_at.getTime());
 
@@ -216,7 +218,7 @@ async function viewProfile(intr: CommandInteraction, user: User) {
               ? ComponentType.ActionRow
               : ComponentType.TextDisplay,
             content: haveSocials ? undefined : 'No social links found',
-            components: data.socials.map((social) => ({
+            components: socials.map((social) => ({
               type: ComponentType.Button,
               label: social.name,
               style: ButtonStyle.Link,
@@ -315,7 +317,9 @@ async function setNickname(intr: ChatInputCommandInteraction) {
 
   const nickname = intr.options.getString('nickname', true).trim();
 
-  const updated = await ProfileService.updateNickname(intr.user.id, nickname);
+  const updated = await ProfileService.updateProfile(intr.user.id, {
+    nickname,
+  });
   if (updated.length === 0)
     return await sendError(intr, 'Failed to update your nickname');
 
@@ -333,26 +337,26 @@ async function addSocial(intr: ChatInputCommandInteraction) {
   if (!z.url().safeParse(link).success)
     return await sendError(intr, 'The provided link is not a valid URL');
 
-  const data = await ProfileService.findUserProfile(intr.user.id, true);
-  if (!data) return await sendError(intr, 'You do not have a profile to edit');
+  const user = await ProfileService.findProfileByDiscordId(intr.user.id);
+  if (!user) return await sendError(intr, 'You do not have a profile to edit');
 
-  if (data.socials.length >= 5)
+  const socials = await SocialsService.listSocialsByDiscordId(intr.user.id);
+
+  if (socials.length >= 5)
     return await sendError(
       intr,
       'You can only have up to 5 social links in your profile',
     );
 
   if (
-    data.socials.some(
-      (social) => social.name.toLowerCase() === name.toLowerCase(),
-    )
+    socials.some((social) => social.name.toLowerCase() === name.toLowerCase())
   )
     return await sendError(
       intr,
       `You already have a social link with the name \`${name}\`. Please choose a different name`,
     );
 
-  const inserted = await ProfileService.addSocialLink(data.id, name, link);
+  const inserted = await SocialsService.createSocial(user.id, name, link);
   if (inserted.length === 0)
     return await sendError(intr, 'Failed to add the social link');
 
@@ -364,12 +368,14 @@ async function addSocial(intr: ChatInputCommandInteraction) {
 async function removeBio(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const data = await ProfileService.findUserProfile(intr.user.id, true);
-  if (!data) return await sendError(intr, 'You do not have a profile to edit');
-  if (!data.bio)
+  const user = await ProfileService.findProfileByDiscordId(intr.user.id);
+  if (!user) return await sendError(intr, 'You do not have a profile to edit');
+  if (!user.bio)
     return await sendError(intr, 'You do not have a bio to remove');
 
-  const updated = await ProfileService.updateBio(intr.user.id, null);
+  const updated = await ProfileService.updateProfile(intr.user.id, {
+    bio: null,
+  });
   if (updated.length === 0)
     return await sendError(intr, 'Failed to remove your bio');
 
@@ -381,12 +387,14 @@ async function removeBio(intr: ChatInputCommandInteraction) {
 async function removeNickname(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const data = await ProfileService.findUserProfile(intr.user.id, true);
-  if (!data) return await sendError(intr, 'You do not have a profile to edit');
-  if (!data.nickname)
+  const user = await ProfileService.findProfileByDiscordId(intr.user.id);
+  if (!user) return await sendError(intr, 'You do not have a profile to edit');
+  if (!user.nickname)
     return await sendError(intr, 'You do not have a nickname to remove');
 
-  const updated = await ProfileService.updateNickname(intr.user.id, null);
+  const updated = await ProfileService.updateProfile(intr.user.id, {
+    nickname: null,
+  });
   if (updated.length === 0)
     return await sendError(intr, 'Failed to remove your nickname');
 
@@ -400,17 +408,17 @@ async function removeSocial(intr: ChatInputCommandInteraction) {
 
   const name = intr.options.getString('name', true).trim();
 
-  const user = await ProfileService.findUserProfile(intr.user.id);
+  const user = await ProfileService.findProfileByDiscordId(intr.user.id);
   if (!user) return await sendError(intr, 'You do not have a profile to edit');
 
-  const data = await ProfileService.findSocialLink(intr.user.id, name, true);
+  const data = await SocialsService.findSocialsByName(intr.user.id, name);
   if (data.length === 0)
     return await sendError(
       intr,
       'You do not have a social link with that name to remove',
     );
 
-  const deleted = await ProfileService.removeSocialLink(user.id, name);
+  const deleted = await SocialsService.deleteSocial(user.id, data[0]!.id);
 
   if (deleted.length === 0)
     return await sendError(intr, 'Failed to remove the social link');
@@ -438,19 +446,18 @@ export const component = <Component>{
 
 export const modal = <Modal>{
   customId: 'modal-edit-bio',
-  async execute(interaction) {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  async execute(intr) {
+    await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-    const content = interaction.fields.getTextInputValue('content').trim();
+    const content = intr.fields.getTextInputValue('content').trim();
 
-    const updated = await ProfileService.updateBio(
-      interaction.user.id,
-      content,
-    );
+    const updated = await ProfileService.updateProfile(intr.user.id, {
+      bio: content,
+    });
     if (updated.length === 0)
-      return await sendError(interaction, 'Failed to update your bio');
+      return await sendError(intr, 'Failed to update your bio');
 
-    await interaction.followUp(
+    await intr.followUp(
       UIBuilder.createGenericSuccess('# Your bio has been updated!'),
     );
   },

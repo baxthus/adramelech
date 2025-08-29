@@ -7,8 +7,6 @@ import {
   type ChatInputCommandInteraction,
 } from 'discord.js';
 import { inArray } from 'drizzle-orm';
-import { FeedbackService } from '~/services/FeedbackService';
-import { ProfileService } from '~/services/ProfileService';
 import {
   executeCommandFromTree,
   type Command,
@@ -21,6 +19,8 @@ import toUnixTimestamps from '~/utils/toUnixTimestamps';
 import v from 'voca';
 import { UIBuilder } from '~/services/UIBuilder';
 import type { Modal } from '~/types/modal';
+import FeedbackService from 'database/services/FeedbackService';
+import ProfileService from 'database/services/ProfileService';
 
 export const command = <Command>{
   data: new SlashCommandBuilder()

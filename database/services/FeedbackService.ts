@@ -1,68 +1,61 @@
-import db from 'database';
-import { feedbacks, users } from 'database/schemas/schema';
 import { and, eq, inArray, like, type SQL } from 'drizzle-orm';
+import db from '..';
+import { feedbacks, users } from '../schemas/schema';
 
 /**
- * Feedback service for managing user feedback
+ * Service for managing user feedback
  */
-export class FeedbackService {
+export default class FeedbackService {
   /**
    * Find feedback by title
    * @param discordId The Discord ID of the user
    * @param title The title of the feedback
-   * @param onlyBasic Whether to only return basic feedback information
-   * @param filter Additional filters to apply to the feedback search
+   * @param onlyBasic Whether to return only basic feedback information
+   * @param filter Additional filters to apply
    * @returns The found feedback entries
    */
   static async findFeedbackByTitle(
     discordId: string,
     title: string,
     onlyBasic: boolean = false,
-    filter: SQL | undefined = undefined,
+    filter: SQL | undefined = undefined
   ) {
-    const data = await db.query.users.findFirst({
-      columns: {},
-      where: eq(users.discord_id, discordId),
-      with: {
-        feedbacks: {
-          columns: onlyBasic ? { id: true, title: true } : undefined,
-          where: and(filter, like(feedbacks.title, `%${title}%`)),
-        },
-      },
+    return await db.query.feedbacks.findMany({
+      columns: onlyBasic ? { id: true, title: true } : undefined,
+      where: and(
+        eq(feedbacks.user_id, discordId),
+        like(feedbacks.title, `%${title}%`),
+        filter
+      ),
     });
-    return data?.feedbacks ?? [];
   }
 
   /**
    * Find feedback by ID
    * @param discordId The Discord ID of the user
    * @param feedbackId The ID of the feedback
-   * @returns The found feedback entry or null if not found
+   * @return The found feedback entry
    */
   static async findFeedbackById(discordId: string, feedbackId: number) {
-    const data = await db.query.users.findFirst({
-      columns: {},
-      where: eq(users.discord_id, discordId),
-      with: {
-        feedbacks: {
-          where: eq(feedbacks.id, feedbackId),
-        },
-      },
+    return await db.query.feedbacks.findFirst({
+      where: and(
+        eq(feedbacks.user_id, discordId),
+        eq(feedbacks.id, feedbackId)
+      ),
     });
-    return data?.feedbacks[0] ?? null;
   }
 
   /**
-   * Creates a new feedback entry
+   * Create a new feedback entry
    * @param discordId The Discord ID of the user
    * @param title The title of the feedback
    * @param content The content of the feedback
-   * @returns The ID of the created feedback
+   * @returns The created feedback entry (ID only)
    */
   static async createFeedback(
     discordId: string,
     title: string,
-    content: string,
+    content: string
   ) {
     return await db
       .insert(feedbacks)
@@ -75,10 +68,10 @@ export class FeedbackService {
   }
 
   /**
-   * Closes a feedback entry
+   * Close a feedback entry
    * @param discordId The Discord ID of the user
-   * @param feedbackId The ID of the feedback to close
-   * @returns The ID of the closed feedback
+   * @param feedbackId The ID of the feedback
+   * @returns The closed feedback entry (ID only)
    */
   static async closeFeedback(discordId: string, feedbackId: number) {
     return await db
@@ -86,10 +79,10 @@ export class FeedbackService {
       .set({ status: 'closed', updated_at: new Date() })
       .where(
         and(
-          eq(feedbacks.id, feedbackId),
           eq(feedbacks.user_id, discordId),
-          inArray(feedbacks.status, ['open', 'acknowledged']),
-        ),
+          eq(feedbacks.id, feedbackId),
+          inArray(feedbacks.status, ['open', 'acknowledged'])
+        )
       )
       .returning({ id: feedbacks.id });
   }
