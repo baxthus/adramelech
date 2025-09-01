@@ -1,16 +1,17 @@
+import { stripIndents } from 'common-tags';
 import {
+  ButtonStyle,
   ComponentType,
   MessageFlags,
   SlashCommandBuilder,
   type ChatInputCommandInteraction,
 } from 'discord.js';
-import z from 'zod';
-import type { Command } from '~/types/command';
-import config from '~/config';
-import { sendError } from '~/utils/sendError';
 import ky from 'ky';
-import { stripIndents } from 'common-tags';
 import v from 'voca';
+import z from 'zod';
+import config from '~/config';
+import type { Command } from '~/types/command';
+import { sendError } from '~/utils/sendError';
 
 const BASE_URL = 'https://api.openweathermap.org';
 
@@ -20,13 +21,16 @@ const geoSchema = z.object({
 });
 
 const weatherSchema = z.object({
+  id: z.number(),
   name: z.string().nullish(),
-  weather: z.array(
-    z.object({
-      main: z.string(),
-      description: z.string(),
-    }),
-  ),
+  weather: z
+    .array(
+      z.object({
+        main: z.string(),
+        description: z.string(),
+      }),
+    )
+    .min(1),
   main: z.object({
     temp: z.number(),
     feels_like: z.number(),
@@ -41,6 +45,12 @@ const weatherSchema = z.object({
     speed: z.number(),
     deg: z.number(),
     gust: z.number().nullish(), // Present most of the time, but not always
+  }),
+  sys: z.object({
+    country: z
+      .string()
+      .length(2)
+      .transform((c) => v.lowerCase(c)),
   }),
 });
 
@@ -100,7 +110,24 @@ export const command = <Command>{
             {
               type: ComponentType.TextDisplay,
               content: stripIndents`
-              # Weather${weather.name ? ` in ${weather.name}` : ''}
+              # Weather${weather.name ? ` in ${weather.name} :flag_${weather.sys.country}:` : ''}
+              `,
+            },
+            {
+              type: ComponentType.ActionRow,
+              components: [
+                {
+                  type: ComponentType.Button,
+                  label: 'View on OpenWeatherMap',
+                  style: ButtonStyle.Link,
+                  url: `https://openweathermap.org/city/${weather.id}`,
+                },
+              ],
+            },
+            { type: ComponentType.Separator, divider: false },
+            {
+              type: ComponentType.TextDisplay,
+              content: stripIndents`
               **Temperature:** ${weather.main.temp}ºC
               **Feels Like:** ${weather.main.feels_like}ºC
               **Minimum Temperature:** ${weather.main.temp_min}ºC
