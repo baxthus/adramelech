@@ -1,9 +1,9 @@
 import {
-  AutocompleteInteraction,
-  ChatInputCommandInteraction,
-  CommandInteraction,
-  ContextMenuCommandBuilder,
-  SlashCommandBuilder,
+  type AutocompleteInteraction,
+  type ChatInputCommandInteraction,
+  type CommandInteraction,
+  type ContextMenuCommandBuilder,
+  type SlashCommandBuilder,
 } from 'discord.js';
 import z from 'zod/v3';
 import type { Precondition } from './precondition';

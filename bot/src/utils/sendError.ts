@@ -1,10 +1,10 @@
 import { stripIndents } from 'common-tags';
 import {
   Colors,
-  CommandInteraction,
+  type CommandInteraction,
   ComponentType,
   InteractionType,
-  MessageComponentInteraction,
+  type MessageComponentInteraction,
   MessageFlags,
   type BaseInteraction,
   type InteractionReplyOptions,

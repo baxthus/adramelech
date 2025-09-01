@@ -1,10 +1,10 @@
 import {
-  AutocompleteInteraction,
+  type AutocompleteInteraction,
   Collection,
   Events,
   InteractionType,
-  ModalSubmitInteraction,
-  PrimaryEntryPointCommandInteraction,
+  type ModalSubmitInteraction,
+  type PrimaryEntryPointCommandInteraction,
   type AnySelectMenuInteraction,
   type ButtonInteraction,
   type ChatInputCommandInteraction,

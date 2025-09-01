@@ -5,13 +5,13 @@ import {
   ContextMenuCommandBuilder,
   MessageFlags,
   SlashCommandBuilder,
-  type UserContextMenuCommandInteraction,
   type ChatInputCommandInteraction,
   type CommandInteraction,
   type User,
+  type UserContextMenuCommandInteraction,
 } from 'discord.js';
-import type { Command } from '~/types/command';
 import config from '~/config';
+import type { Command } from '~/types/command';
 
 export const commands = <Array<Command>>[
   {
