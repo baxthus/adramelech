@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   psql:
@@ -8,9 +8,9 @@ services:
       POSTGRES_PASSWORD: hunter2
       POSTGRES_DB: adramelech
     ports:
-      - '5432:5432'
+      - "5432:5432"
     volumes:
-      - psql_data:/var/lib/postgresql/data
+      - adramelech_data:/var/lib/postgresql/data
 
 volumes:
-  psql_data:
+  adramelech_data:
