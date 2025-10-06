@@ -15,7 +15,15 @@
     "typescript": "^5"
   },
   "trustedDependencies": [
-    "@tailwindcss/oxide"
+    "@heroui/shared-utils",
+    "@prisma/client",
+    "@prisma/engines",
+    "@tailwindcss/oxide",
+    "better-sqlite3",
+    "esbuild",
+    "prisma",
+    "sharp",
+    "unrs-resolver"
   ],
   "dependencies": {
     "drizzle-orm": "^0.44.4",

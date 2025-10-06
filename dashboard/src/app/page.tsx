@@ -1,7 +1,10 @@
+'use client';
+import { Button } from '@heroui/react';
+
 export default function Home() {
   return (
     <div>
-      <h1>test</h1>
+      <Button color="primary">Test</Button>
     </div>
   );
 }
