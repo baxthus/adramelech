@@ -1,4 +1,4 @@
-import cn from '@/utils/cn';
+import { cn } from '@heroui/react';
 import { Boldonse } from 'next/font/google';
 
 const boldonse = Boldonse({
@@ -9,6 +9,8 @@ const boldonse = Boldonse({
 
 export default function Logo({ className }: { className?: string }) {
   return (
-    <p className={cn(boldonse.className, className)}>Adramelech Dashboard</p>
+    <p className={cn(boldonse.className, 'text-center', className)}>
+      Adramelech Dashboard
+    </p>
   );
 }
