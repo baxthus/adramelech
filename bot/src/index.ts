@@ -1,15 +1,15 @@
 import '~/instrument'; // Sentry, import this first
 
-import '#db'; // Preload
+import 'database'; // Preload
 import { Client, Collection, GatewayIntentBits } from 'discord.js';
-import type { Command } from '~/types/command';
-import type { Event } from '~/types/event';
-import type { Component } from '~/types/component';
-import type { Modal } from '~/types/modal';
 import config from '~/config';
 import { loadModules } from '~/loader';
-import registerCommands from '~/utils/registerCommands';
 import logger from '~/logger';
+import type { Command } from '~/types/command';
+import type { Component } from '~/types/component';
+import type { Event } from '~/types/event';
+import type { Modal } from '~/types/modal';
+import registerCommands from '~/utils/registerCommands';
 
 export class CustomClient extends Client {
   commands: Collection<string, Command> = new Collection();
