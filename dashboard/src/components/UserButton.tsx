@@ -1,5 +1,5 @@
 'use client';
-import { SignOutButton, useAuth, useUser } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
 import {
   Avatar,
   Dropdown,
@@ -8,7 +8,7 @@ import {
   DropdownMenu,
   DropdownTrigger,
 } from '@heroui/react';
-import { Icon, IconLogout } from '@tabler/icons-react';
+import { Icon, IconLogout, IconQuote } from '@tabler/icons-react';
 import { redirect } from 'next/navigation';
 
 export default function UserButton() {
@@ -39,7 +39,14 @@ export default function UserButton() {
           </p>
         </>
       ),
+      color: 'secondary',
       href: '/profile',
+    },
+    {
+      key: 'phrases',
+      content: 'Phrases',
+      href: '/dashboard/phrases',
+      icon: IconQuote,
     },
     {
       key: 'sign-out',
@@ -51,44 +58,42 @@ export default function UserButton() {
   ];
 
   return (
-    <>
-      <Dropdown placement="bottom-end">
-        <DropdownTrigger>
-          <Avatar
-            isBordered
-            color="secondary"
-            as="button"
-            src={user.imageUrl}
-            fallback={
-              user.firstName?.[0] ||
-              user.username?.[0] ||
-              user.emailAddresses[0].emailAddress[0]
+    <Dropdown placement="bottom-end">
+      <DropdownTrigger>
+        <Avatar
+          isBordered
+          color="secondary"
+          as="button"
+          src={user.imageUrl}
+          fallback={
+            user.firstName?.[0] ||
+            user.username?.[0] ||
+            user.emailAddresses[0].emailAddress[0]
+          }
+        />
+      </DropdownTrigger>
+      <DropdownMenu
+        aria-label="Profile Actions"
+        variant="shadow"
+        onAction={(key) => {
+          const item = items.find((item) => item.key === key);
+          if (item?.action) item.action();
+        }}
+      >
+        {items.map((item) => (
+          <DropdownItem
+            key={item.key}
+            href={item.href}
+            as={item.as}
+            color={item.color}
+            startContent={
+              item.icon ? <item.icon stroke={1.5} size={20} /> : undefined
             }
-          />
-        </DropdownTrigger>
-        <DropdownMenu
-          aria-label="Profile Actions"
-          variant="flat"
-          onAction={(key) => {
-            const item = items.find((item) => item.key === key);
-            if (item?.action) item.action();
-          }}
-        >
-          {items.map((item) => (
-            <DropdownItem
-              key={item.key}
-              href={item.href}
-              as={item.as}
-              color={item.color}
-              startContent={
-                item.icon ? <item.icon stroke={1.5} size={20} /> : undefined
-              }
-            >
-              {item.content}
-            </DropdownItem>
-          ))}
-        </DropdownMenu>
-      </Dropdown>
-    </>
+          >
+            {item.content}
+          </DropdownItem>
+        ))}
+      </DropdownMenu>
+    </Dropdown>
   );
 }
