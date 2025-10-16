@@ -3,9 +3,9 @@ version: '3'
 dotenv: ['.env']
 
 vars:
-  DASHBOARD: '{{.USER_WORKING_DIR}}/dashboard'
-  DATABASE: '{{.USER_WORKING_DIR}}/database'
-  BOT: '{{.USER_WORKING_DIR}}/bot'
+  DASHBOARD: './dashboard'
+  DATABASE: './database'
+  BOT: './bot'
 
 tasks:
   dashboard:
