@@ -50,6 +50,7 @@ export const feedbackStatuses = t.pgEnum('feedback_statuses', [
   'accepted',
   'rejected',
 ]);
+export type FeedbackStatus = (typeof feedbackStatuses.enumValues)[number];
 
 export const feedbacks = t.pgTable('feedbacks', {
   id: t.integer().primaryKey().generatedAlwaysAsIdentity(),

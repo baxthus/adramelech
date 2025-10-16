@@ -1,4 +1,4 @@
-import { feedbacks } from 'database/schemas/schema';
+import { type FeedbackStatus } from 'database/schemas/schema';
 import {
   ComponentType,
   MessageFlags,
@@ -6,7 +6,6 @@ import {
   TextInputStyle,
   type ChatInputCommandInteraction,
 } from 'discord.js';
-import { inArray } from 'drizzle-orm';
 import {
   executeCommandFromTree,
   type Command,
@@ -65,7 +64,7 @@ export const command = <Command>{
     const filter =
       subcommand === 'view'
         ? undefined
-        : inArray(feedbacks.status, ['open', 'acknowledged']);
+        : (['open', 'acknowledged'] as FeedbackStatus[]);
 
     const focused = intr.options.getFocused();
     const data = await FeedbackService.findFeedbackByTitle(

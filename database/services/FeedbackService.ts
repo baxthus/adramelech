@@ -1,6 +1,6 @@
 import { and, eq, inArray, like, type SQL } from 'drizzle-orm';
 import db from '..';
-import { feedbacks, users } from '../schemas/schema';
+import { feedbacks, type FeedbackStatus } from '../schemas/schema';
 
 /**
  * Service for managing user feedback
@@ -18,14 +18,18 @@ export default class FeedbackService {
     discordId: string,
     title: string,
     onlyBasic: boolean = false,
-    filter: SQL | undefined = undefined
+    statusList: Array<FeedbackStatus> | undefined = undefined
   ) {
+    const statusFilter = statusList
+      ? inArray(feedbacks.status, statusList)
+      : undefined;
+
     return await db.query.feedbacks.findMany({
       columns: onlyBasic ? { id: true, title: true } : undefined,
       where: and(
         eq(feedbacks.user_id, discordId),
         like(feedbacks.title, `%${title}%`),
-        filter
+        statusFilter
       ),
     });
   }
