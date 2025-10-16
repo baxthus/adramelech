@@ -1,4 +1,5 @@
 'use client';
+import places from '@/app/places';
 import { useAuth, useUser } from '@clerk/nextjs';
 import {
   Avatar,
@@ -42,12 +43,12 @@ export default function UserButton() {
       color: 'secondary',
       href: '/profile',
     },
-    {
-      key: 'phrases',
-      content: 'Phrases',
-      href: '/dashboard/phrases',
-      icon: IconQuote,
-    },
+    ...places.map((place) => ({
+      key: place.key,
+      content: place.name,
+      href: place.href,
+      icon: place.icon,
+    })),
     {
       key: 'sign-out',
       content: 'Sign out',
