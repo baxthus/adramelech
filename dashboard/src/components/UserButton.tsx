@@ -1,6 +1,6 @@
 'use client';
 import places from '@/app/places';
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useAuth, useClerk, useUser } from '@clerk/nextjs';
 import {
   Avatar,
   Dropdown,
@@ -15,6 +15,7 @@ import { redirect } from 'next/navigation';
 export default function UserButton() {
   const { user, isLoaded, isSignedIn } = useUser();
   const { signOut } = useAuth();
+  const { openUserProfile } = useClerk();
 
   if (!isLoaded) return null;
   if (!isSignedIn) redirect('/sign-in');
@@ -41,7 +42,7 @@ export default function UserButton() {
         </>
       ),
       color: 'secondary',
-      href: '/profile',
+      action: openUserProfile,
     },
     ...places.map((place) => ({
       key: place.key,
