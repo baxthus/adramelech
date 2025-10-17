@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, sql } from 'drizzle-orm';
+import { desc, eq, ilike, or, sql } from 'drizzle-orm';
 import db from '..';
 import { phrases, type PhraseInsert } from '../schemas/schema';
 
@@ -13,7 +13,7 @@ export default class PhraseService {
    */
   static async getPhrases(searchTerm?: string) {
     const searchFilter = searchTerm
-      ? and(
+      ? or(
           ilike(phrases.content, `%${searchTerm}%`),
           ilike(phrases.source, `%${searchTerm}%`)
         )
