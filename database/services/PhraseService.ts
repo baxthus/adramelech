@@ -1,4 +1,4 @@
-import { and, ilike, sql } from 'drizzle-orm';
+import { and, desc, eq, ilike, sql } from 'drizzle-orm';
 import db from '..';
 import { phrases } from '../schemas/schema';
 
@@ -20,6 +20,7 @@ export default class PhraseService {
       : undefined;
 
     return await db.query.phrases.findMany({
+      orderBy: [desc(phrases.created_at)],
       where: searchFilter,
     });
   }
@@ -33,5 +34,17 @@ export default class PhraseService {
       columns: { id: false },
       orderBy: sql`RANDOM()`,
     });
+  }
+
+  /**
+   * Delete a phrase by its ID
+   * @param id ID of the phrase to delete
+   * @returns The ID of the deleted phrase
+   */
+  static async deletePhrase(id: number) {
+    return await db
+      .delete(phrases)
+      .where(eq(phrases.id, id))
+      .returning({ id: phrases.id });
   }
 }

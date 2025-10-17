@@ -27,7 +27,7 @@ export const command = <Command>{
             },
             {
               type: ComponentType.TextDisplay,
-              content: `> ${phrase.content}`,
+              content: `> ${phrase.source}`,
             },
           ],
         },

@@ -2,12 +2,22 @@
 import Loading from '@/components/Loading';
 import SearchField from '@/components/SearchField';
 import { useAuth } from '@clerk/nextjs';
-import { Alert, Button } from '@heroui/react';
-import { IconPlus, IconRefresh } from '@tabler/icons-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  addToast,
+  Alert,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
+} from '@heroui/react';
+import { IconPlus, IconRefresh, IconTrash } from '@tabler/icons-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { redirect } from 'next/navigation';
 import { useState } from 'react';
-import { getPhrases } from './actions';
+import { getPhrases, deletePhrase } from './actions';
 
 export default function PhrasesPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -28,13 +38,28 @@ export default function PhrasesPage() {
     queryFn: () => getPhrases(searchTerm),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: deletePhrase,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['phrases'] });
+      addToast({ title: 'Phrase deleted', color: 'success' });
+    },
+    onError: (error) => {
+      addToast({
+        title: 'Failed to delete phrase',
+        description: error?.message,
+        color: 'danger',
+      });
+    },
+  });
+
   if (!isLoaded) return <Loading />;
   if (!isSignedIn) redirect('/sign-in');
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-4xl font-bold">Notes</p>
+        <p className="text-4xl font-bold">Phrases</p>
         <div className="flex items-center gap-x-2">
           <Button color="primary" isIconOnly aria-label="Add Phrase">
             <IconPlus />
@@ -71,9 +96,34 @@ export default function PhrasesPage() {
       {isLoading ? (
         <Loading />
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {JSON.stringify(phrases)}
-        </div>
+        <Table isVirtualized>
+          <TableHeader>
+            <TableColumn>ID</TableColumn>
+            <TableColumn>CONTENT</TableColumn>
+            <TableColumn>SOURCE</TableColumn>
+            <TableColumn>ACTIONS</TableColumn>
+          </TableHeader>
+          <TableBody emptyContent="No phrases found">
+            {phrases?.map((phrase) => (
+              <TableRow key={phrase.id}>
+                <TableCell>{phrase.id}</TableCell>
+                <TableCell>{phrase.content}</TableCell>
+                <TableCell>{phrase.source}</TableCell>
+                <TableCell>
+                  <Button
+                    color="danger"
+                    variant="flat"
+                    size="sm"
+                    isIconOnly
+                    onPress={() => deleteMutation.mutate(phrase.id)}
+                  >
+                    <IconTrash size={18} />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            )) || []}
+          </TableBody>
+        </Table>
       )}
     </div>
   );

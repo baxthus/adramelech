@@ -5,6 +5,7 @@ export const phrases = t.pgTable('phrases', {
   id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
   content: t.text().notNull(),
   source: t.text().notNull(),
+  created_at: t.timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
 export const users = t.pgTable(

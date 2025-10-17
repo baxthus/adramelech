@@ -7,3 +7,9 @@ export async function getPhrases(searchTerm?: string) {
 
   return await PhraseService.getPhrases(searchTerm);
 }
+
+export async function deletePhrase(id: number) {
+  isAuthenticated();
+
+  await PhraseService.deletePhrase(id);
+}
