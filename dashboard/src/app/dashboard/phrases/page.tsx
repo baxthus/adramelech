@@ -93,12 +93,12 @@ export default function PhrasesPage() {
           className="max-w-md"
         />
       )}
-      <Table isVirtualized>
+      <Table isVirtualized isHeaderSticky isStriped>
         <TableHeader>
           <TableColumn>CONTENT</TableColumn>
           <TableColumn>SOURCE</TableColumn>
           <TableColumn>CREATED AT</TableColumn>
-          <TableColumn>ACTIONS</TableColumn>
+          <TableColumn align="center">ACTIONS</TableColumn>
         </TableHeader>
         <TableBody
           emptyContent="No phrases found"
