@@ -18,6 +18,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { redirect } from 'next/navigation';
 import { useState } from 'react';
 import { getPhrases, deletePhrase } from './actions';
+import { formatDate } from '@/utils/date';
 
 export default function PhrasesPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -93,38 +94,38 @@ export default function PhrasesPage() {
           className="max-w-md"
         />
       )}
-      {isLoading ? (
-        <Loading />
-      ) : (
-        <Table isVirtualized>
-          <TableHeader>
-            <TableColumn>ID</TableColumn>
-            <TableColumn>CONTENT</TableColumn>
-            <TableColumn>SOURCE</TableColumn>
-            <TableColumn>ACTIONS</TableColumn>
-          </TableHeader>
-          <TableBody emptyContent="No phrases found">
-            {phrases?.map((phrase) => (
-              <TableRow key={phrase.id}>
-                <TableCell>{phrase.id}</TableCell>
-                <TableCell>{phrase.content}</TableCell>
-                <TableCell>{phrase.source}</TableCell>
-                <TableCell>
-                  <Button
-                    color="danger"
-                    variant="flat"
-                    size="sm"
-                    isIconOnly
-                    onPress={() => deleteMutation.mutate(phrase.id)}
-                  >
-                    <IconTrash size={18} />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            )) || []}
-          </TableBody>
-        </Table>
-      )}
+      <Table isVirtualized>
+        <TableHeader>
+          <TableColumn>CONTENT</TableColumn>
+          <TableColumn>SOURCE</TableColumn>
+          <TableColumn>CREATED AT</TableColumn>
+          <TableColumn>ACTIONS</TableColumn>
+        </TableHeader>
+        <TableBody
+          emptyContent="No phrases found"
+          isLoading={isLoading}
+          loadingContent={<Loading />}
+        >
+          {phrases?.map((phrase) => (
+            <TableRow key={phrase.id}>
+              <TableCell>{phrase.content}</TableCell>
+              <TableCell>{phrase.source}</TableCell>
+              <TableCell>{formatDate(phrase.created_at)}</TableCell>
+              <TableCell>
+                <Button
+                  color="danger"
+                  variant="flat"
+                  size="sm"
+                  isIconOnly
+                  onPress={() => deleteMutation.mutate(phrase.id)}
+                >
+                  <IconTrash size={18} />
+                </Button>
+              </TableCell>
+            </TableRow>
+          )) || []}
+        </TableBody>
+      </Table>
     </div>
   );
 }
