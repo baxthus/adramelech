@@ -93,7 +93,7 @@ export default function PhrasesPage() {
           className="max-w-md"
         />
       )}
-      <Table isVirtualized isHeaderSticky isStriped>
+      <Table isVirtualized isHeaderSticky isStriped className="overflow-x-auto">
         <TableHeader>
           <TableColumn>CONTENT</TableColumn>
           <TableColumn>SOURCE</TableColumn>
@@ -107,10 +107,14 @@ export default function PhrasesPage() {
         >
           {phrases?.map((phrase) => (
             <TableRow key={phrase.id}>
-              <TableCell className="whitespace-pre-wrap">
-                {phrase.content}
+              <TableCell className="whitespace-pre">{phrase.content}</TableCell>
+              <TableCell className="whitespace-nowrap">
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html: phrase.source.replace(/;/g, ';<wbr>'),
+                  }}
+                />
               </TableCell>
-              <TableCell>{phrase.source}</TableCell>
               <TableCell>{formatDate(phrase.created_at)}</TableCell>
               <TableCell>
                 <Button
