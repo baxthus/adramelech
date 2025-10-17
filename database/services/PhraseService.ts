@@ -1,6 +1,6 @@
 import { and, desc, eq, ilike, sql } from 'drizzle-orm';
 import db from '..';
-import { phrases } from '../schemas/schema';
+import { phrases, type PhraseInsert } from '../schemas/schema';
 
 /**
  * Service for managing phrases
@@ -37,14 +37,18 @@ export default class PhraseService {
   }
 
   /**
+   * Add a new phrase
+   * @param data Data for the new phrase
+   */
+  static async addPhrase(data: PhraseInsert) {
+    await db.insert(phrases).values(data);
+  }
+
+  /**
    * Delete a phrase by its ID
    * @param id ID of the phrase to delete
-   * @returns The ID of the deleted phrase
    */
   static async deletePhrase(id: number) {
-    return await db
-      .delete(phrases)
-      .where(eq(phrases.id, id))
-      .returning({ id: phrases.id });
+    await db.delete(phrases).where(eq(phrases.id, id));
   }
 }

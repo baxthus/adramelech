@@ -13,12 +13,13 @@ import {
   TableHeader,
   TableRow,
 } from '@heroui/react';
-import { IconPlus, IconRefresh, IconTrash } from '@tabler/icons-react';
+import { IconRefresh, IconTrash } from '@tabler/icons-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { redirect } from 'next/navigation';
 import { useState } from 'react';
 import { getPhrases, deletePhrase } from './actions';
 import { formatDate } from '@/utils/date';
+import AddPhraseModal from './modal';
 
 export default function PhrasesPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -62,9 +63,7 @@ export default function PhrasesPage() {
       <div className="flex items-center justify-between">
         <p className="text-4xl font-bold">Phrases</p>
         <div className="flex items-center gap-x-2">
-          <Button color="primary" isIconOnly aria-label="Add Phrase">
-            <IconPlus />
-          </Button>
+          <AddPhraseModal queryClient={queryClient} />
           <Button
             variant="flat"
             isIconOnly
@@ -108,7 +107,9 @@ export default function PhrasesPage() {
         >
           {phrases?.map((phrase) => (
             <TableRow key={phrase.id}>
-              <TableCell>{phrase.content}</TableCell>
+              <TableCell className="whitespace-pre-wrap">
+                {phrase.content}
+              </TableCell>
               <TableCell>{phrase.source}</TableCell>
               <TableCell>{formatDate(phrase.created_at)}</TableCell>
               <TableCell>

@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm';
 import * as t from 'drizzle-orm/pg-core';
+import { createInsertSchema } from 'drizzle-zod';
 
 export const phrases = t.pgTable('phrases', {
   id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -7,6 +8,8 @@ export const phrases = t.pgTable('phrases', {
   source: t.text().notNull(),
   created_at: t.timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
+export const phraseInsertSchema = createInsertSchema(phrases);
+export type PhraseInsert = typeof phrases.$inferInsert;
 
 export const users = t.pgTable(
   'users',
