@@ -7,6 +7,7 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
+import { useRouter } from 'next/navigation';
 
 function createQueryClient() {
   return new QueryClient({
@@ -28,11 +29,12 @@ function getQueryClient() {
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
+  const router = useRouter();
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" enableSystem disableTransitionOnChange>
         <ThemedClerkProvider>
-          <HeroUIProvider>
+          <HeroUIProvider navigate={router.push}>
             <ToastProvider
               toastProps={{
                 timeout: 3000,

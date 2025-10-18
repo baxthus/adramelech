@@ -17,7 +17,7 @@ export default function DashboardPage() {
         >
           <CardBody className="flex items-center">
             <place.icon size={64} stroke={1} />
-            <p className="mb-2 text-3xl">{place.name}</p>
+            <p className="m-2 text-3xl">{place.name}</p>
           </CardBody>
         </Card>
       ))}

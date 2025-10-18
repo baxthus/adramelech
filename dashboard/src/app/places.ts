@@ -1,4 +1,4 @@
-import { IconQuote } from '@tabler/icons-react';
+import { IconQuote, IconUsers } from '@tabler/icons-react';
 
 export default [
   {
@@ -6,5 +6,11 @@ export default [
     name: 'Phrases',
     href: '/dashboard/phrases',
     icon: IconQuote,
+  },
+  {
+    key: 'users',
+    name: 'Users',
+    href: '/dashboard/users',
+    icon: IconUsers,
   },
 ];
