@@ -93,7 +93,13 @@ export default function PhrasesPage() {
           className="max-w-md"
         />
       )}
-      <Table isVirtualized isHeaderSticky isStriped className="overflow-x-auto">
+      <Table
+        isVirtualized
+        isHeaderSticky
+        isStriped
+        className="overflow-x-auto"
+        aria-label="Phrases Table"
+      >
         <TableHeader>
           <TableColumn>CONTENT</TableColumn>
           <TableColumn>SOURCE</TableColumn>
