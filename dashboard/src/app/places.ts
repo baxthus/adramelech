@@ -8,9 +8,9 @@ export default [
     icon: IconQuote,
   },
   {
-    key: 'users',
-    name: 'Users',
-    href: '/dashboard/users',
+    key: 'profiles',
+    name: 'Profiles',
+    href: '/dashboard/profiles',
     icon: IconUsers,
   },
 ];
