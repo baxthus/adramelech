@@ -121,7 +121,7 @@ export default function PhrasesPage() {
                   }}
                 />
               </TableCell>
-              <TableCell>{formatDate(phrase.created_at)}</TableCell>
+              <TableCell>{formatDate(phrase.createdAt)}</TableCell>
               <TableCell>
                 <Button
                   color="danger"

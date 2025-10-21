@@ -1,4 +1,4 @@
-import { type FeedbackStatus } from 'database/schemas/schema';
+import { feedbacks, profiles } from 'database/schemas/schema';
 import {
   ComponentType,
   MessageFlags,
@@ -18,8 +18,9 @@ import toUnixTimestamps from '~/utils/toUnixTimestamps';
 import v from 'voca';
 import { UIBuilder } from '~/services/UIBuilder';
 import type { Modal } from '~/types/modal';
-import FeedbackService from 'database/services/FeedbackService';
-import ProfileService from 'database/services/ProfileService';
+import exists from 'database/utils/exists';
+import { and, eq, ilike, inArray } from 'drizzle-orm';
+import db from 'database';
 
 export const command = <Command>{
   data: new SlashCommandBuilder()
@@ -32,7 +33,7 @@ export const command = <Command>{
       subcommand
         .setName('view')
         .setDescription('View your feedbacks')
-        .addNumberOption((option) =>
+        .addStringOption((option) =>
           option
             .setName('feedback')
             .setDescription('The feedback to view')
@@ -44,7 +45,7 @@ export const command = <Command>{
       subcommand
         .setName('close')
         .setDescription('Close a feedback')
-        .addNumberOption((option) =>
+        .addStringOption((option) =>
           option
             .setName('feedback')
             .setDescription('The feedback to close')
@@ -64,19 +65,23 @@ export const command = <Command>{
     const filter =
       subcommand === 'view'
         ? undefined
-        : (['open', 'acknowledged'] as FeedbackStatus[]);
+        : inArray(feedbacks.status, ['open', 'acknowledged']);
 
     const focused = intr.options.getFocused();
-    const data = await FeedbackService.findFeedbackByTitle(
-      intr.user.id,
-      focused,
-      true,
-      filter,
-    );
-    if (!data.length) return await intr.respond([]);
+    const profile = await db.query.profiles.findFirst({
+      columns: {},
+      where: eq(profiles.discordId, intr.user.id),
+      with: {
+        feedbacks: {
+          columns: { id: true, title: true },
+          where: and(ilike(feedbacks.title, `%${focused}%`), filter),
+        },
+      },
+    });
+    if (!profile || !profile.feedbacks.length) return await intr.respond([]);
 
     await intr.respond(
-      data.map((f) => ({
+      profile.feedbacks.map((f) => ({
         name: f.title,
         value: f.id,
       })),
@@ -91,7 +96,7 @@ const executors: CommandExecutors = {
 };
 
 async function createFeedback(intr: ChatInputCommandInteraction) {
-  if (!(await ProfileService.userExists(intr.user.id)))
+  if (!(await exists(profiles, eq(profiles.discordId, intr.user.id))))
     return await sendError(
       intr,
       'You need to register first using `/profile create` command',
@@ -134,18 +139,23 @@ async function createFeedback(intr: ChatInputCommandInteraction) {
 async function viewFeedback(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  if (!(await ProfileService.userExists(intr.user.id)))
+  const feedbackId = intr.options.getString('feedback', true);
+
+  const profile = await db.query.profiles.findFirst({
+    columns: {},
+    where: eq(profiles.discordId, intr.user.id),
+    with: {
+      feedbacks: {
+        where: eq(feedbacks.id, feedbackId),
+      },
+    },
+  });
+  if (!profile)
     return await sendError(
       intr,
       'You need to register first using `/profile create` command',
     );
-
-  const feedbackId = intr.options.getNumber('feedback', true);
-
-  const feedback = await FeedbackService.findFeedbackById(
-    intr.user.id,
-    feedbackId,
-  );
+  const feedback = profile.feedbacks[0];
   if (!feedback)
     return await sendError(
       intr,
@@ -178,9 +188,9 @@ async function viewFeedback(intr: ChatInputCommandInteraction) {
             type: ComponentType.TextDisplay,
             content: stripIndents`
             ### Created at
-            <t:${toUnixTimestamps(feedback.created_at.getTime())}:R>
+            <t:${toUnixTimestamps(feedback.createdAt.getTime())}:R>
             ### Updated at
-            <t:${toUnixTimestamps(feedback.updated_at.getTime())}:R>
+            <t:${toUnixTimestamps(feedback.updatedAt.getTime())}:R>
             ### Status
             \`\`\`${v.titleCase(feedback.status)}\`\`\`
             `,
@@ -208,19 +218,30 @@ async function viewFeedback(intr: ChatInputCommandInteraction) {
 async function closeFeedback(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  if (!(await ProfileService.userExists(intr.user.id)))
+  const profile = await db.query.profiles.findFirst({
+    columns: { id: true },
+    where: eq(profiles.discordId, intr.user.id),
+  });
+  if (!profile)
     return await sendError(
       intr,
       'You need to register first using `/profile create` command',
     );
 
-  const feedbackId = intr.options.getNumber('feedback', true);
+  const feedbackId = intr.options.getString('feedback', true);
 
-  const feedback = await FeedbackService.closeFeedback(
-    intr.user.id,
-    feedbackId,
-  );
-  if (feedback.length === 0)
+  const result = await db
+    .update(feedbacks)
+    .set({ status: 'closed', updatedAt: new Date() })
+    .where(
+      and(
+        eq(feedbacks.profileId, profile.id),
+        eq(feedbacks.id, feedbackId),
+        inArray(feedbacks.status, ['open', 'acknowledged']),
+      ),
+    )
+    .returning({ id: feedbacks.id });
+  if (!result.length)
     return await sendError(
       intr,
       'Failed to close feedback. It may not exist, not be open, or not belong to you',
@@ -236,21 +257,28 @@ export const modal = <Modal>{
   async execute(intr) {
     await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-    const title = intr.fields.getTextInputValue('title');
-    const content = intr.fields.getTextInputValue('content');
-
-    if (!(await ProfileService.userExists(intr.user.id)))
+    const profile = await db.query.profiles.findFirst({
+      columns: { id: true },
+      where: eq(profiles.discordId, intr.user.id),
+    });
+    if (!profile)
       return await sendError(
         intr,
         'You need to register first using `/profile create` command',
       );
 
-    const feedback = await FeedbackService.createFeedback(
-      intr.user.id,
-      title,
-      content,
-    );
-    if (!feedback)
+    const title = intr.fields.getTextInputValue('title');
+    const content = intr.fields.getTextInputValue('content');
+
+    const feedback = await db
+      .insert(feedbacks)
+      .values({
+        profileId: profile.id,
+        title,
+        content,
+      })
+      .returning({ id: feedbacks.id });
+    if (!feedback.length)
       return await sendError(intr, 'Failed to save feedback to the database');
 
     await intr.followUp(

@@ -1,22 +1,33 @@
 'use server';
 import { isAuthenticated } from '@/utils/auth';
-import type { PhraseInsert } from 'database/schemas/schema';
-import PhraseService from 'database/services/PhraseService';
+import db from 'database';
+import { phrases, type PhraseInsert } from 'database/schemas/schema';
+import { desc, eq, ilike, or } from 'drizzle-orm';
 
 export async function getPhrases(searchTerm?: string) {
   isAuthenticated();
 
-  return await PhraseService.getPhrases(searchTerm);
+  const searchFilter = searchTerm
+    ? or(
+        ilike(phrases.content, `%${searchTerm}%`),
+        ilike(phrases.source, `%${searchTerm}%`),
+      )
+    : undefined;
+
+  return await db.query.phrases.findMany({
+    orderBy: [desc(phrases.createdAt)],
+    where: searchFilter,
+  });
 }
 
 export async function addPhrase(data: PhraseInsert) {
   isAuthenticated();
 
-  await PhraseService.addPhrase(data);
+  await db.insert(phrases).values(data);
 }
 
-export async function deletePhrase(id: number) {
+export async function deletePhrase(id: string) {
   isAuthenticated();
 
-  await PhraseService.deletePhrase(id);
+  await db.delete(phrases).where(eq(phrases.id, id));
 }

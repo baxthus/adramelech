@@ -1,6 +1,7 @@
 import { stripIndents } from 'common-tags';
-import ProfileService from 'database/services/ProfileService';
-import SocialsService from 'database/services/SocialsService';
+import db from 'database';
+import { profiles, socials } from 'database/schemas/schema';
+import exists from 'database/utils/exists';
 import {
   ActionRowBuilder,
   ApplicationCommandType,
@@ -19,6 +20,7 @@ import {
   type User,
   type UserContextMenuCommandInteraction,
 } from 'discord.js';
+import { and, eq, ilike } from 'drizzle-orm';
 import { z } from 'zod/mini';
 import config from '~/config';
 import { UIBuilder } from '~/services/UIBuilder';
@@ -108,8 +110,8 @@ export const commands = <Command[]>[
               .setDescription('Remove a social link from your profile')
               .addStringOption((option) =>
                 option
-                  .setName('name')
-                  .setDescription('The name of the social platform')
+                  .setName('id')
+                  .setDescription('The ID of the social link to remove')
                   .setRequired(true)
                   .setAutocomplete(true),
               ),
@@ -125,17 +127,22 @@ export const commands = <Command[]>[
         return;
 
       const focused = intr.options.getFocused();
-      const socials = await SocialsService.findSocialsByName(
-        intr.user.id,
-        focused,
-        false,
-      );
-      if (!socials) return await intr.respond([]);
+      const profile = await db.query.profiles.findFirst({
+        columns: {},
+        where: eq(profiles.discordId, intr.user.id),
+        with: {
+          socials: {
+            columns: { id: true, name: true },
+            where: ilike(socials.name, `%${focused}%`),
+          },
+        },
+      });
+      if (!profile || !profile.socials.length) return await intr.respond([]);
 
       await intr.respond(
-        socials.map((social) => ({
+        profile.socials.map((social) => ({
           name: social.name,
-          value: social.name,
+          value: social.id,
         })),
       );
     },
@@ -171,13 +178,21 @@ const executors: CommandGroupExecutors = {
 async function viewProfile(intr: CommandInteraction, user: User) {
   await intr.deferReply();
 
-  const data = await ProfileService.findProfileByDiscordId(user.id);
-  if (!data) return await sendError(intr, 'This user does not have a profile');
-  const socials = await SocialsService.listSocialsByDiscordId(user.id);
+  const profile = await db.query.profiles.findFirst({
+    columns: { discordId: false },
+    where: eq(profiles.discordId, user.id),
+    with: {
+      socials: {
+        columns: { name: true, url: true },
+      },
+    },
+  });
+  if (!profile)
+    return await sendError(intr, 'This user does not have a profile');
 
-  const haveSocials = socials.length > 0;
+  const haveSocials = profile.socials.length > 0;
 
-  const registeredAt = toUnixTimestamps(data.created_at.getTime());
+  const registeredAt = toUnixTimestamps(profile.createdAt.getTime());
 
   await intr.followUp({
     flags: MessageFlags.IsComponentsV2,
@@ -198,13 +213,13 @@ async function viewProfile(intr: CommandInteraction, user: User) {
                 content: stripIndents`
                 # ${user.username}
                 ### ID
-                \`${data.id}\`
+                \`${profile.id}\`
                 ### Registered At
                 ${time(registeredAt, TimestampStyles.ShortDateTime)} (${time(registeredAt, TimestampStyles.RelativeTime)})
                 ### Nickname
-                \`${data.nickname ?? 'None'}\`
+                \`${profile.nickname ?? 'None'}\`
                 ### Bio
-                \`\`\`${data.bio ?? 'None'}\`\`\`
+                \`\`\`${profile.bio ?? 'None'}\`\`\`
                 `,
               },
             ],
@@ -218,7 +233,7 @@ async function viewProfile(intr: CommandInteraction, user: User) {
               ? ComponentType.ActionRow
               : ComponentType.TextDisplay,
             content: haveSocials ? undefined : 'No social links found',
-            components: socials.map((social) => ({
+            components: profile.socials.map((social) => ({
               type: ComponentType.Button,
               label: social.name,
               style: ButtonStyle.Link,
@@ -239,8 +254,12 @@ async function viewProfile(intr: CommandInteraction, user: User) {
 async function createProfile(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const user = await ProfileService.createProfile(intr.user.id);
-  if (user.length === 0)
+  const result = await db
+    .insert(profiles)
+    .values({ discordId: intr.user.id })
+    .returning({ id: profiles.id })
+    .onConflictDoNothing();
+  if (!result.length)
     return await sendError(intr, 'You already have a profile!');
 
   await intr.followUp(
@@ -251,7 +270,7 @@ async function createProfile(intr: ChatInputCommandInteraction) {
 async function deleteProfile(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  if (!(await ProfileService.userExists(intr.user.id)))
+  if (!(await exists(profiles, eq(profiles.discordId, intr.user.id))))
     return await sendError(intr, 'You do not have a profile to delete');
 
   await intr.followUp({
@@ -288,7 +307,7 @@ async function deleteProfile(intr: ChatInputCommandInteraction) {
 }
 
 async function setBio(intr: ChatInputCommandInteraction) {
-  if (!(await ProfileService.userExists(intr.user.id)))
+  if (!(await exists(profiles, eq(profiles.discordId, intr.user.id))))
     return await sendError(intr, 'You do not have a profile to edit');
 
   await intr.showModal({
@@ -311,16 +330,21 @@ async function setBio(intr: ChatInputCommandInteraction) {
 async function setNickname(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const exists = await ProfileService.userExists(intr.user.id);
-  if (!exists)
+  const profile = await db.query.profiles.findFirst({
+    columns: { id: true },
+    where: eq(profiles.discordId, intr.user.id),
+  });
+  if (!profile)
     return await sendError(intr, 'You do not have a profile to edit');
 
   const nickname = intr.options.getString('nickname', true).trim();
 
-  const updated = await ProfileService.updateProfile(intr.user.id, {
-    nickname,
-  });
-  if (updated.length === 0)
+  const result = await db
+    .update(profiles)
+    .set({ nickname })
+    .where(eq(profiles.discordId, intr.user.id))
+    .returning({ id: profiles.id });
+  if (!result.length)
     return await sendError(intr, 'Failed to update your nickname');
 
   await intr.followUp(
@@ -331,33 +355,45 @@ async function setNickname(intr: ChatInputCommandInteraction) {
 async function addSocial(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
+  const profile = await db.query.profiles.findFirst({
+    columns: { id: true },
+    where: eq(profiles.discordId, intr.user.id),
+    with: {
+      socials: {
+        columns: { id: true, name: true },
+      },
+    },
+  });
+  if (!profile)
+    return await sendError(intr, 'You do not have a profile to edit');
+
+  if (profile.socials.length >= 5)
+    return await sendError(
+      intr,
+      'You can only have up to 5 social links in your profile',
+    );
+
   const name = intr.options.getString('name', true).trim();
   const link = intr.options.getString('link', true).trim();
 
   if (!z.url().safeParse(link).success)
     return await sendError(intr, 'The provided link is not a valid URL');
 
-  const user = await ProfileService.findProfileByDiscordId(intr.user.id);
-  if (!user) return await sendError(intr, 'You do not have a profile to edit');
-
-  const socials = await SocialsService.listSocialsByDiscordId(intr.user.id);
-
-  if (socials.length >= 5)
-    return await sendError(
-      intr,
-      'You can only have up to 5 social links in your profile',
-    );
-
   if (
-    socials.some((social) => social.name.toLowerCase() === name.toLowerCase())
+    profile.socials.some(
+      (social) => social.name.toLowerCase() === name.toLowerCase(),
+    )
   )
     return await sendError(
       intr,
       `You already have a social link with the name \`${name}\`. Please choose a different name`,
     );
 
-  const inserted = await SocialsService.createSocial(user.id, name, link);
-  if (inserted.length === 0)
+  const result = await db
+    .insert(socials)
+    .values({ profileId: profile.id, name, url: link })
+    .returning({ id: socials.id });
+  if (!result.length)
     return await sendError(intr, 'Failed to add the social link');
 
   await intr.followUp(
@@ -368,16 +404,21 @@ async function addSocial(intr: ChatInputCommandInteraction) {
 async function removeBio(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const user = await ProfileService.findProfileByDiscordId(intr.user.id);
-  if (!user) return await sendError(intr, 'You do not have a profile to edit');
-  if (!user.bio)
+  const profile = await db.query.profiles.findFirst({
+    columns: { id: true, bio: true },
+    where: eq(profiles.discordId, intr.user.id),
+  });
+  if (!profile)
+    return await sendError(intr, 'You do not have a profile to edit');
+  if (!profile.bio)
     return await sendError(intr, 'You do not have a bio to remove');
 
-  const updated = await ProfileService.updateProfile(intr.user.id, {
-    bio: null,
-  });
-  if (updated.length === 0)
-    return await sendError(intr, 'Failed to remove your bio');
+  const result = await db
+    .update(profiles)
+    .set({ bio: null })
+    .where(eq(profiles.discordId, intr.user.id))
+    .returning({ id: profiles.id });
+  if (!result.length) return await sendError(intr, 'Failed to remove your bio');
 
   await intr.followUp(
     UIBuilder.createGenericSuccess('# Your bio has been removed!'),
@@ -387,15 +428,21 @@ async function removeBio(intr: ChatInputCommandInteraction) {
 async function removeNickname(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const user = await ProfileService.findProfileByDiscordId(intr.user.id);
-  if (!user) return await sendError(intr, 'You do not have a profile to edit');
-  if (!user.nickname)
+  const profile = await db.query.profiles.findFirst({
+    columns: { id: true, nickname: true },
+    where: eq(profiles.discordId, intr.user.id),
+  });
+  if (!profile)
+    return await sendError(intr, 'You do not have a profile to edit');
+  if (!profile.nickname)
     return await sendError(intr, 'You do not have a nickname to remove');
 
-  const updated = await ProfileService.updateProfile(intr.user.id, {
-    nickname: null,
-  });
-  if (updated.length === 0)
+  const result = await db
+    .update(profiles)
+    .set({ nickname: null })
+    .where(eq(profiles.discordId, intr.user.id))
+    .returning({ id: profiles.id });
+  if (!result.length)
     return await sendError(intr, 'Failed to remove your nickname');
 
   await intr.followUp(
@@ -406,21 +453,31 @@ async function removeNickname(intr: ChatInputCommandInteraction) {
 async function removeSocial(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const name = intr.options.getString('name', true).trim();
+  const socialId = intr.options.getString('id', true).trim();
 
-  const user = await ProfileService.findProfileByDiscordId(intr.user.id);
-  if (!user) return await sendError(intr, 'You do not have a profile to edit');
-
-  const data = await SocialsService.findSocialsByName(intr.user.id, name);
-  if (data.length === 0)
+  const profile = await db.query.profiles.findFirst({
+    columns: { id: true },
+    where: eq(profiles.discordId, intr.user.id),
+    with: {
+      socials: {
+        columns: { id: true },
+        where: eq(socials.id, socialId),
+      },
+    },
+  });
+  if (!profile)
+    return await sendError(intr, 'You do not have a profile to edit');
+  if (!profile.socials.length)
     return await sendError(
       intr,
-      'You do not have a social link with that name to remove',
+      'You do not have a social link with that ID to remove',
     );
 
-  const deleted = await SocialsService.deleteSocial(user.id, data[0]!.id);
-
-  if (deleted.length === 0)
+  const result = await db
+    .delete(socials)
+    .where(and(eq(socials.profileId, profile.id), eq(socials.id, socialId)))
+    .returning({ id: socials.id });
+  if (!result.length)
     return await sendError(intr, 'Failed to remove the social link');
 
   await intr.followUp(
@@ -434,8 +491,11 @@ export const component = <Component>{
   async execute(interaction) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-    const deleted = await ProfileService.deleteProfile(interaction.user.id);
-    if (deleted.length === 0)
+    const result = await db
+      .delete(profiles)
+      .where(eq(profiles.discordId, interaction.user.id))
+      .returning({ id: profiles.id });
+    if (!result.length)
       return await sendError(interaction, 'Failed to delete your profile');
 
     await interaction.followUp(
@@ -451,10 +511,12 @@ export const modal = <Modal>{
 
     const content = intr.fields.getTextInputValue('content').trim();
 
-    const updated = await ProfileService.updateProfile(intr.user.id, {
-      bio: content,
-    });
-    if (updated.length === 0)
+    const result = await db
+      .update(profiles)
+      .set({ bio: content })
+      .where(eq(profiles.discordId, intr.user.id))
+      .returning({ id: profiles.id });
+    if (!result.length)
       return await sendError(intr, 'Failed to update your bio');
 
     await intr.followUp(

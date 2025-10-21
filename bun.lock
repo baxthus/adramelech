@@ -4,6 +4,7 @@
     "": {
       "name": "adramelech",
       "dependencies": {
+        "drizzle-orm": "^0.44.4",
         "pg": "^8.16.3",
         "zod": "^4.0.17",
       },
@@ -78,7 +79,6 @@
     "database": {
       "name": "database",
       "dependencies": {
-        "drizzle-orm": "^0.44.4",
         "drizzle-zod": "^0.8.3",
       },
       "devDependencies": {

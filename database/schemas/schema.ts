@@ -3,46 +3,52 @@ import * as t from 'drizzle-orm/pg-core';
 import { createInsertSchema } from 'drizzle-zod';
 
 export const phrases = t.pgTable('phrases', {
-  id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
-  content: t.text().notNull(),
-  source: t.text().notNull(),
-  created_at: t.timestamp({ withTimezone: true }).notNull().defaultNow(),
+  id: t.uuid('id').primaryKey().defaultRandom(),
+  content: t.text('content').notNull(),
+  source: t.text('source').notNull(),
+  createdAt: t
+    .timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 export const phraseInsertSchema = createInsertSchema(phrases);
 export type PhraseInsert = typeof phrases.$inferInsert;
 
-export const users = t.pgTable(
-  'users',
+export const profiles = t.pgTable(
+  'profiles',
   {
-    id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
-    discord_id: t.varchar({ length: 19 }).notNull().unique(),
-    nickname: t.text(),
-    bio: t.text(),
-    created_at: t.timestamp({ withTimezone: true }).notNull().defaultNow(),
+    id: t.uuid('id').primaryKey().defaultRandom(),
+    discordId: t.varchar('discord_id', { length: 19 }).notNull().unique(),
+    nickname: t.text('nickname'),
+    bio: t.text('bio'),
+    createdAt: t
+      .timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
-  (table) => [t.uniqueIndex('discord_id_idx').on(table.discord_id)]
+  (table) => [t.uniqueIndex('profiles_discord_id_idx').on(table.discordId)]
 );
-export type User = typeof users.$inferSelect;
+export type Profile = typeof profiles.$inferSelect;
 
-export const userRelations = relations(users, ({ many }) => ({
-  socials: many(socialsLinks),
+export const profilesRelations = relations(profiles, ({ many }) => ({
+  socials: many(socials),
   feedbacks: many(feedbacks),
 }));
 
-export const socialsLinks = t.pgTable('socials_links', {
-  id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
-  user_id: t
-    .integer()
+export const socials = t.pgTable('socials', {
+  id: t.uuid('id').primaryKey().defaultRandom(),
+  profileId: t
+    .uuid('profile_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  name: t.text().notNull(),
-  url: t.text().notNull(),
+    .references(() => profiles.id, { onDelete: 'cascade' }),
+  name: t.text('name').notNull(),
+  url: t.text('url').notNull(),
 });
 
-export const socialsLinksRelations = relations(socialsLinks, ({ one }) => ({
-  user: one(users, {
-    fields: [socialsLinks.user_id],
-    references: [users.id],
+export const socialsRelations = relations(socials, ({ one }) => ({
+  profile: one(profiles, {
+    fields: [socials.profileId],
+    references: [profiles.id],
   }),
 }));
 
@@ -57,22 +63,28 @@ export const feedbackStatuses = t.pgEnum('feedback_statuses', [
 export type FeedbackStatus = (typeof feedbackStatuses.enumValues)[number];
 
 export const feedbacks = t.pgTable('feedbacks', {
-  id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
-  user_id: t
-    .varchar({ length: 19 })
+  id: t.uuid('id').primaryKey().defaultRandom(),
+  profileId: t
+    .uuid('profile_id')
     .notNull()
-    .references(() => users.discord_id, { onDelete: 'cascade' }),
-  title: t.text().notNull(),
-  content: t.text().notNull(),
-  status: feedbackStatuses().notNull().default('open'),
-  response: t.text(),
-  created_at: t.timestamp({ withTimezone: true }).notNull().defaultNow(),
-  updated_at: t.timestamp({ withTimezone: true }).notNull().defaultNow(),
+    .references(() => profiles.id, { onDelete: 'cascade' }),
+  title: t.text('title').notNull(),
+  content: t.text('content').notNull(),
+  status: feedbackStatuses('status').notNull().default('open'),
+  response: t.text('response'),
+  createdAt: t
+    .timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: t
+    .timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 export const feedbacksRelations = relations(feedbacks, ({ one }) => ({
-  user: one(users, {
-    fields: [feedbacks.user_id],
-    references: [users.discord_id],
+  profile: one(profiles, {
+    fields: [feedbacks.profileId],
+    references: [profiles.id],
   }),
 }));
