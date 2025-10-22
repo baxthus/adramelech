@@ -8,7 +8,7 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: 'Adramelech Dashboard',
+  title: 'AdraDash',
 };
 
 export default function RootLayout({

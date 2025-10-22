@@ -124,6 +124,7 @@ export default function ProfilesPage() {
                     size="sm"
                     isIconOnly
                     href={`/dashboard/profiles/${profile.id}`}
+                    target="_blank"
                   >
                     <IconEye size={18} />
                   </Button>
