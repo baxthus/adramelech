@@ -10,6 +10,10 @@ export async function getProfile(id: string) {
   const data = await db.query.profiles.findFirst({
     columns: { id: false },
     where: eq(profiles.id, id),
+    with: {
+      socials: true,
+      feedbacks: true,
+    },
   });
   if (!data) throw new Error('Profile not found');
   return data;

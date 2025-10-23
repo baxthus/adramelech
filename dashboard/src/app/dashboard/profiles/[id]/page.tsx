@@ -7,6 +7,7 @@ import { getProfile } from './actions';
 import Loading from '@/components/Loading';
 import { redirect } from 'next/navigation';
 import { Alert, Button } from '@heroui/react';
+import CodeBlock from '@/components/CodeBlock';
 
 export default function ProfilePage({
   params,
@@ -46,5 +47,15 @@ export default function ProfilePage({
       />
     );
 
-  return <div>{JSON.stringify(profile)}</div>;
+  if (!profile) return 'Oh no!';
+
+  const jsonProfile = JSON.stringify(profile, null, 2);
+
+  return (
+    <div className="space-y-4">
+      <p className="text-3xl font-bold">Profile Viewer</p>
+      {/* temporary (i hope) */}
+      <CodeBlock code={jsonProfile} />
+    </div>
+  );
 }
