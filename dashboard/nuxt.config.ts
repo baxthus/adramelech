@@ -6,6 +6,12 @@ export default defineNuxtConfig({
   modules: ['@nuxt/eslint', '@nuxt/ui', '@clerk/nuxt'],
   devtools: { enabled: true },
 
+  app: {
+    head: {
+      title: 'Adramelech Dashboard',
+    },
+  },
+
   css: ['~/assets/css/main.css'],
   compatibilityDate: '2025-07-15',
 

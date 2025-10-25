@@ -13,4 +13,7 @@ export default defineAppConfig({
       search: 'solar:magnifer-linear',
     },
   },
+  data: {
+    repository: 'https://github.com/baxthus/adramelech',
+  },
 });

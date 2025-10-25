@@ -1,7 +1,16 @@
 <template>
   <UDashboardPanel id="home">
     <template #header>
-      <UDashboardNavbar title="Home" />
+      <UDashboardNavbar title="Home">
+        <template #leading>
+          <UDashboardSidebarCollapse
+            variant="ghost"
+            :ui="{
+              leadingIcon: 'text-dimmed',
+            }"
+          />
+        </template>
+      </UDashboardNavbar>
     </template>
 
     <template #body>

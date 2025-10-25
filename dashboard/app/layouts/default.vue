@@ -30,27 +30,20 @@ const groups = [
     label: 'Go to',
     items: links.flat(),
   },
-  {
-    id: 'code',
-    label: 'Code',
-    items: [
-      {
-        id: 'Source',
-        label: 'Source Code',
-        icon: 'simple-icons:github',
-        to: 'https://github.com/baxthus/adramelech',
-        target: '_blank',
-      },
-    ],
-  },
 ];
 </script>
 
 <template>
-  <UDashboardGroup>
-    <UDashboardSidebar v-model:open="open" collapsible class="bg-elevated/25">
+  <UDashboardGroup unit="rem">
+    <UDashboardSidebar
+      id="default"
+      v-model:open="open"
+      collapsible
+      class="bg-elevated/25"
+      :ui="{ footer: 'lg:border-t lg:border-default' }"
+    >
       <template #header="{ collapsed }">
-        <Logo class="w-full" :content="collapsed ? 'AD' : undefined" />
+        <Logo class="w-full text-sm" :content="collapsed ? 'AD' : undefined" />
       </template>
 
       <template #default="{ collapsed }">
@@ -63,10 +56,10 @@ const groups = [
           tooltip
           popover
         />
+      </template>
 
-        <div class="mt-auto flex justify-end">
-          <UDashboardSidebarCollapse />
-        </div>
+      <template #footer="{ collapsed }">
+        <UserMenu :collapsed="collapsed" />
       </template>
     </UDashboardSidebar>
 
