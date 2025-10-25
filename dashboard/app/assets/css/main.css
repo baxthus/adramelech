@@ -1,0 +1,17 @@
+@import 'tailwindcss';
+@import '@nuxt/ui';
+
+@theme {
+  --font-sans: 'Geist Sans', sans-serif;
+  --font-boldonse: 'Boldonse', sans-serif;
+  --font-jetbrains-mono: 'JetBrains Mono', monospace;
+}
+
+:root {
+  /* --ui-radius: 0; */
+}
+
+button,
+a {
+  @apply cursor-pointer;
+}

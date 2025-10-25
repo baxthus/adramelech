@@ -1,32 +1,19 @@
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { FlatCompat } from '@eslint/eslintrc';
+import withNuxt from './.nuxt/eslint.config.mjs';
 import prettier from 'eslint-plugin-prettier';
+import prettierConfig from 'eslint-config-prettier';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-const eslintConfig = [
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
+export default withNuxt(
   {
-    plugins: [prettier],
+    plugins: {
+      prettier,
+    },
     rules: {
-      'prettier/prettier': 'error',
+      'vue/multi-word-component-names': 'off',
+      'vue/no-multiple-template-root': 'off',
+      '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: true }],
+      'vue/max-attributes-per-line': ['error', { singleline: 4 }],
+      'sort-imports': ['error', { ignoreDeclarationSort: true }],
     },
   },
-  {
-    ignores: [
-      'node_modules/**',
-      '.next/**',
-      'out/**',
-      'build/**',
-      'next-env.d.ts',
-    ],
-  },
-];
-
-export default eslintConfig;
+  prettierConfig,
+);
