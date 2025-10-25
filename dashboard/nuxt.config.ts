@@ -1,8 +1,9 @@
 import tailwindcss from '@tailwindcss/vite';
+import { dark } from '@clerk/themes';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ['@nuxt/eslint', '@nuxt/ui'],
+  modules: ['@nuxt/eslint', '@nuxt/ui', '@clerk/nuxt'],
   devtools: { enabled: true },
 
   css: ['~/assets/css/main.css'],
@@ -10,6 +11,12 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
+  },
+
+  clerk: {
+    appearance: {
+      theme: dark,
+    },
   },
 
   eslint: {

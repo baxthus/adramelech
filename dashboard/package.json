@@ -13,6 +13,8 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@clerk/nuxt": "^1.11.1",
+    "@clerk/themes": "^2.4.29",
     "@nuxt/eslint": "1.9.0",
     "@nuxt/ui": "^4.1.0",
     "@tailwindcss/vite": "^4.1.16",
