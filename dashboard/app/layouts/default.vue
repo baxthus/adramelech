@@ -6,19 +6,19 @@ const open = ref(false);
 const links = [
   {
     label: 'Home',
-    icon: 'solar:home-smile-bold',
+    icon: 'lucide:house',
     to: '/',
     onSelect: () => (open.value = false),
   },
   {
     label: 'Phrases',
-    icon: 'solar:document-text-bold',
+    icon: 'lucide:quote',
     to: '/phrases',
     onSelect: () => (open.value = false),
   },
   {
     label: 'Users',
-    icon: 'solar:users-group-rounded-bold',
+    icon: 'lucide:users',
     to: '/users',
     onSelect: () => (open.value = false),
   },

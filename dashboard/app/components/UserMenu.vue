@@ -34,18 +34,18 @@ const items = computed<DropdownMenuItem[][]>(() => [
   [
     {
       label: 'Profile',
-      icon: 'solar:user-bold',
+      icon: 'lucide:user',
       onSelect: () => clerk.value?.openUserProfile(),
     },
   ],
   [
     {
       label: 'Theme',
-      icon: colorMode.value === 'dark' ? 'solar:moon-bold' : 'solar:sun-bold',
+      icon: 'lucide:sun-moon',
       children: [
         {
           label: 'System',
-          icon: 'solar:monitor-bold',
+          icon: 'lucide:monitor',
           type: 'checkbox',
           checked: colorMode.preference === 'system',
           onSelect: (e) => {
@@ -55,7 +55,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
         },
         {
           label: 'Light',
-          icon: 'solar:sun-bold',
+          icon: 'lucide:sun',
           type: 'checkbox',
           checked: colorMode.preference === 'light',
           onSelect: (e) => {
@@ -65,7 +65,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
         },
         {
           label: 'Dark',
-          icon: 'solar:moon-bold',
+          icon: 'lucide:moon',
           type: 'checkbox',
           checked: colorMode.preference === 'dark',
           onSelect: (e) => {
@@ -77,13 +77,13 @@ const items = computed<DropdownMenuItem[][]>(() => [
     },
     {
       label: 'Source Code',
-      icon: 'simple-icons:github',
+      icon: 'lucide:github',
       to: appConfig.data.repository,
       target: '_blank',
     },
     {
       label: 'Sign out',
-      icon: 'solar:logout-2-bold',
+      icon: 'lucide:log-out',
       onSelect: async () => {
         await signOut.value();
         await navigateTo('/sign-in');
@@ -111,9 +111,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
       variant="ghost"
       block
       :square="collapsed"
-      :trailing-icon="
-        collapsed ? undefined : 'solar:double-alt-arrow-up-linear'
-      "
+      :trailing-icon="collapsed ? undefined : 'lucide:chevrons-up-down'"
       class="data-[state=open]:bg-elevated"
       :ui="{
         trailingIcon: 'text-dimmed',

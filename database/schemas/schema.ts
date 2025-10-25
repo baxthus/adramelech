@@ -13,6 +13,7 @@ export const phrases = t.pgTable('phrases', {
 });
 export const phraseInsertSchema = createInsertSchema(phrases);
 export type PhraseInsert = typeof phrases.$inferInsert;
+export type Phrase = typeof phrases.$inferSelect;
 
 export const profiles = t.pgTable(
   'profiles',
