@@ -6,8 +6,20 @@ const open = ref(false);
 const links = [
   {
     label: 'Home',
-    icon: 'i-tabler-home',
+    icon: 'solar:home-smile-bold',
     to: '/',
+    onSelect: () => (open.value = false),
+  },
+  {
+    label: 'Phrases',
+    icon: 'solar:document-text-bold',
+    to: '/phrases',
+    onSelect: () => (open.value = false),
+  },
+  {
+    label: 'Users',
+    icon: 'solar:users-group-rounded-bold',
+    to: '/users',
     onSelect: () => (open.value = false),
   },
 ] satisfies NavigationMenuItem[];
@@ -25,7 +37,7 @@ const groups = [
       {
         id: 'Source',
         label: 'Source Code',
-        icon: 'i-tabler-brand-github',
+        icon: 'simple-icons:github',
         to: 'https://github.com/baxthus/adramelech',
         target: '_blank',
       },
@@ -51,6 +63,10 @@ const groups = [
           tooltip
           popover
         />
+
+        <div class="mt-auto flex justify-end">
+          <UDashboardSidebarCollapse />
+        </div>
       </template>
     </UDashboardSidebar>
 
