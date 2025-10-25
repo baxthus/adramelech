@@ -3,12 +3,7 @@
     <template #header>
       <UDashboardNavbar title="Home">
         <template #leading>
-          <UDashboardSidebarCollapse
-            variant="ghost"
-            :ui="{
-              leadingIcon: 'text-dimmed',
-            }"
-          />
+          <UDashboardSidebarCollapse />
         </template>
       </UDashboardNavbar>
     </template>

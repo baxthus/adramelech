@@ -2,7 +2,7 @@ export default defineAppConfig({
   ui: {
     colors: {
       primary: 'pink',
-      neutral: 'neutral',
+      neutral: 'zinc',
     },
     icons: {
       dark: 'solar:moon-bold',
@@ -10,7 +10,6 @@ export default defineAppConfig({
       system: 'solar:monitor-bold',
       panelClose: 'solar:double-alt-arrow-left-linear',
       panelOpen: 'solar:double-alt-arrow-right-linear',
-      search: 'solar:magnifer-linear',
     },
   },
   data: {
