@@ -8,6 +8,7 @@ import copyToClipboard from '~/utils/copyToClipboard';
 const toast = useToast();
 const { copy } = useClipboard();
 
+const UuidRender = resolveComponent('UuidRender');
 const UButton = resolveComponent('UButton');
 const UDropdownMenu = resolveComponent('UDropdownMenu');
 
@@ -58,6 +59,7 @@ const columns: TableColumn<Phrase>[] = [
   {
     accessorKey: 'id',
     header: '#',
+    cell: ({ row }) => h(UuidRender, { uuid: row.original.id }),
   },
   {
     accessorKey: 'content',

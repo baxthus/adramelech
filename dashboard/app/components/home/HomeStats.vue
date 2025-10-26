@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query';
 
-const { data, isError, error, refetch } = useQuery({
+const { data, isError, error } = useQuery({
   queryKey: ['home-stats'],
   queryFn: () => $fetch('/api/stats'),
   placeholderData: {
@@ -41,14 +41,6 @@ const stats = computed(() => [
     title="Failed to load stats"
     :description="error?.message"
     icon="lucide:circle-alert"
-    :actions="[
-      {
-        label: 'Retry',
-        color: 'error',
-        size: 'md',
-        onClick: () => void refetch(),
-      },
-    ]"
   />
   <UPageGrid v-else class="gap-4 sm:gap-6 lg:grid-cols-3 lg:gap-px">
     <UPageCard

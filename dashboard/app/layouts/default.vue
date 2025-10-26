@@ -22,6 +22,12 @@ const links = [
     to: '/profiles',
     onSelect: () => (open.value = false),
   },
+  {
+    label: 'Feedbacks',
+    icon: 'lucide:message-circle',
+    to: '/feedbacks',
+    onSelect: () => (open.value = false),
+  },
 ] satisfies NavigationMenuItem[];
 
 const groups = [
@@ -41,6 +47,7 @@ const groups = [
       collapsible
       class="bg-elevated/25"
       :ui="{ footer: 'lg:border-t lg:border-default' }"
+      toggle-side="right"
     >
       <template #header="{ collapsed }">
         <Logo

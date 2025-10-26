@@ -1,6 +1,6 @@
 import { protectRoute } from '~~/server/utils/auth';
 import { z } from 'zod';
-import { desc, ilike, or } from 'drizzle-orm';
+import { desc, eq, ilike, or } from 'drizzle-orm';
 import { phrases } from 'database/schemas/schema';
 import db from 'database';
 
@@ -17,6 +17,7 @@ export default defineEventHandler(async (event) => {
 
   const searchFilter = searchTerm
     ? or(
+        eq(phrases.id, searchTerm),
         ilike(phrases.content, `%${searchTerm}%`),
         ilike(phrases.source, `%${searchTerm}%`),
       )
