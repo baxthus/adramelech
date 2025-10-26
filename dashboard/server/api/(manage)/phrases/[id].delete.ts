@@ -9,7 +9,7 @@ const schema = z.object({
 });
 
 export default defineEventHandler(async (event) => {
-  protectRoute(event.context.auth);
+  protectRoute(event.context.auth());
 
   const { id } = await getValidatedRouterParams(event, (params) =>
     schema.parse(params),

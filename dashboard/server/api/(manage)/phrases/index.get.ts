@@ -9,7 +9,7 @@ const schema = z.object({
 });
 
 export default defineEventHandler(async (event) => {
-  protectRoute(event.context.auth);
+  protectRoute(event.context.auth());
 
   const { searchTerm } = await getValidatedQuery(event, (query) =>
     schema.parse(query),

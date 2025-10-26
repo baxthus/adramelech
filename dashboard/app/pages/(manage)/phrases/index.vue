@@ -1,10 +1,19 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui';
-import { useQuery } from '@tanstack/vue-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import type { Phrase } from 'database/schemas/schema';
+import type { Row } from '@tanstack/vue-table';
+import copyToClipboard from '~/utils/copyToClipboard';
+
+const toast = useToast();
+const { copy } = useClipboard();
+
+const UButton = resolveComponent('UButton');
+const UDropdownMenu = resolveComponent('UDropdownMenu');
 
 const searchTerm = ref('');
 
+const queryClient = useQueryClient();
 const {
   data: phrases,
   isLoading,
@@ -20,6 +29,29 @@ const {
         searchTerm: searchTerm.value,
       },
     }),
+});
+
+const deleteMutation = useMutation({
+  mutationFn: (id: string) =>
+    $fetch(`/api/phrases/${id}`, {
+      method: 'DELETE',
+    }),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['phrases'] });
+    toast.add({
+      title: 'Phrase deleted',
+      color: 'success',
+      icon: 'lucide:check',
+    });
+  },
+  onError: (error) => {
+    toast.add({
+      title: 'Failed to delete phrase',
+      description: error?.message,
+      color: 'error',
+      icon: 'lucide:circle-alert',
+    });
+  },
 });
 
 const columns: TableColumn<Phrase>[] = [
@@ -48,6 +80,70 @@ const columns: TableColumn<Phrase>[] = [
     header: 'Created At',
     cell: ({ row }) => formatDate(new Date(row.original.createdAt)),
   },
+  {
+    id: 'actions',
+    cell: ({ row }) =>
+      h(
+        'div',
+        { class: 'text-right' },
+        h(
+          UDropdownMenu,
+          {
+            content: {
+              align: 'end',
+            },
+            items: getRowActions(row),
+            'aria-label': 'Actions dropdown',
+          },
+          () =>
+            h(UButton, {
+              icon: 'lucide:ellipsis-vertical',
+              color: 'neutral',
+              variant: 'ghost',
+              class: 'ml-auto',
+              'aria-label': 'Actions dropdown',
+            }),
+        ),
+      ),
+  },
+];
+
+const getRowActions = (row: Row<Phrase>) => [
+  {
+    type: 'label',
+    label: 'Actions',
+  },
+  {
+    label: 'Copy ID',
+    onSelect: () => copyToClipboard(copy, toast.add, row.original.id, 'ID'),
+  },
+  {
+    label: 'Copy Content',
+    onSelect: () =>
+      copyToClipboard(copy, toast.add, row.original.content, 'Content'),
+  },
+  {
+    label: 'Copy Source',
+    onSelect: () =>
+      copyToClipboard(copy, toast.add, row.original.source, 'Source'),
+  },
+  {
+    label: 'Copy Unix Timestamp',
+    onSelect: () =>
+      copyToClipboard(
+        copy,
+        toast.add,
+        new Date(row.original.createdAt).getTime().toString(),
+        'Unix Timestamp',
+      ),
+  },
+  { type: 'separator' },
+  {
+    label: 'Delete',
+    color: 'error',
+    icon: 'lucide:trash',
+    onSelect: () => deleteMutation.mutate(row.original.id),
+  },
 ];
 </script>
 
@@ -63,7 +159,7 @@ const columns: TableColumn<Phrase>[] = [
 
     <template #body>
       <div class="space-y-4">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-x-2">
           <SearchField
             name="phrases"
             class="w-full max-w-md"
@@ -86,7 +182,7 @@ const columns: TableColumn<Phrase>[] = [
           variant="subtle"
           title="Failed to load phrases"
           :description="error?.message"
-          icon="solar:danger-bold"
+          icon="lucide:circle-alert"
           :actions="[
             {
               label: 'Retry',
@@ -95,7 +191,6 @@ const columns: TableColumn<Phrase>[] = [
               onClick: () => void refetch(),
             },
           ]"
-          class="max-w-fit min-w-md"
         />
         <UTable
           v-else

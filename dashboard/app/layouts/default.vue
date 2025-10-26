@@ -43,7 +43,10 @@ const groups = [
       :ui="{ footer: 'lg:border-t lg:border-default' }"
     >
       <template #header="{ collapsed }">
-        <Logo class="w-full text-sm" :content="collapsed ? 'AD' : undefined" />
+        <Logo
+          class="w-full text-left text-sm lg:text-center"
+          :content="collapsed ? 'AD' : undefined"
+        />
       </template>
 
       <template #default="{ collapsed }">
