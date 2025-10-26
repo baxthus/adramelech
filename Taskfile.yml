@@ -11,7 +11,7 @@ tasks:
   dashboard:
     dir: '{{.DASHBOARD}}'
     cmds:
-      - bun --bun run dev -o
+      - bun run dev -o
   bot:
     dir: '{{.BOT}}'
     cmds:

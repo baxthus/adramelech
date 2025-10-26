@@ -1,4 +1,4 @@
-import { protectRoute } from '~~/server/utlis/auth';
+import { protectRoute } from '~~/server/utils/auth';
 import { z } from 'zod';
 import { desc, ilike, or } from 'drizzle-orm';
 import { phrases } from 'database/schemas/schema';

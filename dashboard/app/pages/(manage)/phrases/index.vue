@@ -41,7 +41,7 @@ const deleteMutation = useMutation({
     toast.add({
       title: 'Phrase deleted',
       color: 'success',
-      icon: 'lucide:check',
+      icon: 'lucide:circle-check',
     });
   },
   onError: (error) => {
@@ -166,11 +166,11 @@ const getRowActions = (row: Row<Phrase>) => [
             @update:value="(value) => (searchTerm = value)"
           />
           <div class="flex items-center gap-x-2">
-            <UButton icon="lucide:plus" />
+            <PhrasesAddModal :query-client="queryClient" />
             <UButton
               icon="lucide:refresh-cw"
               color="neutral"
-              variant="soft"
+              variant="subtle"
               :disabled="isLoading || isRefetching"
               @click="() => void refetch()"
             />
