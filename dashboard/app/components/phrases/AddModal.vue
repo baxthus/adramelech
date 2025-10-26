@@ -46,10 +46,15 @@ const addMutation = useMutation({
 
 const onSubmit = (event: FormSubmitEvent<PhraseInsert>) =>
   addMutation.mutate(event.data);
+
+function resetForm() {
+  state.content = '';
+  state.source = '';
+}
 </script>
 
 <template>
-  <UModal v-model:open="open" title="New Phrase">
+  <UModal v-model:open="open" title="New Phrase" @update:open="resetForm">
     <UButton icon="lucide:plus" />
 
     <template #body>
@@ -59,11 +64,15 @@ const onSubmit = (event: FormSubmitEvent<PhraseInsert>) =>
         class="space-y-4"
         @submit="onSubmit"
       >
-        <UFormField label="Content" name="content">
-          <UTextarea v-model="state.content" class="w-full" />
+        <UFormField name="content">
+          <UTextarea
+            v-model="state.content"
+            placeholder="Content"
+            class="w-full"
+          />
         </UFormField>
-        <UFormField label="Source" name="source">
-          <UInput v-model="state.source" class="w-full" />
+        <UFormField name="source">
+          <UInput v-model="state.source" placeholder="Source" class="w-full" />
         </UFormField>
         <div class="flex justify-end gap-x-2">
           <UButton

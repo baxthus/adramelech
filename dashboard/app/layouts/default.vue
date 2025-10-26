@@ -44,8 +44,8 @@ const groups = [
     >
       <template #header="{ collapsed }">
         <Logo
-          class="w-full text-left text-sm lg:text-center"
-          :content="collapsed ? 'AD' : undefined"
+          :collapsed="collapsed"
+          class="w-full justify-start lg:justify-center"
         />
       </template>
 

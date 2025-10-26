@@ -1,12 +1,21 @@
 <script setup lang="ts">
-const { class: className, content = 'Adramelech Dashboard' } = defineProps<{
+const { class: className, collapsed = false } = defineProps<{
   class?: string;
-  content?: string;
+  collapsed?: boolean;
 }>();
 </script>
 
 <template>
-  <p class="font-boldonse text-center" :class="className">
-    {{ content }}
-  </p>
+  <div class="flex" :class="className">
+    <div class="flex items-center gap-x-2">
+      <img
+        src="/logo.png"
+        alt="Adramelech Logo"
+        class="size-10 object-contain"
+      />
+      <span v-if="!collapsed" class="font-boldonse w-min text-center text-sm"
+        >Adramelech Dashboard</span
+      >
+    </div>
+  </div>
 </template>
