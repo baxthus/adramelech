@@ -13,7 +13,7 @@ const { class: className, collapsed = false } = defineProps<{
         alt="Adramelech Logo"
         class="size-10 object-contain"
       />
-      <span v-if="!collapsed" class="font-boldonse w-min text-center text-sm"
+      <span v-if="!collapsed" class="font-logo w-min text-center text-sm"
         >Adramelech Dashboard</span
       >
     </div>

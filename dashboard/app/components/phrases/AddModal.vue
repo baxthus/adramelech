@@ -55,7 +55,7 @@ function resetForm() {
 
 <template>
   <UModal v-model:open="open" title="New Phrase" @update:open="resetForm">
-    <UButton icon="lucide:plus" />
+    <UButton icon="lucide:plus" label="New phrase" />
 
     <template #body>
       <UForm

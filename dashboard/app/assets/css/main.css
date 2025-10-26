@@ -2,9 +2,9 @@
 @import '@nuxt/ui';
 
 @theme {
-  --font-sans: 'Geist Sans', sans-serif;
-  --font-boldonse: 'Boldonse', sans-serif;
-  --font-jetbrains-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Inter', sans-serif;
+  --font-logo: 'Boldonse', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 :root {

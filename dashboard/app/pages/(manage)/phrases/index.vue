@@ -156,28 +156,28 @@ const getRowActions = (row: Row<Phrase>) => [
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
+
+        <template #right>
+          <PhrasesAddModal :query-client="queryClient" />
+          <UButton
+            icon="lucide:refresh-cw"
+            color="neutral"
+            variant="subtle"
+            :disabled="isLoading"
+            :loading="isRefetching"
+            @click="() => void refetch()"
+          />
+        </template>
       </UDashboardNavbar>
     </template>
 
     <template #body>
-      <div class="space-y-4">
-        <div class="flex items-center justify-between gap-x-2">
-          <SearchField
-            name="phrases"
-            class="w-full max-w-md"
-            @update:value="(value) => (searchTerm = value)"
-          />
-          <div class="flex items-center gap-x-2">
-            <PhrasesAddModal :query-client="queryClient" />
-            <UButton
-              icon="lucide:refresh-cw"
-              color="neutral"
-              variant="subtle"
-              :disabled="isLoading || isRefetching"
-              @click="() => void refetch()"
-            />
-          </div>
-        </div>
+      <div class="space-y-6">
+        <SearchField
+          name="phrases"
+          class="w-full max-w-md"
+          @update:value="(value) => (searchTerm = value)"
+        />
         <UAlert
           v-if="isError"
           color="error"
@@ -198,8 +198,8 @@ const getRowActions = (row: Row<Phrase>) => [
           v-else
           :data="phrases"
           :columns="columns"
-          :loading="isLoading"
-          class="flex-1"
+          :loading="isLoading || isRefetching"
+          class="shrink-0"
         />
       </div>
     </template>

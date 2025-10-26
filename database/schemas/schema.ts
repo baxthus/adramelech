@@ -1,6 +1,7 @@
 import { relations } from 'drizzle-orm';
 import * as t from 'drizzle-orm/pg-core';
 import { createInsertSchema } from 'drizzle-zod';
+import z from 'zod';
 
 export const phrases = t.pgTable('phrases', {
   id: t.uuid('id').primaryKey().defaultRandom(),
@@ -11,7 +12,10 @@ export const phrases = t.pgTable('phrases', {
     .notNull()
     .defaultNow(),
 });
-export const phraseInsertSchema = createInsertSchema(phrases);
+export const phraseInsertSchema = z.object({
+  content: z.string().min(1, 'Content cannot be empty'),
+  source: z.string().min(1, 'Source cannot be empty'),
+});
 export type PhraseInsert = typeof phrases.$inferInsert;
 export type Phrase = typeof phrases.$inferSelect;
 
