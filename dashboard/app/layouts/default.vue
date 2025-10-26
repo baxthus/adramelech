@@ -17,9 +17,9 @@ const links = [
     onSelect: () => (open.value = false),
   },
   {
-    label: 'Users',
+    label: 'Profiles',
     icon: 'lucide:users',
-    to: '/users',
+    to: '/profiles',
     onSelect: () => (open.value = false),
   },
 ] satisfies NavigationMenuItem[];
