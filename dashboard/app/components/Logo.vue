@@ -9,7 +9,7 @@ const { class: className, collapsed = false } = defineProps<{
   <div class="flex" :class="className">
     <div class="flex items-center gap-x-2">
       <img
-        src="/logo.png"
+        src="~/assets/images/logo.png"
         alt="Adramelech Logo"
         class="size-10 object-contain"
       />
