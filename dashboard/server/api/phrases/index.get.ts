@@ -15,9 +15,12 @@ export default defineEventHandler(async (event) => {
     schema.parse(query),
   );
 
+  const isSearchTermAnUuid = z.uuid().safeParse(searchTerm).success;
+  const idFilter = isSearchTermAnUuid ? eq(phrases.id, searchTerm!) : undefined;
+
   const searchFilter = searchTerm
     ? or(
-        eq(phrases.id, searchTerm),
+        idFilter,
         ilike(phrases.content, `%${searchTerm}%`),
         ilike(phrases.source, `%${searchTerm}%`),
       )

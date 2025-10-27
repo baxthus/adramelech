@@ -34,18 +34,18 @@ const items = computed<DropdownMenuItem[][]>(() => [
   [
     {
       label: 'Profile',
-      icon: 'lucide:user',
+      icon: appConfig.ui.icons.user,
       onSelect: () => clerk.value?.openUserProfile(),
     },
   ],
   [
     {
       label: 'Theme',
-      icon: 'lucide:sun-moon',
+      icon: appConfig.ui.icons.theme,
       children: [
         {
           label: 'System',
-          icon: 'lucide:monitor',
+          icon: appConfig.ui.icons.system,
           type: 'checkbox',
           checked: colorMode.preference === 'system',
           onSelect: (e) => {
@@ -55,7 +55,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
         },
         {
           label: 'Light',
-          icon: 'lucide:sun',
+          icon: appConfig.ui.icons.light,
           type: 'checkbox',
           checked: colorMode.preference === 'light',
           onSelect: (e) => {
@@ -65,7 +65,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
         },
         {
           label: 'Dark',
-          icon: 'lucide:moon',
+          icon: appConfig.ui.icons.dark,
           type: 'checkbox',
           checked: colorMode.preference === 'dark',
           onSelect: (e) => {
@@ -77,13 +77,13 @@ const items = computed<DropdownMenuItem[][]>(() => [
     },
     {
       label: 'Source Code',
-      icon: 'lucide:github',
+      icon: appConfig.ui.icons.github,
       to: appConfig.data.repository,
       target: '_blank',
     },
     {
       label: 'Sign out',
-      icon: 'lucide:log-out',
+      icon: appConfig.ui.icons.logout,
       onSelect: async () => {
         await signOut.value();
         await navigateTo('/sign-in');
@@ -111,7 +111,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
       variant="ghost"
       block
       :square="collapsed"
-      :trailing-icon="collapsed ? undefined : 'lucide:chevrons-up-down'"
+      :trailing-icon="collapsed ? undefined : appConfig.ui.icons.chevronUpDown"
       class="data-[state=open]:bg-elevated"
       :ui="{
         trailingIcon: 'text-dimmed',

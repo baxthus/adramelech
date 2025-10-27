@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query';
 
+const appConfig = useAppConfig();
+
 const { data, isError, error } = useQuery({
   queryKey: ['home-stats'],
   queryFn: () => $fetch('/api/stats'),
@@ -15,19 +17,19 @@ const stats = computed(() => [
   {
     title: 'Phrases',
     value: data.value?.totalPhrases,
-    icon: 'lucide:quote',
+    icon: appConfig.ui.icons.phrases,
     to: '/phrases',
   },
   {
     title: 'Profiles',
     value: data.value?.totalProfiles,
-    icon: 'lucide:users',
+    icon: appConfig.ui.icons.profiles,
     to: '/profiles',
   },
   {
     title: 'Feedbacks',
     value: data.value?.totalFeedbacks,
-    icon: 'lucide:message-circle',
+    icon: appConfig.ui.icons.feedbacks,
     to: '/feedbacks',
   },
 ]);
@@ -40,7 +42,7 @@ const stats = computed(() => [
     variant="subtle"
     title="Failed to load stats"
     :description="error?.message"
-    icon="lucide:circle-alert"
+    :icon="appConfig.ui.icons.error"
   />
   <UPageGrid v-else class="gap-4 sm:gap-6 lg:grid-cols-3 lg:gap-px">
     <UPageCard

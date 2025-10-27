@@ -7,6 +7,8 @@ const { queryClient } = defineProps<{
   queryClient: QueryClient;
 }>();
 
+const appConfig = useAppConfig();
+
 const toast = useToast();
 
 const open = ref(false);
@@ -30,7 +32,7 @@ const addMutation = useMutation({
     toast.add({
       title: 'Phrase added',
       color: 'success',
-      icon: 'lucide:circle-check',
+      icon: appConfig.ui.icons.success,
     });
   },
   onError: (error) => {
@@ -38,7 +40,7 @@ const addMutation = useMutation({
       title: 'Failed to add phrase',
       description: error?.message,
       color: 'error',
-      icon: 'lucide:circle-alert',
+      icon: appConfig.ui.icons.error,
     });
   },
   onSettled: () => (loading.value = false),
@@ -55,7 +57,7 @@ function resetForm() {
 
 <template>
   <UModal v-model:open="open" title="New Phrase" @update:open="resetForm">
-    <UButton icon="lucide:plus" label="New phrase" />
+    <UButton :icon="appConfig.ui.icons.plus" label="New phrase" />
 
     <template #body>
       <UForm

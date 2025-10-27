@@ -5,6 +5,8 @@ import type { Phrase } from 'database/schemas/schema';
 import type { Row } from '@tanstack/vue-table';
 import copyToClipboard from '~/utils/copyToClipboard';
 
+const appConfig = useAppConfig();
+
 const toast = useToast();
 const { copy } = useClipboard();
 
@@ -37,20 +39,24 @@ const deleteMutation = useMutation({
     $fetch(`/api/phrases/${id}`, {
       method: 'DELETE',
     }),
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['phrases'] });
-    toast.add({
-      title: 'Phrase deleted',
-      color: 'success',
-      icon: 'lucide:circle-check',
+  onMutate: (id) => {
+    loadingToast.create(toast, `delete-phrase-${id}`, {
+      title: 'Deleting phrase...',
     });
   },
-  onError: (error) => {
-    toast.add({
+  onSuccess: (_, id) => {
+    queryClient.invalidateQueries({ queryKey: ['phrases'] });
+    loadingToast.update(toast, `delete-phrase-${id}`, {
+      title: 'Phrase deleted',
+      color: 'success',
+      icon: appConfig.ui.icons.success,
+    });
+  },
+  onError: (error, id) => {
+    loadingToast.update(toast, `delete-phrase-${id}`, {
       title: 'Failed to delete phrase',
-      description: error?.message,
       color: 'error',
-      icon: 'lucide:circle-alert',
+      icon: appConfig.ui.icons.error,
     });
   },
 });
@@ -99,7 +105,7 @@ const columns: TableColumn<Phrase>[] = [
           },
           () =>
             h(UButton, {
-              icon: 'lucide:ellipsis-vertical',
+              icon: appConfig.ui.icons.menuVertical,
               color: 'neutral',
               variant: 'ghost',
               class: 'ml-auto',
@@ -143,7 +149,7 @@ const getRowActions = (row: Row<Phrase>) => [
   {
     label: 'Delete',
     color: 'error',
-    icon: 'lucide:trash',
+    icon: appConfig.ui.icons.trash,
     onSelect: () => deleteMutation.mutate(row.original.id),
   },
 ];
@@ -160,7 +166,7 @@ const getRowActions = (row: Row<Phrase>) => [
         <template #right>
           <PhrasesAddModal :query-client="queryClient" />
           <UButton
-            icon="lucide:refresh-cw"
+            :icon="appConfig.ui.icons.reload"
             color="neutral"
             variant="subtle"
             :disabled="isLoading"
@@ -184,7 +190,7 @@ const getRowActions = (row: Row<Phrase>) => [
           variant="subtle"
           title="Failed to load phrases"
           :description="error?.message"
-          icon="lucide:circle-alert"
+          :icon="appConfig.ui.icons.error"
           :actions="[
             {
               label: 'Retry',

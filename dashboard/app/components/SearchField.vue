@@ -9,6 +9,8 @@ const emit = defineEmits<{
   (e: 'update:value', value: string): void;
 }>();
 
+const appConfig = useAppConfig();
+
 const searchInput = ref<string>('');
 
 const debouncedEmit = debounce((value: string) => {
@@ -21,7 +23,7 @@ const debouncedEmit = debounce((value: string) => {
     v-model="searchInput"
     color="neutral"
     :placeholder="`Search ${name}...`"
-    leading-icon="lucide:search"
+    :leading-icon="appConfig.ui.icons.search"
     :class="props.class"
     :ui="{ trailing: 'pe-1' }"
     @update:model-value="debouncedEmit"
@@ -31,7 +33,7 @@ const debouncedEmit = debounce((value: string) => {
         color="neutral"
         variant="link"
         size="sm"
-        icon="lucide:circle-x"
+        :icon="appConfig.ui.icons.clear"
         aria-label="Clear input"
         @click="
           searchInput = '';

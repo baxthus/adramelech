@@ -1,30 +1,32 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui';
 
+const appConfig = useAppConfig();
+
 const open = ref(false);
 
 const links = [
   {
     label: 'Home',
-    icon: 'lucide:house',
+    icon: appConfig.ui.icons.home,
     to: '/',
     onSelect: () => (open.value = false),
   },
   {
     label: 'Phrases',
-    icon: 'lucide:quote',
+    icon: appConfig.ui.icons.phrases,
     to: '/phrases',
     onSelect: () => (open.value = false),
   },
   {
     label: 'Profiles',
-    icon: 'lucide:users',
+    icon: appConfig.ui.icons.profiles,
     to: '/profiles',
     onSelect: () => (open.value = false),
   },
   {
     label: 'Feedbacks',
-    icon: 'lucide:message-circle',
+    icon: appConfig.ui.icons.feedbacks,
     to: '/feedbacks',
     onSelect: () => (open.value = false),
   },
