@@ -28,6 +28,7 @@ export default defineAppConfig({
       trash: 'lucide:trash',
       reload: 'lucide:refresh-cw',
       theme: 'lucide:sun-moon',
+      nothing: 'lucide:circle-slash-2',
     },
   },
   toaster: {

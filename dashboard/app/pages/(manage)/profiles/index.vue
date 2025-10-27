@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui';
+import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
-import type { Phrase } from 'database/schemas/schema';
 import type { Row } from '@tanstack/vue-table';
-import copyToClipboard from '~/utils/copyToClipboard';
+import type { Profile } from 'database/schemas/schema';
 
 const appConfig = useAppConfig();
 
 const toast = useToast();
 const { copy } = useClipboard();
 
-const UuidRender = resolveComponent('UuidRender');
+const UuuidRender = resolveComponent('UuidRender');
+const UIcon = resolveComponent('UIcon');
 const UButton = resolveComponent('UButton');
 const UDropdownMenu = resolveComponent('UDropdownMenu');
 
@@ -18,16 +18,16 @@ const searchTerm = ref('');
 
 const queryClient = useQueryClient();
 const {
-  data: phrases,
+  data: profiles,
   isLoading,
   isRefetching,
   isError,
   error,
   refetch,
 } = useQuery({
-  queryKey: ['phrases', searchTerm],
+  queryKey: ['profiles', searchTerm],
   queryFn: () =>
-    $fetch<Phrase[]>('/api/phrases', {
+    $fetch<Profile[]>('/api/profiles', {
       query: {
         searchTerm: searchTerm.value,
       },
@@ -36,25 +36,25 @@ const {
 
 const deleteMutation = useMutation({
   mutationFn: (id: string) =>
-    $fetch(`/api/phrases/${id}`, {
+    $fetch(`/api/profiles/${id}`, {
       method: 'DELETE',
     }),
   onMutate: (id) => {
-    loadingToast.create(toast, `delete-phrase-${id}`, {
-      title: 'Deleting phrase...',
+    loadingToast.create(toast, `delete-profile-${id}`, {
+      title: 'Deleting profile...',
     });
   },
   onSuccess: (_, id) => {
-    queryClient.invalidateQueries({ queryKey: ['phrases'] });
-    loadingToast.update(toast, `delete-phrase-${id}`, {
-      title: 'Phrase deleted',
+    queryClient.invalidateQueries({ queryKey: ['profiles'] });
+    loadingToast.update(toast, `delete-profile-${id}`, {
+      title: 'Profile deleted',
       color: 'success',
       icon: appConfig.ui.icons.success,
     });
   },
   onError: (error, id) => {
-    loadingToast.update(toast, `delete-phrase-${id}`, {
-      title: 'Failed to delete phrase',
+    loadingToast.update(toast, `delete-profile-${id}`, {
+      title: 'Failed to delete profile',
       description: error?.message,
       color: 'error',
       icon: appConfig.ui.icons.error,
@@ -62,27 +62,33 @@ const deleteMutation = useMutation({
   },
 });
 
-const columns: TableColumn<Phrase>[] = [
+const columns: TableColumn<Profile>[] = [
   {
     accessorKey: 'id',
     header: '#',
-    cell: ({ row }) => h(UuidRender, { uuid: row.original.id }),
+    cell: ({ row }) => h(UuuidRender, { uuid: row.original.id }),
   },
   {
-    accessorKey: 'content',
-    header: 'Content',
-    cell: ({ row }) =>
-      h('span', { class: 'whitespace-pre' }, row.original.content),
+    accessorKey: 'discordId',
+    header: 'Discord ID',
   },
   {
-    accessorKey: 'source',
-    header: 'Source',
+    accessorKey: 'nickname',
+    header: 'Nickname',
     cell: ({ row }) =>
-      h(
-        'span',
-        { class: 'whitespace-pre' },
-        row.original.source.replace(/;\s/g, '\n'),
-      ),
+      row.original.nickname || h(UIcon, { name: appConfig.ui.icons.nothing }),
+  },
+  {
+    accessorKey: 'bio',
+    header: 'Bio',
+    cell: ({ row }) =>
+      row.original.bio
+        ? h(
+            'span',
+            { class: 'whitespace-pre truncate max-w-xs block' },
+            row.original.bio,
+          )
+        : h(UIcon, { name: appConfig.ui.icons.nothing }),
   },
   {
     accessorKey: 'createdAt',
@@ -102,7 +108,7 @@ const columns: TableColumn<Phrase>[] = [
               align: 'end',
             },
             items: getRowActions(row),
-            'aria-label': 'Actions dropdown',
+            'aria-label': 'Profile actions',
           },
           () =>
             h(UButton, {
@@ -110,58 +116,78 @@ const columns: TableColumn<Phrase>[] = [
               color: 'neutral',
               variant: 'ghost',
               class: 'ml-auto',
-              'aria-label': 'Actions dropdown',
+              'aria-label': 'Open actions menu',
             }),
         ),
       ),
   },
 ];
 
-const getRowActions = (row: Row<Phrase>) => [
-  {
-    label: 'Copy ID',
-    onSelect: () => copyToClipboard(copy, toast.add, row.original.id, 'ID'),
-  },
-  {
-    label: 'Copy Content',
-    onSelect: () =>
-      copyToClipboard(copy, toast.add, row.original.content, 'Content'),
-  },
-  {
-    label: 'Copy Source',
-    onSelect: () =>
-      copyToClipboard(copy, toast.add, row.original.source, 'Source'),
-  },
-  {
-    label: 'Copy Unix Timestamp',
-    onSelect: () =>
-      copyToClipboard(
-        copy,
-        toast.add,
-        new Date(row.original.createdAt).getTime().toString(),
-        'Unix Timestamp',
-      ),
-  },
-  { type: 'separator' },
-  {
-    label: 'Delete',
-    color: 'error',
-    icon: appConfig.ui.icons.trash,
-    onSelect: () => deleteMutation.mutate(row.original.id),
-  },
-];
+const getRowActions = (row: Row<Profile>) => {
+  const actions: DropdownMenuItem[] = [
+    {
+      label: 'View details',
+      icon: appConfig.ui.icons.eye,
+      to: `/profiles/${row.original.id}`,
+    },
+    { type: 'separator' },
+    {
+      label: 'Copy ID',
+      onSelect: () => copyToClipboard(copy, toast.add, row.original.id, 'ID'),
+    },
+    {
+      label: 'Copy Discord ID',
+      onSelect: () =>
+        copyToClipboard(copy, toast.add, row.original.discordId, 'Discord ID'),
+    },
+  ];
+
+  if (row.original.nickname)
+    actions.push({
+      label: 'Copy Nickname',
+      onSelect: () =>
+        copyToClipboard(copy, toast.add, row.original.nickname!, 'Nickname'),
+    });
+  if (row.original.bio)
+    actions.push({
+      label: 'Copy Bio',
+      onSelect: () =>
+        copyToClipboard(copy, toast.add, row.original.bio!, 'Bio'),
+    });
+
+  actions.push(
+    {
+      label: 'Copy Unix Timestamp',
+      onSelect: () =>
+        copyToClipboard(
+          copy,
+          toast.add,
+          new Date(row.original.createdAt).getTime().toString(),
+          'Unix Timestamp',
+        ),
+    },
+    { type: 'separator' },
+    {
+      label: 'Delete',
+      color: 'error',
+      icon: appConfig.ui.icons.trash,
+      onSelect: () => deleteMutation.mutate(row.original.id),
+    },
+  );
+
+  return actions;
+};
 </script>
 
 <template>
-  <UDashboardPanel id="phrases">
+  <UDashboardPanel id="profiles">
     <template #header>
-      <UDashboardNavbar title="Phrases">
+      <UDashboardNavbar title="Profiles">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
 
         <template #right>
-          <PhrasesAddModal :query-client="queryClient" />
           <UButton
             :icon="appConfig.ui.icons.reload"
             color="neutral"
@@ -177,7 +203,7 @@ const getRowActions = (row: Row<Phrase>) => [
     <template #body>
       <div class="space-y-6">
         <SearchField
-          name="phrases"
+          name="profiles"
           class="w-full max-w-md"
           @update:value="(value) => (searchTerm = value)"
         />
@@ -185,7 +211,7 @@ const getRowActions = (row: Row<Phrase>) => [
           v-if="isError"
           color="error"
           variant="subtle"
-          title="Failed to load phrases"
+          title="Failed to load profiles"
           :description="error?.message"
           :icon="appConfig.ui.icons.error"
           :actions="[
@@ -199,7 +225,7 @@ const getRowActions = (row: Row<Phrase>) => [
         />
         <UTable
           v-else
-          :data="phrases"
+          :data="profiles"
           :columns="columns"
           :loading="isLoading || isRefetching"
           class="shrink-0"
