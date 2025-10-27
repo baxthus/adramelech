@@ -1,10 +1,7 @@
 import db from 'database';
 import { phraseInsertSchema, phrases } from 'database/schemas/schema';
-import { protectRoute } from '~~/server/utils/auth';
 
 export default defineEventHandler(async (event) => {
-  protectRoute(event.context.auth());
-
   const data = await readValidatedBody(event, (body) =>
     phraseInsertSchema.parse(body),
   );

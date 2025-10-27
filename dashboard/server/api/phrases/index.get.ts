@@ -1,4 +1,3 @@
-import { protectRoute } from '~~/server/utils/auth';
 import { z } from 'zod';
 import { desc, eq, ilike, or } from 'drizzle-orm';
 import { phrases } from 'database/schemas/schema';
@@ -9,8 +8,6 @@ const schema = z.object({
 });
 
 export default defineEventHandler(async (event) => {
-  protectRoute(event.context.auth());
-
   const { searchTerm } = await getValidatedQuery(event, (query) =>
     schema.parse(query),
   );

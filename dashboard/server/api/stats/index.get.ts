@@ -7,9 +7,7 @@ export type HomeStats = {
   totalFeedbacks: number;
 };
 
-export default defineEventHandler(async (event): Promise<HomeStats> => {
-  protectRoute(event.context.auth());
-
+export default defineEventHandler(async (): Promise<HomeStats> => {
   return await Promise.all([
     db.$count(phrases),
     db.$count(profiles),
