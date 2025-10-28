@@ -66,6 +66,7 @@ export const feedbackStatuses = t.pgEnum('feedback_statuses', [
   'rejected',
 ]);
 export type FeedbackStatus = (typeof feedbackStatuses.enumValues)[number];
+export const feedbackStatusesSchema = z.enum(feedbackStatuses.enumValues);
 
 export const feedbacks = t.pgTable('feedbacks', {
   id: t.uuid('id').primaryKey().defaultRandom(),
@@ -86,6 +87,7 @@ export const feedbacks = t.pgTable('feedbacks', {
     .notNull()
     .defaultNow(),
 });
+export type Feedback = typeof feedbacks.$inferSelect;
 
 export const feedbacksRelations = relations(feedbacks, ({ one }) => ({
   profile: one(profiles, {

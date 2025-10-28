@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query';
-import type { Profile } from 'database/schemas/schema';
 import * as z from 'zod/mini';
 
 definePageMeta({
@@ -14,7 +13,7 @@ const profileId = route.params.id as string;
 
 const { data: profile } = useQuery({
   queryKey: ['profile', profileId],
-  queryFn: () => $fetch<Profile>(`/api/profiles/${profileId}`),
+  queryFn: () => $fetch(`/api/profiles/${profileId}`),
 });
 </script>
 

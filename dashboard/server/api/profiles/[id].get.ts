@@ -15,6 +15,10 @@ export default defineEventHandler(async (event) => {
 
   const profile = await db.query.profiles.findFirst({
     where: eq(profiles.id, id),
+    with: {
+      socials: true,
+      feedbacks: true,
+    },
   });
   if (!profile)
     throw createError({ statusCode: 404, message: 'Profile not found' });
