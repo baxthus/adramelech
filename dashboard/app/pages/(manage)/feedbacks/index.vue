@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui';
+import type { BadgeProps, TableColumn } from '@nuxt/ui';
 import { useQuery } from '@tanstack/vue-query';
-import type { Feedback } from 'database/schemas/schema';
+import type { Feedback, FeedbackStatus } from 'database/schemas/schema';
 
 const appConfig = useAppConfig();
 
 const UuidRender = resolveComponent('UuidRender');
+const UBadge = resolveComponent('UBadge');
 
 const searchTerm = ref('');
 
@@ -26,11 +27,72 @@ const {
     }),
 });
 
+const statusColor: Record<FeedbackStatus, BadgeProps['color']> = {
+  open: 'secondary',
+  acknowledged: 'warning',
+  closed: 'neutral',
+  resolved: 'primary',
+  accepted: 'success',
+  rejected: 'error',
+};
+
 const columns: TableColumn<Feedback>[] = [
   {
     accessorKey: 'id',
     header: '#',
     cell: ({ row }) => h(UuidRender, { uuid: row.original.id }),
+  },
+  {
+    accessorKey: 'profileId',
+    header: 'Profile',
+    // TODO: Link to profile
+    cell: ({ row }) =>
+      h(UuidRender, {
+        uuid: row.original.profileId,
+        to: `/profiles/${row.original.profileId}`,
+      }),
+  },
+  {
+    accessorKey: 'title',
+    header: 'Title',
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ row }) =>
+      h(
+        UBadge,
+        {
+          class: 'capitalize',
+          variant: 'subtle',
+          color: statusColor[row.original.status],
+        },
+        () => row.original.status,
+      ),
+  },
+  {
+    accessorKey: 'response',
+    header: 'Responded',
+    cell: ({ row }) =>
+      h(
+        UBadge,
+        {
+          class: 'capitalize',
+          variant: 'subtle',
+          color: row.original.response ? 'success' : 'neutral',
+        } as BadgeProps,
+        () => (row.original.response ? 'Yes' : 'No'),
+      ),
+  },
+  {
+    accessorKey: 'createdAt',
+    header: 'Created At',
+    cell: ({ row }) => formatDate(new Date(row.original.createdAt)),
+  },
+  {
+    accessorKey: 'updatedAt',
+    header: 'Updated At',
+    cell: ({ row }) => formatDate(new Date(row.original.updatedAt)),
   },
 ];
 </script>

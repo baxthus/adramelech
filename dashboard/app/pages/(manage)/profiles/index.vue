@@ -13,6 +13,7 @@ const UuuidRender = resolveComponent('UuidRender');
 const UIcon = resolveComponent('UIcon');
 const UButton = resolveComponent('UButton');
 const UDropdownMenu = resolveComponent('UDropdownMenu');
+const UFieldGroup = resolveComponent('UFieldGroup');
 
 const searchTerm = ref('');
 
@@ -101,36 +102,40 @@ const columns: TableColumn<Profile>[] = [
       h(
         'div',
         { class: 'text-right' },
-        h(
-          UDropdownMenu,
-          {
-            content: {
-              align: 'end',
+        h(UFieldGroup, null, () => [
+          h(UButton, {
+            icon: appConfig.ui.icons.eye,
+            color: 'primary',
+            variant: 'subtle',
+            as: 'a',
+            href: `/profiles/${row.original.id}`,
+            'aria-label': 'View profile details',
+          }),
+          h(
+            UDropdownMenu,
+            {
+              content: {
+                align: 'end',
+              },
+              items: getRowActions(row),
+              'aria-label': 'Profile actions',
             },
-            items: getRowActions(row),
-            'aria-label': 'Profile actions',
-          },
-          () =>
-            h(UButton, {
-              icon: appConfig.ui.icons.menuVertical,
-              color: 'neutral',
-              variant: 'ghost',
-              class: 'ml-auto',
-              'aria-label': 'Open actions menu',
-            }),
-        ),
+            () =>
+              h(UButton, {
+                icon: appConfig.ui.icons.menuVertical,
+                color: 'neutral',
+                variant: 'subtle',
+                class: 'ml-auto',
+                'aria-label': 'Open actions menu',
+              }),
+          ),
+        ]),
       ),
   },
 ];
 
 const getRowActions = (row: Row<Profile>) => {
   const actions: DropdownMenuItem[] = [
-    {
-      label: 'View details',
-      icon: appConfig.ui.icons.eye,
-      to: `/profiles/${row.original.id}`,
-    },
-    { type: 'separator' },
     {
       label: 'Copy ID',
       onSelect: () => copyToClipboard(copy, toast.add, row.original.id, 'ID'),
