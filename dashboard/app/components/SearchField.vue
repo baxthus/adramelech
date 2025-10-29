@@ -12,34 +12,37 @@ const emit = defineEmits<{
 const appConfig = useAppConfig();
 
 const searchInput = ref<string>('');
-
-const debouncedEmit = debounce((value: string) => {
-  emit('update:value', value);
-}, props.delay ?? 500);
 </script>
 
 <template>
-  <UInput
-    v-model="searchInput"
-    color="neutral"
-    :placeholder="`Search ${name}...`"
-    :leading-icon="appConfig.ui.icons.search"
-    :class="props.class"
-    :ui="{ trailing: 'pe-1' }"
-    @update:model-value="debouncedEmit"
-  >
-    <template v-if="searchInput?.length" #trailing>
-      <UButton
-        color="neutral"
-        variant="link"
-        size="sm"
-        :icon="appConfig.ui.icons.clear"
-        aria-label="Clear input"
-        @click="
-          searchInput = '';
-          debouncedEmit('');
-        "
-      />
-    </template>
-  </UInput>
+  <UFieldGroup :class="props.class">
+    <UInput
+      v-model="searchInput"
+      :placeholder="`Search ${name}...`"
+      :ui="{ trailing: 'pe-1' }"
+      class="flex-1"
+      @keyup.enter="emit('update:value', searchInput)"
+    >
+      <template v-if="searchInput?.length" #trailing>
+        <UButton
+          color="neutral"
+          variant="link"
+          size="sm"
+          :icon="appConfig.ui.icons.clear"
+          aria-label="Clear input"
+          @click="
+            searchInput = '';
+            emit('update:value', '');
+          "
+        />
+      </template>
+    </UInput>
+    <UButton
+      color="neutral"
+      variant="outline"
+      :icon="appConfig.ui.icons.search"
+      aria-label="Search"
+      @click="emit('update:value', searchInput)"
+    />
+  </UFieldGroup>
 </template>
