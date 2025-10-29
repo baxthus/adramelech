@@ -212,21 +212,11 @@ const getRowActions = (row: Row<Profile>) => {
           class="w-full max-w-md"
           @update:value="(value) => (searchTerm = value)"
         />
-        <UAlert
+        <ErrorAlert
           v-if="isError"
-          color="error"
-          variant="subtle"
+          :error="error"
           title="Failed to load profiles"
-          :description="error?.message"
-          :icon="appConfig.ui.icons.error"
-          :actions="[
-            {
-              label: 'Retry',
-              color: 'error',
-              size: 'md',
-              onClick: () => void refetch(),
-            },
-          ]"
+          :retry-action="refetch"
         />
         <UTable
           v-else

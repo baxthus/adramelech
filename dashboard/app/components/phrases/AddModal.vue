@@ -9,54 +9,42 @@ const { queryClient } = defineProps<{
 
 const appConfig = useAppConfig();
 
-const toast = useToast();
-
 const open = ref(false);
-const loading = ref(false);
 
 const state = reactive<Partial<PhraseInsert>>({
   content: '',
   source: '',
 });
 
-const addMutation = useMutation({
+const { mutate, isPending, isError, error, reset } = useMutation({
   mutationFn: (phrase: PhraseInsert) =>
     $fetch('/api/phrases', {
       method: 'POST',
       body: phrase,
     }),
-  onMutate: () => (loading.value = true),
   onSuccess: () => {
     open.value = false;
     queryClient.invalidateQueries({ queryKey: ['phrases'] });
-    toast.add({
-      title: 'Phrase added',
-      color: 'success',
-      icon: appConfig.ui.icons.success,
-    });
   },
-  onError: (error) => {
-    toast.add({
-      title: 'Failed to add phrase',
-      description: error?.message,
-      color: 'error',
-      icon: appConfig.ui.icons.error,
-    });
-  },
-  onSettled: () => (loading.value = false),
 });
 
-const onSubmit = (event: FormSubmitEvent<PhraseInsert>) =>
-  addMutation.mutate(event.data);
+const onSubmit = (event: FormSubmitEvent<PhraseInsert>) => mutate(event.data);
 
 function resetForm() {
   state.content = '';
   state.source = '';
+  reset();
 }
 </script>
 
 <template>
-  <UModal v-model:open="open" title="New Phrase" @update:open="resetForm">
+  <UModal
+    v-model:open="open"
+    title="New Phrase"
+    :dismissible="!isPending"
+    :close="{ disabled: isPending }"
+    @update:open="resetForm"
+  >
     <UButton :icon="appConfig.ui.icons.plus" label="New phrase" />
 
     <template #body>
@@ -76,14 +64,20 @@ function resetForm() {
         <UFormField name="source">
           <UInput v-model="state.source" placeholder="Source" class="w-full" />
         </UFormField>
+        <ErrorAlert
+          v-if="isError"
+          title="Failed to add phrase"
+          :error="error"
+        />
         <div class="flex justify-end gap-x-2">
           <UButton
             label="Cancel"
             color="neutral"
             variant="subtle"
+            :disabled="isPending"
             @click="open = false"
           />
-          <UButton type="submit" label="Create" :loading="loading" />
+          <UButton type="submit" label="Create" :loading="isPending" />
         </div>
       </UForm>
     </template>

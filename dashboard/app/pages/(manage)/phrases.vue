@@ -181,21 +181,11 @@ const getRowActions = (row: Row<Phrase>) => [
           class="w-full max-w-md"
           @update:value="(value) => (searchTerm = value)"
         />
-        <UAlert
+        <ErrorAlert
           v-if="isError"
-          color="error"
-          variant="subtle"
           title="Failed to load phrases"
-          :description="error?.message"
-          :icon="appConfig.ui.icons.error"
-          :actions="[
-            {
-              label: 'Retry',
-              color: 'error',
-              size: 'md',
-              onClick: () => void refetch(),
-            },
-          ]"
+          :error="error"
+          :retry-action="refetch"
         />
         <UTable
           v-else
