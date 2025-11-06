@@ -5,10 +5,12 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
+  BreadcrumbPage,
   BreadcrumbSeparator,
 } from '../ui/breadcrumb';
 import { cn } from '@/lib/utils';
 import { Fragment } from 'react';
+import { usePathname } from 'next/navigation';
 
 export interface BreadcrumbItem {
   title: string;
@@ -20,39 +22,50 @@ interface DashboardInsetProps {
   breadcrumbs?: BreadcrumbItem[];
 }
 
-const BreadcrumbNavigation = ({
+function BreadcrumbNavigation({
   breadcrumbs,
 }: {
   breadcrumbs: BreadcrumbItem[];
-}) => (
-  <>
-    <Separator
-      orientation="vertical"
-      className="mr-2 data-[orientation=vertical]:h-4"
-    />
-    <Breadcrumb>
-      <BreadcrumbList>
-        {breadcrumbs.map((breadcrumb, index) => {
-          const isLastItem = index === breadcrumbs.length - 1;
-          const showSeparator = !isLastItem;
+}) {
+  const pathname = usePathname();
 
-          return (
-            <Fragment key={`${breadcrumb.href}-${index}`}>
-              <BreadcrumbItem className={cn(!isLastItem && 'hidden md:block')}>
-                <BreadcrumbLink href={breadcrumb.href}>
-                  {breadcrumb.title}
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              {showSeparator && (
-                <BreadcrumbSeparator className="hidden md:block" />
-              )}
-            </Fragment>
-          );
-        })}
-      </BreadcrumbList>
-    </Breadcrumb>
-  </>
-);
+  return (
+    <>
+      <Separator
+        orientation="vertical"
+        className="mr-2 data-[orientation=vertical]:h-4"
+      />
+      <Breadcrumb>
+        <BreadcrumbList>
+          {breadcrumbs.map((breadcrumb, index) => {
+            const isLastItem = index === breadcrumbs.length - 1;
+            const showSeparator = !isLastItem;
+            const isActive = pathname === breadcrumb.href;
+
+            return (
+              <Fragment key={`${breadcrumb.href}-${index}`}>
+                <BreadcrumbItem
+                  className={cn(!isLastItem && 'hidden md:block')}
+                >
+                  {isActive ? (
+                    <BreadcrumbPage>{breadcrumb.title}</BreadcrumbPage>
+                  ) : (
+                    <BreadcrumbLink href={breadcrumb.href}>
+                      {breadcrumb.title}
+                    </BreadcrumbLink>
+                  )}
+                </BreadcrumbItem>
+                {showSeparator && (
+                  <BreadcrumbSeparator className="hidden md:block" />
+                )}
+              </Fragment>
+            );
+          })}
+        </BreadcrumbList>
+      </Breadcrumb>
+    </>
+  );
+}
 
 export default function DashboardInset({
   children,

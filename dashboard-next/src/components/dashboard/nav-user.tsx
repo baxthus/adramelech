@@ -12,14 +12,28 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuPortal,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { ChevronsUpDown, Github, LogOut, User } from 'lucide-react';
+import {
+  ChevronsUpDown,
+  Github,
+  LogOut,
+  Monitor,
+  Moon,
+  Sun,
+  SunMoon,
+  User,
+} from 'lucide-react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { env } from '@/env';
+import { useTheme } from 'next-themes';
 
 const UserView = ({
   user,
@@ -47,6 +61,7 @@ const UserView = ({
 export function NavUser() {
   const { user, openUserProfile, signOut } = useClerk();
   const { isMobile } = useSidebar();
+  const { setTheme } = useTheme();
 
   const identifier =
     user?.firstName ||
@@ -84,6 +99,28 @@ export function NavUser() {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <SunMoon />
+                  Theme
+                </DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuItem onSelect={() => setTheme('system')}>
+                      <Monitor />
+                      System
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setTheme('light')}>
+                      <Sun />
+                      Light
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setTheme('dark')}>
+                      <Moon />
+                      Dark
+                    </DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+              </DropdownMenuSub>
               <DropdownMenuItem asChild>
                 <Link href={env.NEXT_PUBLIC_REPOSITORY_URL} target="_blank">
                   <Github />
