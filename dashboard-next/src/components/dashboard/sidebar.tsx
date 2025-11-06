@@ -6,7 +6,8 @@ import {
 } from '@/components/ui/sidebar';
 import type { ComponentProps } from 'react';
 import Logo from '../logo';
-import { NavUser } from './nav-user';
+import { DashboardNavUser } from './nav-user';
+import { DashboardNavMain } from './nav-main';
 
 export function DashboardSidebar(props: ComponentProps<typeof Sidebar>) {
   return (
@@ -14,9 +15,11 @@ export function DashboardSidebar(props: ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <Logo className="self-center" />
       </SidebarHeader>
-      <SidebarContent>test</SidebarContent>
+      <SidebarContent>
+        <DashboardNavMain />
+      </SidebarContent>
       <SidebarFooter>
-        <NavUser />
+        <DashboardNavUser />
       </SidebarFooter>
     </Sidebar>
   );

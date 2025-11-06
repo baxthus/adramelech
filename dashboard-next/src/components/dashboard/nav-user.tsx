@@ -58,7 +58,7 @@ const UserView = ({
   </>
 );
 
-export function NavUser() {
+export function DashboardNavUser() {
   const { user, openUserProfile, signOut } = useClerk();
   const { isMobile } = useSidebar();
   const { setTheme } = useTheme();
