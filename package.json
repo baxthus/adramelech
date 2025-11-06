@@ -6,6 +6,7 @@
   "workspaces": [
     "database",
     "dashboard",
+    "dashboard-next",
     "bot"
   ],
   "devDependencies": {

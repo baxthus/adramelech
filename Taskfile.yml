@@ -3,7 +3,8 @@ version: '3'
 dotenv: ['.env']
 
 vars:
-  DASHBOARD: './dashboard'
+  # DASHBOARD: './dashboard'
+  DASHBOARD: './dashboard-next'
   DATABASE: './database'
   BOT: './bot'
 
@@ -11,7 +12,8 @@ tasks:
   dashboard:
     dir: '{{.DASHBOARD}}'
     cmds:
-      - bun run dev -o
+      # - bun run dev -o
+      - bun run dev
   bot:
     dir: '{{.BOT}}'
     cmds:
