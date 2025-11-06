@@ -126,6 +126,7 @@
 }
 
 a,
-button {
+button,
+div[data-slot='dropdown-menu-item'] {
   @apply cursor-pointer;
 }
