@@ -15,7 +15,6 @@ import {
 } from '../ui/sidebar';
 import type { ComponentPropsWithoutRef } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 
 export interface MenuItem {
   title: string;
@@ -26,8 +25,6 @@ export interface MenuItem {
 export function DashboardNavMain(
   props: ComponentPropsWithoutRef<typeof SidebarGroup>,
 ) {
-  const pathname = usePathname();
-
   const items: Array<MenuItem> = [
     {
       title: 'Home',
@@ -57,7 +54,7 @@ export function DashboardNavMain(
         <SidebarMenu>
           {items.map(item => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild isActive={pathname === item.href}>
+              <SidebarMenuButton asChild>
                 <Link href={item.href}>
                   <item.icon />
                   {item.title}
