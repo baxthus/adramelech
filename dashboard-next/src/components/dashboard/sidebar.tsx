@@ -12,8 +12,8 @@ import { DashboardNavMain } from './nav-main';
 export function DashboardSidebar(props: ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <Logo className="self-center p-2 group-data-[collapsible=icon]:p-0" />
+      <SidebarHeader className="group-data-[collapsible=icon]:h-auto md:h-14 md:border-b">
+        <Logo className="self-center group-data-[collapsible=icon]:p-0" />
       </SidebarHeader>
       <SidebarContent>
         <DashboardNavMain />
