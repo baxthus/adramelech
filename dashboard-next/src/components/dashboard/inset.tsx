@@ -1,3 +1,4 @@
+'use client';
 import { Separator } from '../ui/separator';
 import { SidebarInset, SidebarTrigger } from '../ui/sidebar';
 import {
