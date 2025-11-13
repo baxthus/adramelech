@@ -75,13 +75,13 @@ export default function DashboardInset({
 
   return (
     <SidebarInset>
-      <header className="flex h-14 shrink-0 items-center gap-2">
+      <header className="flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:h-14">
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           {hasBreadcrumbs && <BreadcrumbNavigation breadcrumbs={breadcrumbs} />}
         </div>
       </header>
-      <div className="p-4 pt-0">{children}</div>
+      <div className="p-4">{children}</div>
     </SidebarInset>
   );
 }

@@ -15,7 +15,7 @@ export default function Logo({ className }: LogoProps) {
         height={40}
         priority
       />
-      <span className="font-brand w-min text-center text-sm">
+      <span className="font-brand w-min overflow-hidden text-center text-sm transition-all duration-300 ease-in-out group-data-[collapsible=icon]:pointer-events-none group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:scale-95 group-data-[collapsible=icon]:opacity-0">
         Adramelech Dashboard
       </span>
     </div>

@@ -11,9 +11,9 @@ import { DashboardNavMain } from './nav-main';
 
 export function DashboardSidebar(props: ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar variant="inset" {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <Logo className="self-center" />
+        <Logo className="self-center p-2 group-data-[collapsible=icon]:p-0" />
       </SidebarHeader>
       <SidebarContent>
         <DashboardNavMain />

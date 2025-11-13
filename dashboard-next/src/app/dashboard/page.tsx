@@ -1,10 +1,7 @@
 'use client';
 import DashboardInset from '@/components/dashboard/inset';
-import { SignOutButton, useUser } from '@clerk/nextjs';
 
 export default function DashboardPage() {
-  const { user } = useUser();
-
   return (
     <DashboardInset
       breadcrumbs={[
@@ -14,8 +11,7 @@ export default function DashboardPage() {
         },
       ]}
     >
-      <div>Welcome to the dashboard, {user?.firstName || 'User'}!</div>
-      <SignOutButton />
+      <div>Welcome to the dashboard</div>
     </DashboardInset>
   );
 }

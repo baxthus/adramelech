@@ -74,7 +74,10 @@ export function DashboardNavUser() {
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton size="lg">
+            <SidebarMenuButton
+              size="lg"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            >
               <UserView user={user} identifier={identifier} />
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
