@@ -12,6 +12,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '../ui/sidebar';
 import type { ComponentPropsWithoutRef } from 'react';
 import Link from 'next/link';
@@ -25,6 +26,8 @@ export interface MenuItem {
 export function DashboardNavMain(
   props: ComponentPropsWithoutRef<typeof SidebarGroup>,
 ) {
+  const { setOpenMobile } = useSidebar();
+
   const items: Array<MenuItem> = [
     {
       title: 'Home',
@@ -54,7 +57,11 @@ export function DashboardNavMain(
         <SidebarMenu>
           {items.map(item => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild tooltip={item.title}>
+              <SidebarMenuButton
+                asChild
+                tooltip={item.title}
+                onClick={() => setOpenMobile(false)}
+              >
                 <Link href={item.href}>
                   <item.icon />
                   {item.title}

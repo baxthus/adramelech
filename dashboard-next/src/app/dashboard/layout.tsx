@@ -1,5 +1,6 @@
 import { DashboardSidebar } from '@/components/dashboard/sidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { PageTransition } from '@/components/dashboard/page-transition';
 
 export default function DashboardLayout({
   children,
@@ -9,7 +10,7 @@ export default function DashboardLayout({
   return (
     <SidebarProvider>
       <DashboardSidebar />
-      {children}
+      <PageTransition>{children}</PageTransition>
     </SidebarProvider>
   );
 }
