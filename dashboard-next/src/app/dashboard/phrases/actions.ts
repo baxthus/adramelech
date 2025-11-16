@@ -10,7 +10,9 @@ import {
 import db from 'database';
 import { protect } from '@/utils/auth';
 
-export async function getPhrases(searchTerm?: string) {
+const pageSize = 10;
+
+export async function getPhrases(searchTerm?: string, page: number = 1) {
   await protect();
 
   const isSearchTermAnUuid = z.uuid().safeParse(searchTerm).success;
@@ -24,10 +26,22 @@ export async function getPhrases(searchTerm?: string) {
       )
     : undefined;
 
-  return await db.query.phrases.findMany({
+  const offset = (page - 1) * pageSize;
+  const totalCount = await db.$count(phrases, searchFilter);
+  const pageCount = Math.ceil(totalCount / pageSize);
+
+  const data = await db.query.phrases.findMany({
     orderBy: [desc(phrases.createdAt)],
     where: searchFilter,
+    limit: pageSize,
+    offset,
   });
+
+  return {
+    data,
+    pageCount,
+    pageIndex: page,
+  };
 }
 
 export async function createPhrase(phrase: PhraseInsert) {

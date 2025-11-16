@@ -24,10 +24,13 @@ import { toast } from 'sonner';
 import { Loading } from '@/components/loading';
 import Alert from '@/components/alert';
 import { NewPhraseDialog } from './dialog';
+import { usePage } from '@/hooks/use-page';
 
 export default function PhrasesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const { isSignedIn, isLoaded } = useAuth();
+
+  const page = usePage();
 
   const queryClient = useQueryClient();
   const {
@@ -40,8 +43,8 @@ export default function PhrasesPage() {
     refetch,
   } = useQuery({
     enabled: isSignedIn,
-    queryKey: ['phrases', searchTerm],
-    queryFn: () => getPhrases(searchTerm),
+    queryKey: ['phrases', searchTerm, page],
+    queryFn: () => getPhrases(searchTerm, page),
   });
 
   const deleteMutation = useMutation({
@@ -169,9 +172,15 @@ export default function PhrasesPage() {
         {isLoading && <Loading description="Fetching phrases..." />}
         {isSuccess && (
           <DataTable
-            data={phrases || []}
+            data={phrases.data || []}
             columns={columns}
             onRefresh={refetch}
+            enablePagination={true}
+            pageCount={phrases.pageCount}
+            pageIndex={phrases.pageIndex}
+            createComponent={
+              <NewPhraseDialog queryClient={queryClient} slick={true} />
+            }
           />
         )}
         {isError && (

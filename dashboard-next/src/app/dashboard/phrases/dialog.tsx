@@ -26,7 +26,13 @@ import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
 import Alert from '@/components/alert';
 
-export function NewPhraseDialog({ queryClient }: { queryClient: QueryClient }) {
+export function NewPhraseDialog({
+  queryClient,
+  slick = false,
+}: {
+  queryClient: QueryClient;
+  slick?: boolean;
+}) {
   const [open, setOpen] = useState(false);
 
   const form = useForm<PhraseInsert>({
@@ -57,8 +63,9 @@ export function NewPhraseDialog({ queryClient }: { queryClient: QueryClient }) {
       }}
     >
       <DialogTrigger asChild>
-        <Button size="icon">
+        <Button size={slick ? 'sm' : 'icon'}>
           <Plus />
+          {slick && 'New Phrase'}
         </Button>
       </DialogTrigger>
 
@@ -115,7 +122,6 @@ export function NewPhraseDialog({ queryClient }: { queryClient: QueryClient }) {
                 title="Failed to create phrase"
                 description={error.message}
                 variant="destructive"
-                className="w-full"
               />
             )}
 
