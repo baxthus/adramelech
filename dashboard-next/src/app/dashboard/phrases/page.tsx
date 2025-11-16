@@ -23,6 +23,7 @@ import { copyToClipboard } from '@/utils/clipboard';
 import { toast } from 'sonner';
 import { Loading } from '@/components/loading';
 import Alert from '@/components/alert';
+import { NewPhraseDialog } from './dialog';
 
 export default function PhrasesPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -153,14 +154,17 @@ export default function PhrasesPage() {
       <div className="space-y-4">
         <div className="flex flex-row items-center justify-between gap-x-2">
           <SearchField name="phrases" onSearch={setSearchTerm} />
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => refetch()}
-            disabled={isLoading || isRefetching}
-          >
-            <RefreshCw />
-          </Button>
+          <div className="flex flex-row gap-x-2">
+            <NewPhraseDialog queryClient={queryClient} />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => refetch()}
+              disabled={isLoading || isRefetching}
+            >
+              <RefreshCw />
+            </Button>
+          </div>
         </div>
         {isLoading && <Loading description="Fetching phrases..." />}
         {isSuccess && (

@@ -5,7 +5,7 @@ import { desc, eq, ilike, or } from 'drizzle-orm';
 import {
   phraseInsertSchema,
   phrases,
-  type Phrase,
+  type PhraseInsert,
 } from 'database/schemas/schema';
 import db from 'database';
 import { protect } from '@/utils/auth';
@@ -30,7 +30,7 @@ export async function getPhrases(searchTerm?: string) {
   });
 }
 
-export async function createPhrase(phrase: Phrase) {
+export async function createPhrase(phrase: PhraseInsert) {
   await protect();
 
   const validPhrase = phraseInsertSchema.parse(phrase);

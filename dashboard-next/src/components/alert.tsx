@@ -14,7 +14,7 @@ export default function Alert({
   icon?: LucideIcon;
 } & ComponentProps<typeof CnAlert>) {
   return (
-    <CnAlert {...props} className={cn('sm:max-w-fit', props.className)}>
+    <CnAlert {...props} className={cn('w-full', props.className)}>
       {props.variant === 'destructive' && !icon && <AlertCircleIcon />}
       {icon && createElement(icon)}
       <AlertTitle>{title}</AlertTitle>
