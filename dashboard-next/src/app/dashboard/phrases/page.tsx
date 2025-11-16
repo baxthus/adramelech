@@ -21,6 +21,8 @@ import {
 import { mapToDropdownMenuItems, type DropdownItem } from '@/utils/dropdown';
 import { copyToClipboard } from '@/utils/clipboard';
 import { toast } from 'sonner';
+import { Loading } from '@/components/loading';
+import Alert from '@/components/alert';
 
 export default function PhrasesPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,6 +33,7 @@ export default function PhrasesPage() {
     data: phrases,
     isLoading,
     isRefetching,
+    isSuccess,
     isError,
     error,
     refetch,
@@ -135,7 +138,7 @@ export default function PhrasesPage() {
     },
   ];
 
-  if (!isLoaded) return null;
+  if (!isLoaded) return <Loading description="Checking authentication..." />;
   if (!isSignedIn) redirect('/sign-in');
 
   return (
@@ -159,7 +162,21 @@ export default function PhrasesPage() {
             <RefreshCw />
           </Button>
         </div>
-        <DataTable data={phrases || []} columns={columns} />
+        {isLoading && <Loading description="Fetching phrases..." />}
+        {isSuccess && (
+          <DataTable
+            data={phrases || []}
+            columns={columns}
+            onRefresh={refetch}
+          />
+        )}
+        {isError && (
+          <Alert
+            title="Failed to load phrases"
+            description={error.message}
+            variant="destructive"
+          />
+        )}
       </div>
     </DashboardInset>
   );

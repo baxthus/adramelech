@@ -1,5 +1,5 @@
 import { AlertCircleIcon, type LucideIcon } from 'lucide-react';
-import { Alert as CnAlert, AlertDescription, AlertTitle } from '../ui/alert';
+import { Alert as CnAlert, AlertDescription, AlertTitle } from './ui/alert';
 import { cn } from '@/lib/utils';
 import { createElement, type ComponentProps } from 'react';
 

@@ -1,5 +1,5 @@
 import DashboardInset from '@/components/dashboard/inset';
-import Alert from '@/components/generic/Alert';
+import Alert from '@/components/alert';
 import * as z from 'zod/mini';
 
 export default async function ProfileLayout({

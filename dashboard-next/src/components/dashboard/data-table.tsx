@@ -12,15 +12,28 @@ import {
   TableHeader,
   TableRow,
 } from '../ui/table';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '../ui/empty';
+import { RefreshCw } from 'lucide-react';
+import { Button } from '../ui/button';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  onRefresh?: () => void;
+  createComponent?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
   data,
   columns,
+  onRefresh,
+  createComponent,
 }: DataTableProps<TData, TValue>) {
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
@@ -65,7 +78,23 @@ export function DataTable<TData, TValue>({
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyTitle>No results</EmptyTitle>
+                    <EmptyDescription>
+                      We couldn&apos;t find any data.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                  <EmptyContent>
+                    {createComponent}
+                    {onRefresh && (
+                      <Button variant="outline" size="sm" onClick={onRefresh}>
+                        <RefreshCw />
+                        Refresh
+                      </Button>
+                    )}
+                  </EmptyContent>
+                </Empty>
               </TableCell>
             </TableRow>
           )}
