@@ -28,7 +28,7 @@ export function SearchField({ name, className, onSearch }: Props) {
   };
 
   return (
-    <ButtonGroup className={cn('w-full max-w-full sm:w-md', className)}>
+    <ButtonGroup className={cn('w-full sm:w-md', className)}>
       <InputGroup>
         <InputGroupInput
           value={searchInput}

@@ -126,7 +126,7 @@
 }
 
 a,
-button,
+button:not([data-slot='tooltip-trigger']),
 div[data-slot='dropdown-menu-item'] {
   @apply cursor-pointer;
 }

@@ -2,10 +2,17 @@
 
 import z from 'zod';
 import { desc, eq, ilike, or } from 'drizzle-orm';
-import { phrases } from 'database/schemas/schema';
+import {
+  phraseInsertSchema,
+  phrases,
+  type Phrase,
+} from 'database/schemas/schema';
 import db from 'database';
+import { protect } from '@/utils/auth';
 
 export async function getPhrases(searchTerm?: string) {
+  await protect();
+
   const isSearchTermAnUuid = z.uuid().safeParse(searchTerm).success;
   const idFilter = isSearchTermAnUuid ? eq(phrases.id, searchTerm!) : undefined;
 
@@ -21,4 +28,20 @@ export async function getPhrases(searchTerm?: string) {
     orderBy: [desc(phrases.createdAt)],
     where: searchFilter,
   });
+}
+
+export async function createPhrase(phrase: Phrase) {
+  await protect();
+
+  const validPhrase = phraseInsertSchema.parse(phrase);
+
+  await db.insert(phrases).values(validPhrase);
+}
+
+export async function deletePhrase(id: string) {
+  await protect();
+
+  const validId = z.uuid().parse(id);
+
+  await db.delete(phrases).where(eq(phrases.id, validId));
 }
