@@ -8,7 +8,7 @@ export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) await auth.protect();
   if (isAuthenticated && isPublicRoute(req)) {
     const url = req.nextUrl.clone();
-    url.pathname = '/dashboard';
+    url.pathname = '/';
     return Response.redirect(url);
   }
 });

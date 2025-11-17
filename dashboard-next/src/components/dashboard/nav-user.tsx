@@ -30,7 +30,6 @@ import {
   SunMoon,
   User,
 } from 'lucide-react';
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { env } from '@/env';
 import { useTheme } from 'next-themes';
@@ -130,12 +129,7 @@ export function DashboardNavUser() {
                   Source Code
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() => {
-                  signOut();
-                  redirect('/sign-in');
-                }}
-              >
+              <DropdownMenuItem onSelect={() => signOut()}>
                 <LogOut />
                 Sign Out
               </DropdownMenuItem>
