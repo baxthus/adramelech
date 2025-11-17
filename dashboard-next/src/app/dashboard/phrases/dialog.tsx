@@ -73,6 +73,7 @@ export function NewPhraseDialog({
         showCloseButton={false}
         onEscapeKeyDown={isPending ? e => e.preventDefault() : undefined}
         onPointerDownOutside={isPending ? e => e.preventDefault() : undefined}
+        className="max-h-full overflow-y-auto"
       >
         <DialogHeader className="mb-2">
           <DialogTitle>New Phrase</DialogTitle>
