@@ -17,11 +17,11 @@ export default async function ProfileLayout({
       breadcrumbs={[
         {
           title: 'Profiles',
-          href: '/dashboard/profiles',
+          href: '/profiles',
         },
         {
           title: isValid ? id : 'oops',
-          href: `/dashboard/profiles/${id}`,
+          href: `/profiles/${id}`,
         },
       ]}
     >

@@ -32,22 +32,22 @@ export function DashboardNavMain(
     {
       title: 'Home',
       icon: Home,
-      href: '/dashboard',
+      href: '/',
     },
     {
       title: 'Phrases',
       icon: Quote,
-      href: '/dashboard/phrases',
+      href: '/phrases',
     },
     {
       title: 'Profiles',
       icon: Users,
-      href: '/dashboard/profiles',
+      href: '/profiles',
     },
     {
       title: 'Feedbacks',
       icon: MessageCircle,
-      href: '/dashboard/feedbacks',
+      href: '/feedbacks',
     },
   ];
 

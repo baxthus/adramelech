@@ -1,17 +1,16 @@
-'use client';
 import DashboardInset from '@/components/dashboard/inset';
 
-export default function DashboardPage() {
+export default function ProfilesPage() {
   return (
     <DashboardInset
       breadcrumbs={[
         {
-          title: 'Home',
-          href: '/dashboard',
+          title: 'Profiles',
+          href: '/profiles',
         },
       ]}
     >
-      <div>Welcome to the dashboard</div>
+      <div>Profiles Page</div>
     </DashboardInset>
   );
 }

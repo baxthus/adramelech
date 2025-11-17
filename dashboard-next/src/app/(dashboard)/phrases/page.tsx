@@ -42,7 +42,7 @@ export default function PhrasesPage() {
     error,
     refetch,
   } = useQuery({
-    enabled: isSignedIn,
+    enabled: !!isSignedIn,
     queryKey: ['phrases', searchTerm, page],
     queryFn: () => getPhrases(searchTerm, page),
   });
@@ -150,7 +150,7 @@ export default function PhrasesPage() {
       breadcrumbs={[
         {
           title: 'Phrases',
-          href: '/dashboard/phrases',
+          href: '/phrases',
         },
       ]}
     >
