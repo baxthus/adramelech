@@ -1,6 +1,152 @@
+'use client';
+
 import DashboardInset from '@/components/dashboard/inset';
+import { useAuth } from '@clerk/nextjs';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { deleteProfile, getProfiles } from './actions';
+import { useState } from 'react';
+import { usePage } from '@/hooks/use-page';
+import { toast } from 'sonner';
+import type { ColumnDef, Row } from '@tanstack/react-table';
+import type { Profile } from 'database/schemas/schema';
+import { UUIDRender } from '@/components/uuid-render';
+import { Eye, MoreVertical, RefreshCw, Trash } from 'lucide-react';
+import { formatDate } from '@/utils/date';
+import { mapToDropdownMenuItems, type DropdownItem } from '@/utils/dropdown';
+import { copyToClipboard } from '@/utils/clipboard';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import { Loading } from '@/components/loading';
+import { SearchField } from '@/components/search-field';
+import Alert from '@/components/alert';
+import { DataTable } from '@/components/dashboard/data-table';
+import { Nothing } from '@/components/nothing';
 
 export default function ProfilesPage() {
+  const { isSignedIn, isLoaded } = useAuth();
+  const page = usePage();
+
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const queryClient = useQueryClient();
+  const {
+    data: profiles,
+    isLoading,
+    isRefetching,
+    isSuccess,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    enabled: !!isSignedIn,
+    queryKey: ['profiles', searchTerm, page],
+    queryFn: () => getProfiles(searchTerm, page),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteProfile(id),
+    onMutate: () => {
+      const toastId = toast.loading('Deleting profile...');
+      return { toastId };
+    },
+    onSuccess: (_, __, context) => {
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+      toast.success('Profile deleted', {
+        id: context.toastId,
+      });
+    },
+    onError: (err, _, context) => {
+      toast.error('Failed to delete phrase', {
+        id: context?.toastId,
+        description: err.message,
+      });
+    },
+  });
+
+  const columns: Array<ColumnDef<Profile>> = [
+    {
+      accessorKey: 'id',
+      header: '#',
+      cell: ({ row }) => <UUIDRender value={row.original.id} />,
+    },
+    {
+      accessorKey: 'discordId',
+      header: 'Discord ID',
+    },
+    {
+      accessorKey: 'nickname',
+      header: 'Nickname',
+      cell: ({ row }) => row.original.nickname || <Nothing />,
+    },
+    {
+      accessorKey: 'createdAt',
+      header: 'Created At',
+      cell: ({ row }) => formatDate(row.original.createdAt),
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => (
+        <div className="ml-2 space-x-2 text-right">
+          <Button variant="secondary" size="icon-sm" asChild>
+            <Link href={`/profiles/${row.original.id}`}>
+              <Eye />
+            </Link>
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-sm">
+                <span className="sr-only">Open Menu</span>
+                <MoreVertical />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {mapToDropdownMenuItems(getRowActions(row))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ),
+    },
+  ];
+
+  const getRowActions = (row: Row<Profile>): Array<DropdownItem> => [
+    {
+      label: 'Copy ID',
+      onClick: () => copyToClipboard(row.original.id, 'ID'),
+    },
+    {
+      label: 'Copy Discord ID',
+      onClick: () => copyToClipboard(row.original.discordId, 'Discord ID'),
+    },
+    {
+      label: 'Copy Nickname',
+      onClick: () => copyToClipboard(row.original.nickname || '', 'Nickname'),
+    },
+    {
+      label: 'Copy Unix Timestamp',
+      onClick: () =>
+        copyToClipboard(
+          row.original.createdAt.getTime().toString(),
+          'Unix Timestamp',
+        ),
+    },
+    { type: 'separator' },
+    {
+      label: 'Delete',
+      variant: 'destructive',
+      icon: <Trash />,
+      onClick: () => deleteMutation.mutate(row.original.id),
+    },
+  ];
+
+  if (!isLoaded) return <Loading description="Checking authentication..." />;
+  if (!isSignedIn) redirect('/sign-in');
+
   return (
     <DashboardInset
       breadcrumbs={[
@@ -10,7 +156,37 @@ export default function ProfilesPage() {
         },
       ]}
     >
-      <div>Profiles Page</div>
+      <div className="space-y-4">
+        <div className="flex flex-row items-center justify-between gap-x-2">
+          <SearchField name="profiles" onSearch={setSearchTerm} />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => refetch()}
+            disabled={isLoading || isRefetching}
+          >
+            <RefreshCw />
+          </Button>
+        </div>
+        {isLoading && <Loading description="Loading profiles..." />}
+        {isError && (
+          <Alert
+            title="Failed to load profiles"
+            description={error.message}
+            variant="destructive"
+          />
+        )}
+        {isSuccess && (
+          <DataTable
+            data={profiles.data || []}
+            columns={columns}
+            onRefresh={refetch}
+            enablePagination={true}
+            pageCount={profiles.pageCount}
+            pageIndex={profiles.pageIndex}
+          />
+        )}
+      </div>
     </DashboardInset>
   );
 }

@@ -12,6 +12,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Fragment } from 'react';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 
 export interface BreadcrumbItem {
   title: string;
@@ -51,8 +52,8 @@ function BreadcrumbNavigation({
                   {isActive ? (
                     <BreadcrumbPage>{breadcrumb.title}</BreadcrumbPage>
                   ) : (
-                    <BreadcrumbLink href={breadcrumb.href}>
-                      {breadcrumb.title}
+                    <BreadcrumbLink asChild>
+                      <Link href={breadcrumb.href}>{breadcrumb.title}</Link>
                     </BreadcrumbLink>
                   )}
                 </BreadcrumbItem>

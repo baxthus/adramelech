@@ -97,17 +97,19 @@ export default function PhrasesPage() {
     {
       id: 'actions',
       cell: ({ row }) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost">
-              <span className="sr-only">Open Menu</span>
-              <MoreVertical />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {mapToDropdownMenuItems(getRowActions(row))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="ml-2 text-right">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-sm">
+                <span className="sr-only">Open Menu</span>
+                <MoreVertical />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {mapToDropdownMenuItems(getRowActions(row))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       ),
     },
   ];
