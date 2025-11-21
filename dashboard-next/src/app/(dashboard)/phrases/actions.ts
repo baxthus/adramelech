@@ -1,7 +1,7 @@
 'use server';
 
 import z from 'zod';
-import { desc, eq, ilike, or } from 'drizzle-orm';
+import { desc, eq, ilike, type SQL } from 'drizzle-orm';
 import {
   phraseInsertSchema,
   phrases,
@@ -9,30 +9,34 @@ import {
 } from 'database/schemas/schema';
 import db from 'database';
 import { protect } from '@/utils/auth';
+import { conditionsToFilter } from '@/utils/db';
 
 const pageSize = 10;
 
-export async function getPhrases(searchTerm?: string, page: number = 1) {
+export async function getPhrases(search?: string, page: number = 1) {
   await protect();
 
-  const isSearchTermAnUuid = z.uuid().safeParse(searchTerm).success;
-  const idFilter = isSearchTermAnUuid ? eq(phrases.id, searchTerm!) : undefined;
+  const conditions: SQL[] = [];
 
-  const searchFilter = searchTerm
-    ? or(
-        idFilter,
-        ilike(phrases.content, `%${searchTerm}%`),
-        ilike(phrases.source, `%${searchTerm}%`),
-      )
-    : undefined;
+  if (search) {
+    const isSearchTermAnUuid = z.uuid().safeParse(search).success;
+    if (isSearchTermAnUuid) conditions.push(eq(phrases.id, search));
+
+    conditions.push(
+      ilike(phrases.content, `%${search}%`),
+      ilike(phrases.source, `%${search}%`),
+    );
+  }
+
+  const filter = conditionsToFilter(conditions);
 
   const offset = (page - 1) * pageSize;
-  const totalCount = await db.$count(phrases, searchFilter);
+  const totalCount = await db.$count(phrases, filter);
   const pageCount = Math.ceil(totalCount / pageSize);
 
   const data = await db.query.phrases.findMany({
     orderBy: [desc(phrases.createdAt)],
-    where: searchFilter,
+    where: filter,
     limit: pageSize,
     offset,
   });
