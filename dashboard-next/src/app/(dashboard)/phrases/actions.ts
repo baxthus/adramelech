@@ -40,7 +40,6 @@ export async function getPhrases(searchTerm?: string, page: number = 1) {
   return {
     data,
     pageCount,
-    pageIndex: page,
   };
 }
 

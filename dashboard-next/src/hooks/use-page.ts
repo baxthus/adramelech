@@ -1,6 +1,5 @@
-import { useSearchParams } from 'next/navigation';
+import { parseAsInteger, useQueryState } from 'nuqs';
 
 export function usePage() {
-  const searchParams = useSearchParams();
-  return parseInt(searchParams.get('page') || '1', 10) || 1;
+  return useQueryState('page', parseAsInteger.withDefault(1));
 }

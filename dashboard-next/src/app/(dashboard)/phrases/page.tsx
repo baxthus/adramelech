@@ -1,7 +1,6 @@
 'use client';
 import DashboardInset from '@/components/dashboard/inset';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
 import { deletePhrase, getPhrases } from './actions';
 import { SearchField } from '@/components/search-field';
 import { Button } from '@/components/ui/button';
@@ -25,12 +24,13 @@ import { Loading } from '@/components/loading';
 import Alert from '@/components/alert';
 import { NewPhraseDialog } from './dialog';
 import { usePage } from '@/hooks/use-page';
+import { useSearch } from '@/hooks/use-search';
 
 export default function PhrasesPage() {
-  const [searchTerm, setSearchTerm] = useState('');
   const { isSignedIn, isLoaded } = useAuth();
 
-  const page = usePage();
+  const [searchTerm, setSearchTerm] = useSearch();
+  const [page] = usePage();
 
   const queryClient = useQueryClient();
   const {
@@ -179,7 +179,6 @@ export default function PhrasesPage() {
             onRefresh={refetch}
             enablePagination={true}
             pageCount={phrases.pageCount}
-            pageIndex={phrases.pageIndex}
             createComponent={
               <NewPhraseDialog queryClient={queryClient} slick={true} />
             }

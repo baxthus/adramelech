@@ -29,8 +29,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { Button } from '../ui/button';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback } from 'react';
+import { usePage } from '@/hooks/use-page';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -39,7 +38,6 @@ interface DataTableProps<TData, TValue> {
   createComponent?: React.ReactNode;
   enablePagination?: boolean;
   pageCount?: number;
-  pageIndex?: number;
 }
 
 export function DataTable<TData, TValue>({
@@ -49,19 +47,8 @@ export function DataTable<TData, TValue>({
   createComponent,
   enablePagination = false,
   pageCount = 1,
-  pageIndex = 1,
 }: DataTableProps<TData, TValue>) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const createQueryString = useCallback(
-    (nama: string, value: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set(nama, value);
-      return params.toString();
-    },
-    [searchParams],
-  );
+  const [page, setPage] = usePage();
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
@@ -75,7 +62,7 @@ export function DataTable<TData, TValue>({
           pageCount,
           state: {
             pagination: {
-              pageIndex: pageIndex - 1,
+              pageIndex: page - 1,
               pageSize: 10,
             },
           },
@@ -84,9 +71,7 @@ export function DataTable<TData, TValue>({
               typeof updater === 'function'
                 ? updater(table.getState().pagination).pageIndex
                 : updater.pageIndex;
-            router.push(
-              '?' + createQueryString('page', (nextPage + 1).toString()),
-            );
+            setPage(nextPage + 1);
           },
         }
       : {}),

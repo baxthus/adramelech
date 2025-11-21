@@ -4,7 +4,6 @@ import DashboardInset from '@/components/dashboard/inset';
 import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { deleteProfile, getProfiles } from './actions';
-import { useState } from 'react';
 import { usePage } from '@/hooks/use-page';
 import { toast } from 'sonner';
 import type { ColumnDef, Row } from '@tanstack/react-table';
@@ -27,12 +26,13 @@ import { SearchField } from '@/components/search-field';
 import Alert from '@/components/alert';
 import { DataTable } from '@/components/dashboard/data-table';
 import { Nothing } from '@/components/nothing';
+import { useSearch } from '@/hooks/use-search';
 
 export default function ProfilesPage() {
   const { isSignedIn, isLoaded } = useAuth();
-  const page = usePage();
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useSearch();
+  const [page] = usePage();
 
   const queryClient = useQueryClient();
   const {
@@ -183,7 +183,6 @@ export default function ProfilesPage() {
             onRefresh={refetch}
             enablePagination={true}
             pageCount={profiles.pageCount}
-            pageIndex={profiles.pageIndex}
           />
         )}
       </div>
