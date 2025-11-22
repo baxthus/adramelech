@@ -11,7 +11,6 @@ export async function getProfile(id: string) {
   const profile = await db.query.profiles.findFirst({
     where: eq(profiles.id, id),
     with: {
-      feedbacks: true,
       socials: true,
     },
   });

@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Nothing } from '@/components/nothing';
+import Link from 'next/link';
 
 export default function ProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -55,7 +56,6 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-4">
-      <p className="whitespace-pre">{JSON.stringify(profile, null, 2)}</p>
       <Card>
         <CardHeader>
           <CardTitle>Profile Details</CardTitle>
@@ -78,6 +78,28 @@ export default function ProfilePage() {
               {profile!.bio ?? <Nothing />}
             </p>
           </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Socials</CardTitle>
+          <CardDescription>Links to social media profiles</CardDescription>
+        </CardHeader>
+        <CardContent>{JSON.stringify(profile!.socials)}</CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Feedbacks</CardTitle>
+          <CardDescription>
+            Feedbacks can be viewed on the feedbacks page
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button>
+            <Link href={`/feedbacks?search=${profile!.id}`}>
+              View Feedbacks
+            </Link>
+          </Button>
         </CardContent>
       </Card>
     </div>

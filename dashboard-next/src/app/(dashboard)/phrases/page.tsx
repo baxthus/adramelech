@@ -29,7 +29,7 @@ import { useSearch } from '@/hooks/use-search';
 export default function PhrasesPage() {
   const { isSignedIn, isLoaded } = useAuth();
 
-  const [searchTerm, setSearchTerm] = useSearch();
+  const [search] = useSearch();
   const [page] = usePage();
 
   const queryClient = useQueryClient();
@@ -43,8 +43,8 @@ export default function PhrasesPage() {
     refetch,
   } = useQuery({
     enabled: !!isSignedIn,
-    queryKey: ['phrases', searchTerm, page],
-    queryFn: () => getPhrases(searchTerm, page),
+    queryKey: ['phrases', search, page],
+    queryFn: () => getPhrases(search, page),
   });
 
   const deleteMutation = useMutation({
@@ -158,7 +158,7 @@ export default function PhrasesPage() {
     >
       <div className="space-y-4">
         <div className="flex flex-row items-center justify-between gap-x-2">
-          <SearchField name="phrases" onSearch={setSearchTerm} />
+          <SearchField name="phrases" />
           <div className="flex flex-row gap-x-2">
             <NewPhraseDialog queryClient={queryClient} />
             <Button

@@ -31,7 +31,7 @@ import { useSearch } from '@/hooks/use-search';
 export default function ProfilesPage() {
   const { isSignedIn, isLoaded } = useAuth();
 
-  const [searchTerm, setSearchTerm] = useSearch();
+  const [search] = useSearch();
   const [page] = usePage();
 
   const queryClient = useQueryClient();
@@ -45,8 +45,8 @@ export default function ProfilesPage() {
     refetch,
   } = useQuery({
     enabled: !!isSignedIn,
-    queryKey: ['profiles', searchTerm, page],
-    queryFn: () => getProfiles(searchTerm, page),
+    queryKey: ['profiles', search, page],
+    queryFn: () => getProfiles(search, page),
   });
 
   const deleteMutation = useMutation({
@@ -158,7 +158,7 @@ export default function ProfilesPage() {
     >
       <div className="space-y-4">
         <div className="flex flex-row items-center justify-between gap-x-2">
-          <SearchField name="profiles" onSearch={setSearchTerm} />
+          <SearchField name="profiles" />
           <Button
             variant="outline"
             size="icon"

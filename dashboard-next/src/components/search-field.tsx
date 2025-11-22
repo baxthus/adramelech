@@ -10,21 +10,22 @@ import {
   InputGroupInput,
 } from './ui/input-group';
 import { cn } from '@/lib/utils';
+import { useSearch } from '@/hooks/use-search';
 
 interface Props {
   name: string;
   className?: string;
-  onSearch: (value: string) => void;
 }
 
-export function SearchField({ name, className, onSearch }: Props) {
-  const [searchInput, setSearchInput] = useState('');
+export function SearchField({ name, className }: Props) {
+  const [search, setSearch] = useSearch();
+  const [searchInput, setSearchInput] = useState(search);
 
-  const handleSearch = () => onSearch(searchInput);
+  const handleSearch = () => setSearch(searchInput);
 
   const handleClear = () => {
     setSearchInput('');
-    onSearch('');
+    setSearch('');
   };
 
   return (

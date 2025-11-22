@@ -31,7 +31,7 @@ import {
 export default function FeedbacksPage() {
   const { isSignedIn, isLoaded } = useAuth();
 
-  const [search, setSearch] = useSearch();
+  const [search] = useSearch();
   const [page] = usePage();
 
   const queryClient = useQueryClient();
@@ -163,7 +163,7 @@ export default function FeedbacksPage() {
     >
       <div className="space-y-4">
         <div className="flex flex-row items-center justify-between gap-x-2">
-          <SearchField name="feedbacks" onSearch={setSearch} />
+          <SearchField name="feedbacks" />
           <Button
             variant="outline"
             size="icon"
