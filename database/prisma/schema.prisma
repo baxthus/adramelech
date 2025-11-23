@@ -13,6 +13,7 @@ model Phrase {
   source    String
   createdAt DateTime @default(now())
 
+  @@index([createdAt])
   @@map("phrases")
 }
 
@@ -27,6 +28,8 @@ model Profile {
   socials   Social[]
   feedbacks Feedback[]
 
+  @@index([discordId])
+  @@index([createdAt])
   @@map("profiles")
 }
 
@@ -38,6 +41,8 @@ model Social {
 
   profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
+  @@index([profileId])
+  @@index([name])
   @@map("socials")
 }
 
@@ -62,5 +67,8 @@ model Feedback {
 
   profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
+  @@index([profileId])
+  @@index([status])
+  @@index([createdAt])
   @@map("feedbacks")
 }
