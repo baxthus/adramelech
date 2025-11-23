@@ -16,7 +16,6 @@ import { Button } from '@/components/ui/button';
 import { Eye, MoreVertical, RefreshCw, Trash } from 'lucide-react';
 import Alert from '@/components/alert';
 import { DataTable } from '@/components/dashboard/data-table';
-import { capitalize } from '@/utils/text';
 import { mapToDropdownMenuItems, type DropdownItem } from '@/utils/dropdown';
 import { copyToClipboard } from '@/utils/clipboard';
 import Link from 'next/link';
@@ -27,6 +26,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { Feedback } from 'database/generated/prisma/client';
 import { toUnixTimestamps } from '@root/utils/date';
+import { Badge } from '@/components/ui/badge';
 
 export default function FeedbacksPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -71,6 +71,15 @@ export default function FeedbacksPage() {
 
   type Response = Omit<Feedback, 'content' | 'response'>;
 
+  const FeedbackStatusClasses: Record<Feedback['status'], string> = {
+    OPEN: 'bg-blue-500 text-white dark:bg-blue-600',
+    ACKNOWLEDGED: 'bg-yellow-400 text-black dark:bg-yellow-500',
+    CLOSED: 'bg-gray-500 text-white dark:bg-gray-600',
+    RESOLVED: 'bg-green-500 text-white dark:bg-green-600',
+    ACCEPTED: 'bg-purple-500 text-white dark:bg-purple-600',
+    REJECTED: 'bg-red-500 text-white dark:bg-red-600',
+  };
+
   const columns: ColumnDef<Response>[] = [
     {
       accessorKey: 'id',
@@ -87,7 +96,11 @@ export default function FeedbacksPage() {
     {
       accessorKey: 'status',
       header: 'Status',
-      cell: ({ row }) => capitalize(row.original.status),
+      cell: ({ row }) => (
+        <Badge className={FeedbackStatusClasses[row.original.status]}>
+          {row.original.status}
+        </Badge>
+      ),
     },
     {
       accessorKey: 'createdAt',
