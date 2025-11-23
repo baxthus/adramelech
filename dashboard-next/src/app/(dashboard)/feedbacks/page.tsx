@@ -7,8 +7,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { deleteFeedback, getFeedbacks } from './actions';
 import { toast } from 'sonner';
 import type { ColumnDef, Row } from '@tanstack/react-table';
-import type { Feedback } from 'database/schemas/schema';
-import { UUIDRender } from '@/components/uuid-render';
 import { formatDate } from '@/utils/date';
 import { Loading } from '@/components/loading';
 import { redirect } from 'next/navigation';
@@ -27,6 +25,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import type { Feedback } from 'database/generated/prisma/client';
 
 export default function FeedbacksPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -73,12 +72,10 @@ export default function FeedbacksPage() {
     {
       accessorKey: 'id',
       header: '#',
-      cell: ({ row }) => <UUIDRender value={row.original.id} />,
     },
     {
       accessorKey: 'profileId',
       header: 'Profile ID',
-      cell: ({ row }) => <UUIDRender value={row.original.profileId} />,
     },
     {
       accessorKey: 'title',

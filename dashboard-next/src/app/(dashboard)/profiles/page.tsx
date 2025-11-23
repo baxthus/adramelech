@@ -7,8 +7,6 @@ import { deleteProfile, getProfiles } from './actions';
 import { usePage } from '@/hooks/use-page';
 import { toast } from 'sonner';
 import type { ColumnDef, Row } from '@tanstack/react-table';
-import type { Profile } from 'database/schemas/schema';
-import { UUIDRender } from '@/components/uuid-render';
 import { Eye, MoreVertical, RefreshCw, Trash } from 'lucide-react';
 import { formatDate } from '@/utils/date';
 import { mapToDropdownMenuItems, type DropdownItem } from '@/utils/dropdown';
@@ -27,6 +25,7 @@ import Alert from '@/components/alert';
 import { DataTable } from '@/components/dashboard/data-table';
 import { Nothing } from '@/components/nothing';
 import { useSearch } from '@/hooks/use-search';
+import type { Profile } from 'database/generated/prisma/client';
 
 export default function ProfilesPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -73,7 +72,6 @@ export default function ProfilesPage() {
     {
       accessorKey: 'id',
       header: '#',
-      cell: ({ row }) => <UUIDRender value={row.original.id} />,
     },
     {
       accessorKey: 'discordId',

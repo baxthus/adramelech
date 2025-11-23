@@ -9,7 +9,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useMutation, type QueryClient } from '@tanstack/react-query';
-import { phraseInsertSchema, type PhraseInsert } from 'database/schemas/schema';
 import { Plus } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,6 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
 import Alert from '@/components/alert';
+import { phraseCreateSchema, type PhraseCreate } from 'database/schemas';
 
 export function NewPhraseDialog({
   queryClient,
@@ -35,8 +35,8 @@ export function NewPhraseDialog({
 }) {
   const [open, setOpen] = useState(false);
 
-  const form = useForm<PhraseInsert>({
-    resolver: zodResolver(phraseInsertSchema),
+  const form = useForm<PhraseCreate>({
+    resolver: zodResolver(phraseCreateSchema),
     defaultValues: {
       content: '',
       source: '',
@@ -44,14 +44,14 @@ export function NewPhraseDialog({
   });
 
   const { mutate, isPending, isError, error, reset } = useMutation({
-    mutationFn: (phrase: PhraseInsert) => createPhrase(phrase),
+    mutationFn: (phrase: PhraseCreate) => createPhrase(phrase),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phrases'] });
       setOpen(false);
     },
   });
 
-  const onSubmit = (phrase: PhraseInsert) => mutate(phrase);
+  const onSubmit = (phrase: PhraseCreate) => mutate(phrase);
 
   return (
     <Dialog

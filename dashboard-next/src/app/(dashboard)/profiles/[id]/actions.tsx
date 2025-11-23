@@ -1,16 +1,14 @@
 'use server';
 
-import db from 'database';
-import { profiles } from 'database/schemas/schema';
-import { eq } from 'drizzle-orm';
+import { prisma } from 'database';
 import z from 'zod';
 
 export async function getProfile(id: string) {
-  z.uuid().parse(id);
+  z.nanoid().parse(id);
 
-  const profile = await db.query.profiles.findFirst({
-    where: eq(profiles.id, id),
-    with: {
+  const profile = await prisma.profile.findUnique({
+    where: { id },
+    include: {
       socials: true,
     },
   });

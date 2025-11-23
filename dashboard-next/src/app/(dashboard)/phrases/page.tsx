@@ -9,8 +9,6 @@ import { useAuth } from '@clerk/nextjs';
 import { redirect } from 'next/navigation';
 import { DataTable } from '@/components/dashboard/data-table';
 import type { ColumnDef, Row } from '@tanstack/react-table';
-import type { Phrase } from 'database/schemas/schema';
-import { UUIDRender } from '@/components/uuid-render';
 import { formatDate } from '@/utils/date';
 import {
   DropdownMenu,
@@ -25,6 +23,7 @@ import Alert from '@/components/alert';
 import { NewPhraseDialog } from './dialog';
 import { usePage } from '@/hooks/use-page';
 import { useSearch } from '@/hooks/use-search';
+import type { Phrase } from 'database/generated/prisma/client';
 
 export default function PhrasesPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -71,7 +70,6 @@ export default function PhrasesPage() {
     {
       accessorKey: 'id',
       header: '#',
-      cell: ({ row }) => <UUIDRender value={row.original.id} />,
     },
     {
       accessorKey: 'content',

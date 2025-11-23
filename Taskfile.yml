@@ -9,16 +9,20 @@ vars:
   BOT: './bot'
 
 tasks:
+  # Dashboard
   dashboard:
     dir: '{{.DASHBOARD}}'
     cmds:
       # - bun run dev -o
       - bun run dev
+
+  # Bot
   bot:
     dir: '{{.BOT}}'
     cmds:
       - bun run dev
 
+  # Database
   up:
     dir: '{{.DATABASE}}'
     cmds:
@@ -27,11 +31,19 @@ tasks:
     dir: '{{.DATABASE}}'
     cmds:
       - podman-compose down
+  migrate:
+    dir: '{{.DATABASE}}'
+    cmds:
+      - bunx prisma migrate dev {{.CLI_ARGS}}
+  migrate-reset:
+    dir: '{{.DATABASE}}'
+    cmds:
+      - bunx prisma migrate reset
+  generate:
+    dir: '{{.DATABASE}}'
+    cmds:
+      - bunx prisma generate
   studio:
     dir: '{{.DATABASE}}'
     cmds:
-      - bun run drizzle-kit studio
-  push:
-    dir: '{{.DATABASE}}'
-    cmds:
-      - bun run drizzle-kit push
+      - bunx prisma studio dev

@@ -1,4 +1,3 @@
-import { feedbacks, profiles } from 'database/schemas/schema';
 import {
   ComponentType,
   MessageFlags,
@@ -18,9 +17,8 @@ import toUnixTimestamps from '~/utils/toUnixTimestamps';
 import v from 'voca';
 import { UIBuilder } from '~/services/UIBuilder';
 import type { Modal } from '~/types/modal';
-import exists from 'database/utils/exists';
-import { and, eq, ilike, inArray } from 'drizzle-orm';
-import db from 'database';
+import type { FeedbackWhereInput } from 'database/generated/prisma/models';
+import { prisma } from 'database';
 
 export const command = <Command>{
   data: new SlashCommandBuilder()
@@ -62,26 +60,29 @@ export const command = <Command>{
 
     // Only show open or acknowledged feedbacks for close command
     // For view command, show all feedbacks
-    const filter =
+    const filter: FeedbackWhereInput | undefined =
       subcommand === 'view'
         ? undefined
-        : inArray(feedbacks.status, ['open', 'acknowledged']);
+        : { status: { in: ['OPEN', 'ACKNOWLEDGED'] } };
 
     const focused = intr.options.getFocused();
-    const profile = await db.query.profiles.findFirst({
-      columns: {},
-      where: eq(profiles.discordId, intr.user.id),
-      with: {
-        feedbacks: {
-          columns: { id: true, title: true },
-          where: and(ilike(feedbacks.title, `%${focused}%`), filter),
+    const feedbacks = await prisma.feedback.findMany({
+      where: {
+        profile: {
+          discordId: intr.user.id,
         },
+        title: {
+          contains: focused,
+          mode: 'insensitive',
+        },
+        ...(filter || {}),
       },
+      select: { id: true, title: true },
     });
-    if (!profile || !profile.feedbacks.length) return await intr.respond([]);
+    if (!feedbacks.length) return await intr.respond([]);
 
     await intr.respond(
-      profile.feedbacks.map((f) => ({
+      feedbacks.map((f) => ({
         name: f.title,
         value: f.id,
       })),
@@ -96,7 +97,7 @@ const executors: CommandExecutors = {
 };
 
 async function createFeedback(intr: ChatInputCommandInteraction) {
-  if (!(await exists(profiles, eq(profiles.discordId, intr.user.id))))
+  if (!(await prisma.profile.$exists({ discordId: intr.user.id })))
     return await sendError(
       intr,
       'You need to register first using `/profile create` command',
@@ -141,21 +142,22 @@ async function viewFeedback(intr: ChatInputCommandInteraction) {
 
   const feedbackId = intr.options.getString('feedback', true);
 
-  const profile = await db.query.profiles.findFirst({
-    columns: {},
-    where: eq(profiles.discordId, intr.user.id),
-    with: {
-      feedbacks: {
-        where: eq(feedbacks.id, feedbackId),
-      },
-    },
+  const profile = await prisma.profile.findFirst({
+    where: { discordId: intr.user.id },
+    select: { id: true },
   });
   if (!profile)
     return await sendError(
       intr,
       'You need to register first using `/profile create` command',
     );
-  const feedback = profile.feedbacks[0];
+
+  const feedback = await prisma.feedback.findFirst({
+    where: {
+      id: feedbackId,
+      profileId: profile.id,
+    },
+  });
   if (!feedback)
     return await sendError(
       intr,
@@ -218,9 +220,9 @@ async function viewFeedback(intr: ChatInputCommandInteraction) {
 async function closeFeedback(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const profile = await db.query.profiles.findFirst({
-    columns: { id: true },
-    where: eq(profiles.discordId, intr.user.id),
+  const profile = await prisma.profile.findFirst({
+    where: { discordId: intr.user.id },
+    select: { id: true },
   });
   if (!profile)
     return await sendError(
@@ -230,18 +232,17 @@ async function closeFeedback(intr: ChatInputCommandInteraction) {
 
   const feedbackId = intr.options.getString('feedback', true);
 
-  const result = await db
-    .update(feedbacks)
-    .set({ status: 'closed', updatedAt: new Date() })
-    .where(
-      and(
-        eq(feedbacks.profileId, profile.id),
-        eq(feedbacks.id, feedbackId),
-        inArray(feedbacks.status, ['open', 'acknowledged']),
-      ),
-    )
-    .returning({ id: feedbacks.id });
-  if (!result.length)
+  const result = await prisma.feedback.updateMany({
+    where: {
+      id: feedbackId,
+      profileId: profile.id,
+      status: { in: ['OPEN', 'ACKNOWLEDGED'] },
+    },
+    data: {
+      status: 'CLOSED',
+    },
+  });
+  if (!result.count)
     return await sendError(
       intr,
       'Failed to close feedback. It may not exist, not be open, or not belong to you',
@@ -257,9 +258,9 @@ export const modal = <Modal>{
   async execute(intr) {
     await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-    const profile = await db.query.profiles.findFirst({
-      columns: { id: true },
-      where: eq(profiles.discordId, intr.user.id),
+    const profile = await prisma.profile.findFirst({
+      where: { discordId: intr.user.id },
+      select: { id: true },
     });
     if (!profile)
       return await sendError(
@@ -270,16 +271,13 @@ export const modal = <Modal>{
     const title = intr.fields.getTextInputValue('title');
     const content = intr.fields.getTextInputValue('content');
 
-    const feedback = await db
-      .insert(feedbacks)
-      .values({
+    await prisma.feedback.create({
+      data: {
         profileId: profile.id,
         title,
         content,
-      })
-      .returning({ id: feedbacks.id });
-    if (!feedback.length)
-      return await sendError(intr, 'Failed to save feedback to the database');
+      },
+    });
 
     await intr.followUp(
       UIBuilder.createGenericSuccess('# Feedback submitted!'),

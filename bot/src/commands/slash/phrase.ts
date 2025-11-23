@@ -2,8 +2,8 @@ import { ComponentType, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import type { Command } from '~/types/command';
 import { sendError } from '~/utils/sendError';
 import config from '~/config';
-import db from 'database';
-import { sql } from 'drizzle-orm';
+import { prisma } from 'database';
+import { getRandomIndex } from 'database/utils';
 
 export const command = <Command>{
   data: new SlashCommandBuilder()
@@ -12,9 +12,9 @@ export const command = <Command>{
   async execute(intr) {
     await intr.deferReply();
 
-    const phrase = await db.query.phrases.findFirst({
-      columns: { id: false },
-      orderBy: sql`RANDOM()`,
+    const phrase = await prisma.phrase.findFirst({
+      omit: { id: true },
+      skip: getRandomIndex(await prisma.phrase.count()),
     });
     if (!phrase) return sendError(intr, 'No phrase found in the database');
 

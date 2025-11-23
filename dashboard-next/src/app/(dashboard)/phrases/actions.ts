@@ -1,44 +1,40 @@
 'use server';
 
 import z from 'zod';
-import { desc, eq, ilike, type SQL } from 'drizzle-orm';
-import {
-  phraseInsertSchema,
-  phrases,
-  type PhraseInsert,
-} from 'database/schemas/schema';
-import db from 'database';
+import { prisma } from 'database';
 import { protect } from '@/utils/auth';
-import { conditionsToFilter } from '@/utils/db';
+import { conditionsToWhere } from 'database/utils';
+import { phraseCreateSchema, type PhraseCreate } from 'database/schemas';
+import type { PhraseWhereInput } from 'database/generated/prisma/models';
 
 const pageSize = 10;
 
 export async function getPhrases(search?: string, page: number = 1) {
   await protect();
 
-  const conditions: SQL[] = [];
+  const conditions: PhraseWhereInput[] = [];
 
   if (search) {
-    const isSearchTermAnUuid = z.uuid().safeParse(search).success;
-    if (isSearchTermAnUuid) conditions.push(eq(phrases.id, search));
+    const isNanoid = z.nanoid().safeParse(search).success;
+    if (isNanoid) conditions.push({ id: search });
 
     conditions.push(
-      ilike(phrases.content, `%${search}%`),
-      ilike(phrases.source, `%${search}%`),
+      { content: { contains: search, mode: 'insensitive' } },
+      { source: { contains: search, mode: 'insensitive' } },
     );
   }
 
-  const filter = conditionsToFilter(conditions);
+  const where = conditionsToWhere(conditions);
 
   const offset = (page - 1) * pageSize;
-  const totalCount = await db.$count(phrases, filter);
+  const totalCount = await prisma.phrase.count({ where });
   const pageCount = Math.ceil(totalCount / pageSize);
 
-  const data = await db.query.phrases.findMany({
-    orderBy: [desc(phrases.createdAt)],
-    where: filter,
-    limit: pageSize,
-    offset,
+  const data = await prisma.phrase.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+    skip: offset,
+    take: pageSize,
   });
 
   return {
@@ -47,18 +43,18 @@ export async function getPhrases(search?: string, page: number = 1) {
   };
 }
 
-export async function createPhrase(phrase: PhraseInsert) {
+export async function createPhrase(phrase: PhraseCreate) {
   await protect();
 
-  const validPhrase = phraseInsertSchema.parse(phrase);
+  const data = phraseCreateSchema.parse(phrase);
 
-  await db.insert(phrases).values(validPhrase);
+  await prisma.phrase.create({ data });
 }
 
 export async function deletePhrase(id: string) {
   await protect();
 
-  const validId = z.uuid().parse(id);
+  z.nanoid().parse(id);
 
-  await db.delete(phrases).where(eq(phrases.id, validId));
+  await prisma.phrase.delete({ where: { id } });
 }

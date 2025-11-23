@@ -10,7 +10,7 @@ export default async function ProfileLayout({
   children: React.ReactNode;
 }) {
   const { id } = await params;
-  const isValid = z.uuid().safeParse(id).success;
+  const isValid = z.nanoid().safeParse(id).success;
 
   return (
     <DashboardInset
