@@ -1,6 +1,0 @@
-node_modules
-.next
-out
-build
-bun.lock
-next-env.d.ts
