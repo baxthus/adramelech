@@ -8,36 +8,49 @@ import z from 'zod';
 
 const pageSize = 10;
 
+const schema = z.object({
+  search: z.string().optional(),
+  page: z.number().int().positive(),
+});
+
 export async function getProfiles(search?: string, page: number = 1) {
   await protect();
 
+  const parsed = schema.parse({ search, page });
+
   const conditions: ProfileWhereInput[] = [];
+  if (parsed.search) {
+    const isNanoid = z.nanoid().safeParse(parsed.search).success;
+    const isDiscordId = z.coerce
+      .string()
+      .min(17)
+      .max(19)
+      .safeParse(parsed.search).success;
 
-  if (search) {
-    const isNanoid = z.nanoid().safeParse(search).success;
-    if (isNanoid) conditions.push({ id: search });
-
-    const isDiscordId = z.coerce.string().length(19).safeParse(search).success;
-    if (isDiscordId) conditions.push({ discordId: search });
-
-    conditions.push(
-      { nickname: { contains: search, mode: 'insensitive' } },
-      { bio: { contains: search, mode: 'insensitive' } },
-    );
+    if (isNanoid) conditions.push({ id: parsed.search });
+    else if (isDiscordId) conditions.push({ discordId: parsed.search });
+    else
+      conditions.push(
+        { nickname: { contains: parsed.search, mode: 'insensitive' } },
+        { bio: { contains: parsed.search, mode: 'insensitive' } },
+      );
   }
 
   const where = conditionsToWhere(conditions);
+  const offset = (parsed.page - 1) * pageSize;
 
-  const offset = (page - 1) * pageSize;
-  const totalCount = await prisma.profile.count({ where });
+  const [totalCount, data] = await Promise.all([
+    await prisma.profile.count({ where }),
+    await prisma.profile.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      omit: { bio: true },
+      take: pageSize,
+      skip: offset,
+    }),
+  ]);
+
   const pageCount = Math.ceil(totalCount / pageSize);
-
-  const data = await prisma.profile.findMany({
-    where,
-    orderBy: { createdAt: 'desc' },
-    take: pageSize,
-    skip: offset,
-  });
 
   return {
     data,

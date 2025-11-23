@@ -16,6 +16,8 @@ import {
 } from '@/components/ui/card';
 import { Nothing } from '@/components/nothing';
 import Link from 'next/link';
+import { formatDate } from '@/utils/date';
+import { toUnixTimestamps } from '@root/utils/date';
 
 export default function ProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -64,11 +66,15 @@ export default function ProfilePage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <p className="text-sm font-semibold">ID</p>
-            <p className="text-sm break-all">{profile!.id}</p>
+            <p className="text-sm">{profile!.id}</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-semibold">Discord ID</p>
+            <p className="text-sm">{profile!.discordId}</p>
           </div>
           <div className="space-y-2">
             <p className="text-sm font-semibold">Nickname</p>
-            <p className="text-sm font-medium">
+            <p className="text-sm break-all">
               {profile!.nickname ?? <Nothing />}
             </p>
           </div>
@@ -76,6 +82,20 @@ export default function ProfilePage() {
             <p className="text-sm font-semibold">Bio</p>
             <p className="max-h-32 overflow-auto text-sm wrap-break-word whitespace-pre-wrap">
               {profile!.bio ?? <Nothing />}
+            </p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-semibold">Created at</p>
+            <p className="text-sm">
+              {formatDate(profile!.createdAt)} (
+              {toUnixTimestamps(profile!.createdAt.getTime())})
+            </p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-semibold">Updated at</p>
+            <p className="text-sm">
+              {formatDate(profile!.updatedAt)} (
+              {toUnixTimestamps(profile!.updatedAt.getTime())})
             </p>
           </div>
         </CardContent>

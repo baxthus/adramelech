@@ -1,4 +1,5 @@
 'use client';
+
 import DashboardInset from '@/components/dashboard/inset';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { deletePhrase, getPhrases } from './actions';
@@ -24,6 +25,7 @@ import { NewPhraseDialog } from './dialog';
 import { usePage } from '@/hooks/use-page';
 import { useSearch } from '@/hooks/use-search';
 import type { Phrase } from 'database/generated/prisma/client';
+import { toUnixTimestamps } from '@root/utils/date';
 
 export default function PhrasesPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -129,7 +131,7 @@ export default function PhrasesPage() {
       label: 'Copy Unix Timestamp',
       onClick: () =>
         copyToClipboard(
-          row.original.createdAt.getTime().toString(),
+          toUnixTimestamps(row.original.createdAt.getTime()).toString(),
           'Unix Timestamp',
         ),
     },

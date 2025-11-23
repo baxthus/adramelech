@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Feedback } from 'database/generated/prisma/client';
+import { toUnixTimestamps } from '@root/utils/date';
 
 export default function FeedbacksPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -68,7 +69,9 @@ export default function FeedbacksPage() {
     },
   });
 
-  const columns: ColumnDef<Feedback>[] = [
+  type Response = Omit<Feedback, 'content' | 'response'>;
+
+  const columns: ColumnDef<Response>[] = [
     {
       accessorKey: 'id',
       header: '#',
@@ -90,6 +93,11 @@ export default function FeedbacksPage() {
       accessorKey: 'createdAt',
       header: 'Created At',
       cell: ({ row }) => formatDate(row.original.createdAt),
+    },
+    {
+      accessorKey: 'updatedAt',
+      header: 'Updated At',
+      cell: ({ row }) => formatDate(row.original.updatedAt),
     },
     {
       id: 'actions',
@@ -116,7 +124,7 @@ export default function FeedbacksPage() {
     },
   ];
 
-  const getRowActions = (row: Row<Feedback>): Array<DropdownItem> => [
+  const getRowActions = (row: Row<Response>): Array<DropdownItem> => [
     {
       label: 'Copy ID',
       onClick: () => copyToClipboard(row.original.id, 'ID'),
@@ -130,11 +138,19 @@ export default function FeedbacksPage() {
       onClick: () => copyToClipboard(row.original.title, 'Title'),
     },
     {
-      label: 'Copy Unix Timestamp',
+      label: 'Copy Created Timestamp',
       onClick: () =>
         copyToClipboard(
-          row.original.createdAt.getTime().toString(),
-          'Unix Timestamp',
+          toUnixTimestamps(row.original.createdAt.getTime()).toString(),
+          'Created Timestamp',
+        ),
+    },
+    {
+      label: 'Copy Updated Timestamp',
+      onClick: () =>
+        copyToClipboard(
+          toUnixTimestamps(row.original.updatedAt.getTime()).toString(),
+          'Updated Timestamp',
         ),
     },
     { type: 'separator' },
