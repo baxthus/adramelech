@@ -1,6 +1,5 @@
 {
   "name": "adramelech",
-  "module": "index.ts",
   "type": "module",
   "private": true,
   "workspaces": [
