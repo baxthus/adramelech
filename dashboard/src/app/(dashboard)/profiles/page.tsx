@@ -25,7 +25,6 @@ import Alert from '@/components/alert';
 import { DataTable } from '@/components/dashboard/data-table';
 import { Nothing } from '@/components/nothing';
 import { useSearch } from '@/hooks/use-search';
-import type { Profile } from 'database/generated/prisma/client';
 import { toUnixTimestamps } from '@root/utils/date';
 
 export default function ProfilesPage() {
@@ -69,7 +68,7 @@ export default function ProfilesPage() {
     },
   });
 
-  type Response = Omit<Profile, 'bio'>;
+  type Response = Awaited<ReturnType<typeof getProfiles>>['data'][number];
 
   const columns: Array<ColumnDef<Response>> = [
     {

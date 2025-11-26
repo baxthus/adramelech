@@ -24,7 +24,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { Feedback } from 'database/generated/prisma/client';
 import { toUnixTimestamps } from '@root/utils/date';
 import { Badge } from '@/components/ui/badge';
 
@@ -69,9 +68,9 @@ export default function FeedbacksPage() {
     },
   });
 
-  type Response = Omit<Feedback, 'content' | 'response'>;
+  type Response = Awaited<ReturnType<typeof getFeedbacks>>['data'][number];
 
-  const FeedbackStatusClasses: Record<Feedback['status'], string> = {
+  const FeedbackStatusClasses: Record<Response['status'], string> = {
     OPEN: 'bg-blue-500 text-white dark:bg-blue-600',
     ACKNOWLEDGED: 'bg-yellow-400 text-black dark:bg-yellow-500',
     CLOSED: 'bg-gray-500 text-white dark:bg-gray-600',
