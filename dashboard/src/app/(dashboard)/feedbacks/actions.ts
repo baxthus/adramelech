@@ -1,5 +1,6 @@
 'use server';
 
+import { defaultGetActionsSchema } from '@/schemas/actions';
 import { protect } from '@/utils/auth';
 import { prisma } from 'database';
 import { FeedbackStatus } from 'database/generated/prisma/enums';
@@ -10,15 +11,10 @@ import z from 'zod';
 
 const pageSize = 10;
 
-const schema = z.object({
-  search: z.string().optional(),
-  page: z.number().int().positive(),
-});
-
 export async function getFeedbacks(search?: string, page: number = 1) {
   await protect();
 
-  const parsed = schema.parse({ search, page });
+  const parsed = defaultGetActionsSchema.parse({ search, page });
 
   const conditions: FeedbackWhereInput[] = [];
   if (parsed.search) {
