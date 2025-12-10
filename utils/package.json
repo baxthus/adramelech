@@ -1,0 +1,17 @@
+{
+  "name": "utils",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./*": {
+      "import": "./src/*.ts",
+      "default": "./src/*.ts"
+    }
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

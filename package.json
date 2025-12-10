@@ -5,7 +5,8 @@
   "workspaces": [
     "database",
     "dashboard",
-    "bot"
+    "bot",
+    "utils"
   ],
   "devDependencies": {
     "@types/bun": "latest"

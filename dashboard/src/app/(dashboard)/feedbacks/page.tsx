@@ -24,7 +24,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { toUnixTimestamps } from '@root/utils/date';
+import { toUnixTimestamps } from 'utils/date';
 import { Badge } from '@/components/ui/badge';
 
 export default function FeedbacksPage() {

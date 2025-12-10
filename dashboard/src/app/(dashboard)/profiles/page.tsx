@@ -31,7 +31,7 @@ import Alert from '@/components/alert';
 import { DataTable } from '@/components/dashboard/data-table';
 import { Nothing } from '@/components/nothing';
 import { useSearch } from '@/hooks/use-search';
-import { toUnixTimestamps } from '@root/utils/date';
+import { toUnixTimestamps } from 'utils/date';
 
 export default function ProfilesPage() {
   const { isSignedIn, isLoaded } = useAuth();

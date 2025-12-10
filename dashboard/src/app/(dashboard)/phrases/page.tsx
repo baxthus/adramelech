@@ -25,7 +25,7 @@ import { NewPhraseDialog } from './dialog';
 import { usePage } from '@/hooks/use-page';
 import { useSearch } from '@/hooks/use-search';
 import type { Phrase } from 'database/generated/prisma/client';
-import { toUnixTimestamps } from '@root/utils/date';
+import { toUnixTimestamps } from 'utils/date';
 
 export default function PhrasesPage() {
   const { isSignedIn, isLoaded } = useAuth();
