@@ -3,6 +3,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import Link from 'next/link';
 import type { ComponentProps } from 'react';
 
 export interface DropdownItem {
@@ -11,6 +12,7 @@ export interface DropdownItem {
   icon?: React.ReactNode;
   variant?: ComponentProps<typeof DropdownMenuItem>['variant'];
   onClick?: () => void;
+  href?: string;
 }
 
 export const mapToDropdownMenuItems = (items: DropdownItem[]) =>
@@ -25,9 +27,23 @@ export const mapToDropdownMenuItems = (items: DropdownItem[]) =>
         key={index}
         onClick={item.onClick}
         variant={item.variant}
+        asChild={!!item.href}
       >
-        {item.icon}
-        {item.label}
+        {item.href ? (
+          <Link
+            href={item.href}
+            target={item.href.startsWith('http') ? '_blank' : undefined}
+            rel="noopener noreferrer"
+          >
+            {item.icon}
+            {item.label}
+          </Link>
+        ) : (
+          <>
+            {item.icon}
+            {item.label}
+          </>
+        )}
       </DropdownMenuItem>
     );
   });

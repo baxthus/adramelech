@@ -3,6 +3,7 @@ import {
   Home,
   MessageCircle,
   Quote,
+  Share2,
   Users,
   type LucideIcon,
 } from 'lucide-react';
@@ -43,6 +44,11 @@ export function DashboardNavMain(
       title: 'Profiles',
       icon: Users,
       href: '/profiles',
+    },
+    {
+      title: 'Socials',
+      icon: Share2,
+      href: '/socials',
     },
     {
       title: 'Feedbacks',

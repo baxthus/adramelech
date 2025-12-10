@@ -7,7 +7,13 @@ import { deleteProfile, getProfiles } from './actions';
 import { usePage } from '@/hooks/use-page';
 import { toast } from 'sonner';
 import type { ColumnDef, Row } from '@tanstack/react-table';
-import { Eye, MoreVertical, RefreshCw, Trash } from 'lucide-react';
+import {
+  MessageCircle,
+  MoreVertical,
+  RefreshCw,
+  Share2,
+  Trash,
+} from 'lucide-react';
 import { formatDate } from '@/utils/date';
 import { mapToDropdownMenuItems, type DropdownItem } from '@/utils/dropdown';
 import { copyToClipboard } from '@/utils/clipboard';
@@ -78,11 +84,31 @@ export default function ProfilesPage() {
     {
       accessorKey: 'discordId',
       header: 'Discord ID',
+      cell: ({ row }) => (
+        <Button variant="link" className="px-0" asChild>
+          <Link
+            href={`https://discord.com/users/${row.original.discordId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {row.original.discordId}
+          </Link>
+        </Button>
+      ),
     },
     {
       accessorKey: 'nickname',
       header: 'Nickname',
       cell: ({ row }) => row.original.nickname || <Nothing />,
+    },
+    {
+      accessorKey: 'bio',
+      header: 'Bio',
+      cell: ({ row }) => (
+        <span className="whitespace-pre-wrap">
+          {row.original.bio || <Nothing />}
+        </span>
+      ),
     },
     {
       accessorKey: 'createdAt',
@@ -97,12 +123,7 @@ export default function ProfilesPage() {
     {
       id: 'actions',
       cell: ({ row }) => (
-        <div className="ml-2 space-x-2 text-right">
-          <Button variant="secondary" size="icon-sm" asChild>
-            <Link href={`/profiles/${row.original.id}`}>
-              <Eye />
-            </Link>
-          </Button>
+        <div className="text-right">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon-sm">
@@ -121,6 +142,17 @@ export default function ProfilesPage() {
 
   const getRowActions = (row: Row<Response>): Array<DropdownItem> => [
     {
+      label: 'View Socials',
+      icon: <Share2 />,
+      href: `/socials?search=${row.original.id}`,
+    },
+    {
+      label: 'View Feedbacks',
+      icon: <MessageCircle />,
+      href: `/feedbacks?search=${row.original.id}`,
+    },
+    { type: 'separator' },
+    {
       label: 'Copy ID',
       onClick: () => copyToClipboard(row.original.id, 'ID'),
     },
@@ -131,6 +163,10 @@ export default function ProfilesPage() {
     {
       label: 'Copy Nickname',
       onClick: () => copyToClipboard(row.original.nickname || '', 'Nickname'),
+    },
+    {
+      label: 'Copy Bio',
+      onClick: () => copyToClipboard(row.original.bio || '', 'Bio'),
     },
     {
       label: 'Copy Created Timestamp',

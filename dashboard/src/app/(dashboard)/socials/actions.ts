@@ -3,32 +3,28 @@
 import { defaultGetActionsSchema } from '@/schemas/actions';
 import { protect } from '@/utils/auth';
 import { prisma } from 'database';
-import type { ProfileWhereInput } from 'database/generated/prisma/models';
+import type { SocialWhereInput } from 'database/generated/prisma/models';
 import { conditionsToWhere } from 'database/utils';
 import z from 'zod';
 
 const pageSize = 10;
 
-export async function getProfiles(search?: string, page: number = 1) {
+export async function getSocials(search?: string, page: number = 1) {
   await protect();
 
   const parsed = defaultGetActionsSchema.parse({ search, page });
 
-  const conditions: ProfileWhereInput[] = [];
+  const conditions: SocialWhereInput[] = [];
   if (parsed.search) {
     const isNanoid = z.nanoid().safeParse(parsed.search).success;
-    const isDiscordId = z.coerce
-      .string()
-      .min(17)
-      .max(19)
-      .safeParse(parsed.search).success;
 
     if (isNanoid) conditions.push({ id: parsed.search });
-    else if (isDiscordId) conditions.push({ discordId: parsed.search });
     else
       conditions.push(
-        { nickname: { contains: parsed.search, mode: 'insensitive' } },
-        { bio: { contains: parsed.search, mode: 'insensitive' } },
+        { name: { contains: parsed.search, mode: 'insensitive' } },
+        // I'll have to trust that the bot is doing proper URL validation
+        // Because I want full text search on URLs
+        { url: { contains: parsed.search, mode: 'insensitive' } },
       );
   }
 
@@ -36,10 +32,10 @@ export async function getProfiles(search?: string, page: number = 1) {
   const offset = (parsed.page - 1) * pageSize;
 
   const [totalCount, data] = await Promise.all([
-    await prisma.profile.count({ where }),
-    await prisma.profile.findMany({
+    await prisma.social.count({ where }),
+    await prisma.social.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { name: 'asc' },
       take: pageSize,
       skip: offset,
     }),
@@ -53,10 +49,10 @@ export async function getProfiles(search?: string, page: number = 1) {
   };
 }
 
-export async function deleteProfile(id: string) {
+export async function deleteSocial(id: string) {
   await protect();
 
   z.nanoid().parse(id);
 
-  await prisma.profile.delete({ where: { id } });
+  await prisma.social.delete({ where: { id } });
 }

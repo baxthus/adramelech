@@ -4,30 +4,28 @@ import { usePage } from '@/hooks/use-page';
 import { useSearch } from '@/hooks/use-search';
 import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { deleteFeedback, getFeedbacks } from './actions';
+import { deleteSocial, getSocials } from './actions';
 import { toast } from 'sonner';
 import type { ColumnDef, Row } from '@tanstack/react-table';
-import { formatDate } from '@/utils/date';
-import { Loading } from '@/components/loading';
-import { redirect } from 'next/navigation';
-import DashboardInset from '@/components/dashboard/inset';
-import { SearchField } from '@/components/search-field';
 import { Button } from '@/components/ui/button';
-import { Eye, MoreVertical, RefreshCw, Trash } from 'lucide-react';
-import Alert from '@/components/alert';
-import { DataTable } from '@/components/dashboard/data-table';
-import { mapToDropdownMenuItems, type DropdownItem } from '@/utils/dropdown';
-import { copyToClipboard } from '@/utils/clipboard';
 import Link from 'next/link';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { toUnixTimestamps } from '@root/utils/date';
-import { Badge } from '@/components/ui/badge';
+import { MoreVertical, RefreshCw, Trash } from 'lucide-react';
+import { Loading } from '@/components/loading';
+import { redirect } from 'next/navigation';
+import DashboardInset from '@/components/dashboard/inset';
+import { SearchField } from '@/components/search-field';
+import { refresh } from 'next/cache';
+import Alert from '@/components/alert';
+import { DataTable } from '@/components/dashboard/data-table';
+import { mapToDropdownMenuItems, type DropdownItem } from '@/utils/dropdown';
+import { copyToClipboard } from '@/utils/clipboard';
 
-export default function FeedbacksPage() {
+export default function SocialsPage() {
   const { isSignedIn, isLoaded } = useAuth();
 
   const [search] = useSearch();
@@ -35,7 +33,7 @@ export default function FeedbacksPage() {
 
   const queryClient = useQueryClient();
   const {
-    data: feedbacks,
+    data: socials,
     isLoading,
     isRefetching,
     isSuccess,
@@ -44,42 +42,33 @@ export default function FeedbacksPage() {
     refetch,
   } = useQuery({
     enabled: !!isSignedIn,
-    queryKey: ['feedbacks', search, page],
-    queryFn: () => getFeedbacks(search, page),
+    queryKey: ['socials', search, page],
+    queryFn: () => getSocials(search, page),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteFeedback(id),
+    mutationFn: (id: string) => deleteSocial(id),
     onMutate: () => {
-      const toastId = toast.loading('Deleting feedback...');
+      const toastId = toast.loading('Deleting social...');
       return { toastId };
     },
     onSuccess: (_, __, context) => {
-      queryClient.invalidateQueries({ queryKey: ['feedbacks'] });
-      toast.success('Feedback deleted', {
+      queryClient.invalidateQueries({ queryKey: ['socials'] });
+      toast.success('Social deleted', {
         id: context.toastId,
       });
     },
     onError: (err, _, context) => {
-      toast.error('Failed to delete feedback', {
+      toast.error(`Failed to delete phrase`, {
         id: context?.toastId,
         description: err.message,
       });
     },
   });
 
-  type Response = Awaited<ReturnType<typeof getFeedbacks>>['data'][number];
+  type Response = Awaited<ReturnType<typeof getSocials>>['data'][number];
 
-  const FeedbackStatusClasses: Record<Response['status'], string> = {
-    OPEN: 'bg-blue-500 text-white dark:bg-blue-600',
-    ACKNOWLEDGED: 'bg-yellow-400 text-black dark:bg-yellow-500',
-    CLOSED: 'bg-gray-500 text-white dark:bg-gray-600',
-    RESOLVED: 'bg-green-500 text-white dark:bg-green-600',
-    ACCEPTED: 'bg-purple-500 text-white dark:bg-purple-600',
-    REJECTED: 'bg-red-500 text-white dark:bg-red-600',
-  };
-
-  const columns: ColumnDef<Response>[] = [
+  const columns: Array<ColumnDef<Response>> = [
     {
       accessorKey: 'id',
       header: '#',
@@ -96,41 +85,28 @@ export default function FeedbacksPage() {
       ),
     },
     {
-      accessorKey: 'title',
-      header: 'Title',
+      accessorKey: 'name',
+      header: 'Name',
     },
     {
-      accessorKey: 'status',
-      header: 'Status',
+      accessorKey: 'url',
+      header: 'URL',
       cell: ({ row }) => (
-        <Badge className={FeedbackStatusClasses[row.original.status]}>
-          {row.original.status}
-        </Badge>
+        <Button variant="link" asChild className="px-0">
+          <Link href={row.original.url} target="_blank">
+            {row.original.url}
+          </Link>
+        </Button>
       ),
-    },
-    {
-      accessorKey: 'createdAt',
-      header: 'Created At',
-      cell: ({ row }) => formatDate(row.original.createdAt),
-    },
-    {
-      accessorKey: 'updatedAt',
-      header: 'Updated At',
-      cell: ({ row }) => formatDate(row.original.updatedAt),
     },
     {
       id: 'actions',
       cell: ({ row }) => (
-        <div className="ml-2 space-x-2 text-right">
-          <Button variant="secondary" size="icon-sm" asChild>
-            <Link href={`/feedbacks/${row.original.id}`}>
-              <Eye />
-            </Link>
-          </Button>
+        <div className="text-right">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon-sm">
-                <span className="sr-only">Open Menu</span>
+                <span className="sr-only">Open menu</span>
                 <MoreVertical />
               </Button>
             </DropdownMenuTrigger>
@@ -153,26 +129,13 @@ export default function FeedbacksPage() {
       onClick: () => copyToClipboard(row.original.profileId, 'Profile ID'),
     },
     {
-      label: 'Copy Title',
-      onClick: () => copyToClipboard(row.original.title, 'Title'),
+      label: 'Copy Name',
+      onClick: () => copyToClipboard(row.original.name, 'Name'),
     },
     {
-      label: 'Copy Created Timestamp',
-      onClick: () =>
-        copyToClipboard(
-          toUnixTimestamps(row.original.createdAt.getTime()).toString(),
-          'Created Timestamp',
-        ),
+      label: 'Copy URL',
+      onClick: () => copyToClipboard(row.original.url, 'URL'),
     },
-    {
-      label: 'Copy Updated Timestamp',
-      onClick: () =>
-        copyToClipboard(
-          toUnixTimestamps(row.original.updatedAt.getTime()).toString(),
-          'Updated Timestamp',
-        ),
-    },
-    { type: 'separator' },
     {
       label: 'Delete',
       variant: 'destructive',
@@ -182,44 +145,44 @@ export default function FeedbacksPage() {
   ];
 
   if (!isLoaded) return <Loading description="Checking authentication..." />;
-  if (!isSignedIn) return redirect('/sign-in');
+  if (!isSignedIn) redirect('/sign-in');
 
   return (
     <DashboardInset
       breadcrumbs={[
         {
-          title: 'Feedbacks',
-          href: '/feedbacks',
+          title: 'Socials',
+          href: '/socials',
         },
       ]}
     >
       <div className="space-y-4">
         <div className="flex flex-row items-center justify-between gap-x-2">
-          <SearchField name="feedbacks" />
+          <SearchField name="socials" />
           <Button
             variant="outline"
             size="icon"
-            onClick={() => refetch()}
+            onClick={() => refresh()}
             disabled={isLoading || isRefetching}
           >
             <RefreshCw />
           </Button>
         </div>
-        {isLoading && <Loading description="Loading feedbacks..." />}
+        {isLoading && <Loading description="Loading socials..." />}
         {isError && (
           <Alert
-            title="Failed to load feedbacks"
+            title="Failed to load socials"
             description={error.message}
             variant="destructive"
           />
         )}
         {isSuccess && (
           <DataTable
-            data={feedbacks.data || []}
+            data={socials.data || []}
             columns={columns}
             onRefresh={refetch}
             enablePagination={true}
-            pageCount={feedbacks.pageCount}
+            pageCount={socials.pageCount}
           />
         )}
       </div>
