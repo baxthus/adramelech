@@ -2,9 +2,9 @@
 
 import { defaultGetActionsSchema } from '@/schemas/actions';
 import { protect } from '@/utils/auth';
-import { prisma } from 'database';
-import type { ProfileWhereInput } from 'database/generated/prisma/models';
-import { conditionsToWhere } from 'database/utils';
+import { db } from 'database';
+import { profiles } from 'database/schema';
+import { desc, eq, ilike, or, type SQL } from 'drizzle-orm';
 import z from 'zod';
 
 const pageSize = 10;
@@ -14,7 +14,7 @@ export async function getProfiles(search?: string, page: number = 1) {
 
   const parsed = defaultGetActionsSchema.parse({ search, page });
 
-  const conditions: ProfileWhereInput[] = [];
+  let where: SQL | undefined;
   if (parsed.search) {
     const isNanoid = z.nanoid().safeParse(parsed.search).success;
     const isDiscordId = z.coerce
@@ -23,25 +23,24 @@ export async function getProfiles(search?: string, page: number = 1) {
       .max(19)
       .safeParse(parsed.search).success;
 
-    if (isNanoid) conditions.push({ id: parsed.search });
-    else if (isDiscordId) conditions.push({ discordId: parsed.search });
+    if (isNanoid) where = eq(profiles.id, parsed.search);
+    else if (isDiscordId) where = eq(profiles.discordId, parsed.search);
     else
-      conditions.push(
-        { nickname: { contains: parsed.search, mode: 'insensitive' } },
-        { bio: { contains: parsed.search, mode: 'insensitive' } },
+      where = or(
+        ilike(profiles.nickname, `%${parsed.search}%`),
+        ilike(profiles.bio, `%${parsed.search}%`),
       );
   }
 
-  const where = conditionsToWhere(conditions);
   const offset = (parsed.page - 1) * pageSize;
 
   const [totalCount, data] = await Promise.all([
-    await prisma.profile.count({ where }),
-    await prisma.profile.findMany({
+    db.$count(profiles, where),
+    db.query.profiles.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
-      take: pageSize,
-      skip: offset,
+      orderBy: [desc(profiles.createdAt)],
+      offset,
+      limit: pageSize,
     }),
   ]);
 
@@ -58,5 +57,6 @@ export async function deleteProfile(id: string) {
 
   z.nanoid().parse(id);
 
-  await prisma.profile.delete({ where: { id } });
+  const result = await db.delete(profiles).where(eq(profiles.id, id));
+  if (!result.rowCount) throw new Error('Profile not found');
 }

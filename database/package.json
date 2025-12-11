@@ -1,17 +1,27 @@
 {
   "name": "database",
-  "module": "index.ts",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "import": "./src/*.ts",
+      "default": "./src/*.ts"
+    }
+  },
   "devDependencies": {
     "@types/bun": "latest",
-    "prisma": "^7.0.0"
+    "@types/pg": "^8.16.0",
+    "drizzle-kit": "^0.31.8"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.0.0",
-    "@prisma/client": "^7.0.0"
+    "nanoid": "^5.1.6",
+    "pg": "^8.16.3"
   }
 }

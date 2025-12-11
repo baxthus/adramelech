@@ -2,9 +2,9 @@
 
 import { defaultGetActionsSchema } from '@/schemas/actions';
 import { protect } from '@/utils/auth';
-import { prisma } from 'database';
-import type { SocialWhereInput } from 'database/generated/prisma/models';
-import { conditionsToWhere } from 'database/utils';
+import { db } from 'database';
+import { socials } from 'database/schema';
+import { asc, eq, ilike, or, type SQL } from 'drizzle-orm';
 import z from 'zod';
 
 const pageSize = 10;
@@ -14,30 +14,33 @@ export async function getSocials(search?: string, page: number = 1) {
 
   const parsed = defaultGetActionsSchema.parse({ search, page });
 
-  const conditions: SocialWhereInput[] = [];
+  let where: SQL | undefined;
   if (parsed.search) {
     const isNanoid = z.nanoid().safeParse(parsed.search).success;
 
-    if (isNanoid) conditions.push({ id: parsed.search });
+    if (isNanoid)
+      where = or(
+        eq(socials.id, parsed.search),
+        eq(socials.profileId, parsed.search),
+      );
     else
-      conditions.push(
-        { name: { contains: parsed.search, mode: 'insensitive' } },
+      where = or(
+        ilike(socials.name, `%${parsed.search}%`),
         // I'll have to trust that the bot is doing proper URL validation
         // Because I want full text search on URLs
-        { url: { contains: parsed.search, mode: 'insensitive' } },
+        ilike(socials.url, `%${parsed.search}%`),
       );
   }
 
-  const where = conditionsToWhere(conditions);
   const offset = (parsed.page - 1) * pageSize;
 
   const [totalCount, data] = await Promise.all([
-    await prisma.social.count({ where }),
-    await prisma.social.findMany({
+    db.$count(socials, where),
+    db.query.socials.findMany({
       where,
-      orderBy: { name: 'asc' },
-      take: pageSize,
-      skip: offset,
+      orderBy: [asc(socials.name)],
+      limit: pageSize,
+      offset,
     }),
   ]);
 
@@ -54,5 +57,6 @@ export async function deleteSocial(id: string) {
 
   z.nanoid().parse(id);
 
-  await prisma.social.delete({ where: { id } });
+  const result = await db.delete(socials).where(eq(socials.id, id));
+  if (!result.rowCount) throw new Error('Social not found');
 }

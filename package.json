@@ -26,7 +26,7 @@
     "unrs-resolver"
   ],
   "dependencies": {
-    "pg": "^8.16.3",
+    "drizzle-orm": "^0.45.1",
     "zod": "^4.0.17"
   }
 }

@@ -24,7 +24,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
 import Alert from '@/components/alert';
-import { phraseCreateSchema, type PhraseCreate } from 'database/schemas';
+import type { PhraseCreate } from 'database/types';
+import { phraseCreateSchema } from 'database/validations';
 
 export function NewPhraseDialog({
   queryClient,

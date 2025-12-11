@@ -2,8 +2,9 @@ import { ComponentType, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import type { Command } from '~/types/command';
 import { sendError } from '~/utils/sendError';
 import config from '~/config';
-import { prisma } from 'database';
-import { getRandomIndex } from 'database/utils';
+import { db } from 'database';
+import { phrases } from 'database/schema';
+import { sql } from 'drizzle-orm';
 
 export const command = <Command>{
   data: new SlashCommandBuilder()
@@ -12,10 +13,12 @@ export const command = <Command>{
   async execute(intr) {
     await intr.deferReply();
 
-    const phrase = await prisma.phrase.findFirst({
-      omit: { id: true },
-      skip: getRandomIndex(await prisma.phrase.count()),
-    });
+    const result = await db
+      .select()
+      .from(phrases)
+      .orderBy(sql`RANDOM()`)
+      .limit(1);
+    const phrase = result[0];
     if (!phrase) return sendError(intr, 'No phrase found in the database');
 
     await intr.followUp({

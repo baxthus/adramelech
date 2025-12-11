@@ -1,5 +1,4 @@
 import { stripIndents } from 'common-tags';
-import { prisma } from 'database';
 import {
   ActionRowBuilder,
   ApplicationCommandType,
@@ -30,6 +29,10 @@ import type { Component } from '~/types/component';
 import type { Modal } from '~/types/modal';
 import { sendError } from '~/utils/sendError';
 import toUnixTimestamps from '~/utils/toUnixTimestamps';
+import { db } from 'database';
+import { profiles, socials } from 'database/schema';
+import { and, asc, eq, ilike } from 'drizzle-orm';
+import { exists } from 'database/utils';
 
 export const commands = <Command[]>[
   {
@@ -124,23 +127,27 @@ export const commands = <Command[]>[
         return;
 
       const focused = intr.options.getFocused();
-      const socials = await prisma.social.findMany({
-        select: { id: true, name: true },
-        where: {
-          profile: {
-            discordId: intr.user.id,
-          },
-          name: {
-            mode: 'insensitive',
-            contains: focused,
+      const nameFilter = focused
+        ? ilike(socials.name, `%${focused}%`)
+        : undefined;
+
+      const profile = await db.query.profiles.findFirst({
+        columns: { id: true },
+        where: eq(profiles.discordId, intr.user.id),
+        with: {
+          socials: {
+            columns: { id: true, name: true },
+            where: nameFilter,
+            orderBy: [asc(socials.name)],
+            limit: 25,
           },
         },
       });
 
-      if (!socials.length) return await intr.respond([]);
+      if (!profile?.socials.length) return await intr.respond([]);
 
       await intr.respond(
-        socials.map((social) => ({
+        profile.socials.map((social) => ({
           name: social.name,
           value: social.id,
         })),
@@ -178,12 +185,12 @@ const executors: CommandGroupExecutors = {
 async function viewProfile(intr: CommandInteraction, user: User) {
   await intr.deferReply();
 
-  const profile = await prisma.profile.findUnique({
-    omit: { discordId: true },
-    where: { discordId: user.id },
-    include: {
+  const profile = await db.query.profiles.findFirst({
+    columns: { discordId: false },
+    where: eq(profiles.discordId, user.id),
+    with: {
       socials: {
-        select: { name: true, url: true },
+        columns: { name: true, url: true },
       },
     },
   });
@@ -254,12 +261,10 @@ async function viewProfile(intr: CommandInteraction, user: User) {
 async function createProfile(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  if (await prisma.profile.$exists({ discordId: intr.user.id }))
+  if (await exists(profiles, eq(profiles.discordId, intr.user.id)))
     return await sendError(intr, 'You already have a profile!');
 
-  await prisma.profile.create({
-    data: { discordId: intr.user.id },
-  });
+  await db.insert(profiles).values({ discordId: intr.user.id });
 
   await intr.followUp(
     UIBuilder.createGenericSuccess('# Your profile has been created!'),
@@ -269,7 +274,7 @@ async function createProfile(intr: ChatInputCommandInteraction) {
 async function deleteProfile(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  if (!(await prisma.profile.$exists({ discordId: intr.user.id })))
+  if (!(await exists(profiles, eq(profiles.discordId, intr.user.id))))
     return await sendError(intr, 'You do not have a profile to delete');
 
   await intr.followUp({
@@ -306,7 +311,7 @@ async function deleteProfile(intr: ChatInputCommandInteraction) {
 }
 
 async function setBio(intr: ChatInputCommandInteraction) {
-  if (!(await prisma.profile.$exists({ discordId: intr.user.id })))
+  if (!(await exists(profiles, eq(profiles.discordId, intr.user.id))))
     return await sendError(intr, 'You do not have a profile to edit');
 
   await intr.showModal({
@@ -329,16 +334,16 @@ async function setBio(intr: ChatInputCommandInteraction) {
 async function setNickname(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  if (!(await prisma.profile.$exists({ discordId: intr.user.id })))
+  if (!(await exists(profiles, eq(profiles.discordId, intr.user.id))))
     return await sendError(intr, 'You do not have a profile to edit');
 
   const nickname = intr.options.getString('nickname', true).trim();
 
-  const result = await prisma.profile.updateMany({
-    data: { nickname },
-    where: { discordId: intr.user.id },
-  });
-  if (!result.count)
+  const result = await db
+    .update(profiles)
+    .set({ nickname })
+    .where(eq(profiles.discordId, intr.user.id));
+  if (!result.rowCount)
     return await sendError(intr, 'Failed to update your nickname');
 
   await intr.followUp(
@@ -349,12 +354,12 @@ async function setNickname(intr: ChatInputCommandInteraction) {
 async function addSocial(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const profile = await prisma.profile.findUnique({
-    where: { discordId: intr.user.id },
-    select: {
-      id: true,
+  const profile = await db.query.profiles.findFirst({
+    columns: { id: true },
+    where: eq(profiles.discordId, intr.user.id),
+    with: {
       socials: {
-        select: { name: true, id: true },
+        columns: { name: true, id: true },
       },
     },
   });
@@ -383,12 +388,10 @@ async function addSocial(intr: ChatInputCommandInteraction) {
       `You already have a social link with the name \`${name}\`. Please choose a different name`,
     );
 
-  await prisma.social.create({
-    data: {
-      profileId: profile.id,
-      name,
-      url: link,
-    },
+  await db.insert(socials).values({
+    profileId: profile.id,
+    name,
+    url: link,
   });
 
   await intr.followUp(
@@ -399,20 +402,21 @@ async function addSocial(intr: ChatInputCommandInteraction) {
 async function removeBio(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const profile = await prisma.profile.findUnique({
-    where: { discordId: intr.user.id },
-    select: { id: true, bio: true },
+  const profile = await db.query.profiles.findFirst({
+    columns: { bio: true },
+    where: eq(profiles.discordId, intr.user.id),
   });
   if (!profile)
     return await sendError(intr, 'You do not have a profile to edit');
   if (!profile.bio)
     return await sendError(intr, 'You do not have a bio to remove');
 
-  const result = await prisma.profile.updateMany({
-    data: { bio: null },
-    where: { discordId: intr.user.id },
-  });
-  if (!result.count) return await sendError(intr, 'Failed to remove your bio');
+  const result = await db
+    .update(profiles)
+    .set({ bio: null })
+    .where(eq(profiles.discordId, intr.user.id));
+  if (!result.rowCount)
+    return await sendError(intr, 'Failed to remove your bio');
 
   await intr.followUp(
     UIBuilder.createGenericSuccess('# Your bio has been removed!'),
@@ -422,20 +426,20 @@ async function removeBio(intr: ChatInputCommandInteraction) {
 async function removeNickname(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const profile = await prisma.profile.findUnique({
-    where: { discordId: intr.user.id },
-    select: { id: true, nickname: true },
+  const profile = await db.query.profiles.findFirst({
+    columns: { nickname: true },
+    where: eq(profiles.discordId, intr.user.id),
   });
   if (!profile)
     return await sendError(intr, 'You do not have a profile to edit');
   if (!profile.nickname)
     return await sendError(intr, 'You do not have a nickname to remove');
 
-  const result = await prisma.profile.updateMany({
-    data: { nickname: null },
-    where: { discordId: intr.user.id },
-  });
-  if (!result.count)
+  const result = await db
+    .update(profiles)
+    .set({ nickname: null })
+    .where(eq(profiles.discordId, intr.user.id));
+  if (!result.rowCount)
     return await sendError(intr, 'Failed to remove your nickname');
 
   await intr.followUp(
@@ -448,13 +452,13 @@ async function removeSocial(intr: ChatInputCommandInteraction) {
 
   const socialId = intr.options.getString('id', true).trim();
 
-  const profile = await prisma.profile.findUnique({
-    where: { discordId: intr.user.id },
-    select: {
-      id: true,
+  const profile = await db.query.profiles.findFirst({
+    columns: { id: true },
+    where: eq(profiles.discordId, intr.user.id),
+    with: {
       socials: {
-        select: { id: true },
-        where: { id: socialId },
+        columns: { id: true },
+        where: eq(socials.id, socialId),
       },
     },
   });
@@ -466,13 +470,10 @@ async function removeSocial(intr: ChatInputCommandInteraction) {
       'You do not have a social link with that ID to remove',
     );
 
-  const result = await prisma.social.deleteMany({
-    where: {
-      id: socialId,
-      profileId: profile.id,
-    },
-  });
-  if (!result.count)
+  const result = await db
+    .delete(socials)
+    .where(and(eq(socials.id, socialId), eq(socials.profileId, profile.id)));
+  if (!result.rowCount)
     return await sendError(intr, 'Failed to remove the social link');
 
   await intr.followUp(
@@ -486,10 +487,10 @@ export const component = <Component>{
   async execute(interaction) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-    const result = await prisma.profile.deleteMany({
-      where: { discordId: interaction.user.id },
-    });
-    if (!result.count)
+    const result = await db
+      .delete(profiles)
+      .where(eq(profiles.discordId, interaction.user.id));
+    if (!result.rowCount)
       return await sendError(interaction, 'Failed to delete your profile');
 
     await interaction.followUp(
@@ -505,11 +506,11 @@ export const modal = <Modal>{
 
     const content = intr.fields.getTextInputValue('content').trim();
 
-    const result = await prisma.profile.updateMany({
-      data: { bio: content },
-      where: { discordId: intr.user.id },
-    });
-    if (!result.count)
+    const result = await db
+      .update(profiles)
+      .set({ bio: content })
+      .where(eq(profiles.discordId, intr.user.id));
+    if (!result.rowCount)
       return await sendError(intr, 'Failed to update your bio');
 
     await intr.followUp(

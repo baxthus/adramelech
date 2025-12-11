@@ -19,7 +19,6 @@ import { Loading } from '@/components/loading';
 import { redirect } from 'next/navigation';
 import DashboardInset from '@/components/dashboard/inset';
 import { SearchField } from '@/components/search-field';
-import { refresh } from 'next/cache';
 import Alert from '@/components/alert';
 import { DataTable } from '@/components/dashboard/data-table';
 import { mapToDropdownMenuItems, type DropdownItem } from '@/utils/dropdown';
@@ -162,7 +161,7 @@ export default function SocialsPage() {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => refresh()}
+            onClick={() => refetch()}
             disabled={isLoading || isRefetching}
           >
             <RefreshCw />

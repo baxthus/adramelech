@@ -24,7 +24,7 @@ import Alert from '@/components/alert';
 import { NewPhraseDialog } from './dialog';
 import { usePage } from '@/hooks/use-page';
 import { useSearch } from '@/hooks/use-search';
-import type { Phrase } from 'database/generated/prisma/client';
+import type { Phrase } from 'database/types';
 import { toUnixTimestamps } from 'utils/date';
 
 export default function PhrasesPage() {

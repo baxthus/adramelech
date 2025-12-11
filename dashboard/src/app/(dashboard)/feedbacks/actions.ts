@@ -2,11 +2,11 @@
 
 import { defaultGetActionsSchema } from '@/schemas/actions';
 import { protect } from '@/utils/auth';
-import { prisma } from 'database';
-import { FeedbackStatus } from 'database/generated/prisma/enums';
-import { FeedbackWhereInput } from 'database/generated/prisma/models';
-import { feedbackStatusSchema } from 'database/schemas';
-import { conditionsToWhere } from 'database/utils';
+import { db } from 'database';
+import { feedbacks } from 'database/schema';
+import type { FeedbackStatus } from 'database/types';
+import { feedbackStatusSchema } from 'database/validations';
+import { desc, eq, ilike, or, type SQL } from 'drizzle-orm';
 import z from 'zod';
 
 const pageSize = 10;
@@ -16,32 +16,34 @@ export async function getFeedbacks(search?: string, page: number = 1) {
 
   const parsed = defaultGetActionsSchema.parse({ search, page });
 
-  const conditions: FeedbackWhereInput[] = [];
+  let where: SQL | undefined;
   if (parsed.search) {
     const isNanoid = z.nanoid().safeParse(parsed.search).success;
     const isStatus = feedbackStatusSchema.safeParse(parsed.search).success;
 
     if (isNanoid)
-      conditions.push({ id: parsed.search }, { profileId: parsed.search });
+      where = or(
+        eq(feedbacks.id, parsed.search),
+        eq(feedbacks.profileId, parsed.search),
+      );
     else if (isStatus)
-      conditions.push({ status: parsed.search as FeedbackStatus });
-    else
-      conditions.push({
-        title: { contains: parsed.search, mode: 'insensitive' },
-      });
+      where = eq(feedbacks.status, parsed.search as FeedbackStatus);
+    else where = ilike(feedbacks.title, `%${parsed.search}%`);
   }
 
-  const where = conditionsToWhere(conditions);
   const offset = (parsed.page - 1) * pageSize;
 
   const [totalCount, data] = await Promise.all([
-    prisma.feedback.count({ where }),
-    prisma.feedback.findMany({
+    db.$count(feedbacks, where),
+    db.query.feedbacks.findMany({
+      columns: {
+        content: false,
+        response: false,
+      },
       where,
-      orderBy: { createdAt: 'desc' },
-      omit: { content: true, response: true },
-      skip: offset,
-      take: pageSize,
+      orderBy: [desc(feedbacks.createdAt)],
+      offset,
+      limit: pageSize,
     }),
   ]);
 
@@ -58,5 +60,6 @@ export async function deleteFeedback(id: string) {
 
   z.nanoid().parse(id);
 
-  await prisma.feedback.delete({ where: { id } });
+  const result = await db.delete(feedbacks).where(eq(feedbacks.id, id));
+  if (!result.rowCount) throw new Error('Feedback not found');
 }

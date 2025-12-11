@@ -2,10 +2,11 @@
 
 import { defaultGetActionsSchema } from '@/schemas/actions';
 import { protect } from '@/utils/auth';
-import { prisma } from 'database';
-import type { PhraseWhereInput } from 'database/generated/prisma/models';
-import { phraseCreateSchema, type PhraseCreate } from 'database/schemas';
-import { conditionsToWhere } from 'database/utils';
+import { db } from 'database';
+import { phrases } from 'database/schema';
+import type { PhraseCreate } from 'database/types';
+import { phraseCreateSchema } from 'database/validations';
+import { desc, eq, ilike, or, type SQL } from 'drizzle-orm';
 import z from 'zod';
 
 const pageSize = 10;
@@ -15,27 +16,26 @@ export async function getPhrases(search?: string, page: number = 1) {
 
   const parsed = defaultGetActionsSchema.parse({ search, page });
 
-  const conditions: PhraseWhereInput[] = [];
+  let where: SQL | undefined;
   if (parsed.search) {
     const isNanoid = z.nanoid().safeParse(parsed.search).success;
-    if (isNanoid) conditions.push({ id: parsed.search });
+    if (isNanoid) where = eq(phrases.id, parsed.search);
     else
-      conditions.push(
-        { content: { contains: parsed.search, mode: 'insensitive' } },
-        { source: { contains: parsed.search, mode: 'insensitive' } },
+      where = or(
+        ilike(phrases.content, `%${parsed.search}%`),
+        ilike(phrases.source, `%${parsed.search}%`),
       );
   }
 
-  const where = conditionsToWhere(conditions);
   const offset = (parsed.page - 1) * pageSize;
 
   const [totalCount, data] = await Promise.all([
-    await prisma.phrase.count({ where }),
-    await prisma.phrase.findMany({
+    db.$count(phrases, where),
+    db.query.phrases.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
-      skip: offset,
-      take: pageSize,
+      orderBy: [desc(phrases.createdAt)],
+      offset,
+      limit: pageSize,
     }),
   ]);
 
@@ -52,7 +52,7 @@ export async function createPhrase(phrase: PhraseCreate) {
 
   const data = phraseCreateSchema.parse(phrase);
 
-  await prisma.phrase.create({ data });
+  await db.insert(phrases).values(data);
 }
 
 export async function deletePhrase(id: string) {
@@ -60,5 +60,6 @@ export async function deletePhrase(id: string) {
 
   z.nanoid().parse(id);
 
-  await prisma.phrase.delete({ where: { id } });
+  const result = await db.delete(phrases).where(eq(phrases.id, id));
+  if (!result.rowCount) throw new Error('Phrase not found');
 }
