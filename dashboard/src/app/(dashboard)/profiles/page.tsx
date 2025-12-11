@@ -31,7 +31,7 @@ import Alert from '@/components/alert';
 import { DataTable } from '@/components/dashboard/data-table';
 import { Nothing } from '@/components/nothing';
 import { useSearch } from '@/hooks/use-search';
-import { toUnixTimestamps } from 'utils/date';
+import { toUnixTimestamp } from 'utils/date';
 
 export default function ProfilesPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -172,7 +172,7 @@ export default function ProfilesPage() {
       label: 'Copy Created Timestamp',
       onClick: () =>
         copyToClipboard(
-          toUnixTimestamps(row.original.createdAt.getTime()).toString(),
+          toUnixTimestamp(row.original.createdAt).toString(),
           'Created Timestamp',
         ),
     },
@@ -180,7 +180,7 @@ export default function ProfilesPage() {
       label: 'Copy Updated Timestamp',
       onClick: () =>
         copyToClipboard(
-          toUnixTimestamps(row.original.updatedAt.getTime()).toString(),
+          toUnixTimestamp(row.original.updatedAt).toString(),
           'Updated Timestamp',
         ),
     },

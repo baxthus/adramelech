@@ -7,9 +7,9 @@ import {
   TimestampStyles,
 } from 'discord.js';
 import type { Command } from '~/types/command';
-import toUnixTimestamps from '~/utils/toUnixTimestamps';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
+import { toUnixTimestamp } from 'utils/date';
 
 export const command = <Command>{
   data: new SlashCommandBuilder()
@@ -18,7 +18,7 @@ export const command = <Command>{
     .setContexts(InteractionContextType.Guild),
   async execute(intr) {
     const owner = await intr.guild?.fetchOwner();
-    const createdAt = toUnixTimestamps(intr.guild!.createdTimestamp);
+    const createdAt = toUnixTimestamp(intr.guild!.createdTimestamp);
 
     await intr.reply({
       flags: MessageFlags.IsComponentsV2,

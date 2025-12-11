@@ -12,8 +12,8 @@ import {
 import StringBuilder from '~/tools/StringBuilder';
 import type { Command } from '~/types/command';
 import { sendError } from '~/utils/sendError';
-import toUnixTimestamps from '~/utils/toUnixTimestamps';
 import config from '~/config';
+import { toUnixTimestamp } from 'utils/date';
 
 export const command = <Command>{
   data: new SlashCommandBuilder()
@@ -74,7 +74,7 @@ export const command = <Command>{
     if (secondsBeforeAutoDelete)
       message.appendLine(
         `### This message will be auto-deleted ${time(
-          toUnixTimestamps(Date.now()) + secondsBeforeAutoDelete,
+          toUnixTimestamp(Date.now()) + secondsBeforeAutoDelete,
           TimestampStyles.RelativeTime,
         )}`,
       );

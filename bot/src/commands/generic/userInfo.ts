@@ -18,9 +18,9 @@ import {
   type UserContextMenuCommandInteraction,
 } from 'discord.js';
 import type { Command } from '~/types/command';
-import toUnixTimestamps from '~/utils/toUnixTimestamps';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
+import { toUnixTimestamp } from 'utils/date';
 
 export const commands = <Array<Command>>[
   {
@@ -47,7 +47,7 @@ export const commands = <Array<Command>>[
 async function helper(intr: CommandInteraction, user: User) {
   const member = await intr.guild?.members.fetch(user.id).catch(() => null);
 
-  const createdAt = toUnixTimestamps(user.createdTimestamp);
+  const createdAt = toUnixTimestamp(user.createdTimestamp);
 
   const container = new ContainerBuilder({
     accent_color: config.EMBED_COLOR,
@@ -99,7 +99,7 @@ async function helper(intr: CommandInteraction, user: User) {
     return;
   }
 
-  const joinedAt = toUnixTimestamps(member.joinedTimestamp!);
+  const joinedAt = toUnixTimestamp(member.joinedTimestamp!);
   const roles = member.roles.cache.toJSON();
   const permissions = member.permissions.toArray();
 

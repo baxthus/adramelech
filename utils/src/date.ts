@@ -1,3 +1,4 @@
-export function toUnixTimestamps(timestamp: number): number {
-  return Math.floor(timestamp / 1000);
+export function toUnixTimestamp(timestamp: Date | number): number {
+  const date = timestamp instanceof Date ? timestamp.getTime() : timestamp;
+  return Math.floor(date / 1000);
 }

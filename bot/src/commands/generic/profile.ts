@@ -28,11 +28,11 @@ import {
 import type { Component } from '~/types/component';
 import type { Modal } from '~/types/modal';
 import { sendError } from '~/utils/sendError';
-import toUnixTimestamps from '~/utils/toUnixTimestamps';
 import { db } from 'database';
 import { profiles, socials } from 'database/schema';
 import { and, asc, eq, ilike } from 'drizzle-orm';
 import { exists } from 'database/utils';
+import { toUnixTimestamp } from 'utils/date';
 
 export const commands = <Command[]>[
   {
@@ -199,7 +199,7 @@ async function viewProfile(intr: CommandInteraction, user: User) {
 
   const haveSocials = profile.socials.length > 0;
 
-  const registeredAt = toUnixTimestamps(profile.createdAt.getTime());
+  const registeredAt = toUnixTimestamp(profile.createdAt);
 
   await intr.followUp({
     flags: MessageFlags.IsComponentsV2,

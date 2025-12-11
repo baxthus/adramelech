@@ -13,7 +13,6 @@ import {
 import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
-import toUnixTimestamps from '~/utils/toUnixTimestamps';
 import v from 'voca';
 import { UIBuilder } from '~/services/UIBuilder';
 import type { Modal } from '~/types/modal';
@@ -21,6 +20,7 @@ import { and, desc, eq, ilike, inArray, type SQL } from 'drizzle-orm';
 import { feedbacks, profiles } from 'database/schema';
 import { db } from 'database';
 import { exists } from 'database/utils';
+import { toUnixTimestamp } from 'utils/date';
 
 export const command = <Command>{
   data: new SlashCommandBuilder()
@@ -194,9 +194,9 @@ async function viewFeedback(intr: ChatInputCommandInteraction) {
             type: ComponentType.TextDisplay,
             content: stripIndents`
             ### Created at
-            <t:${toUnixTimestamps(feedback.createdAt.getTime())}:R>
+            <t:${toUnixTimestamp(feedback.createdAt)}:R>
             ### Updated at
-            <t:${toUnixTimestamps(feedback.updatedAt.getTime())}:R>
+            <t:${toUnixTimestamp(feedback.updatedAt)}:R>
             ### Status
             \`\`\`${v.titleCase(feedback.status)}\`\`\`
             `,

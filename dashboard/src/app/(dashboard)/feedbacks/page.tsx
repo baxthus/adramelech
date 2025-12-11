@@ -24,7 +24,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { toUnixTimestamps } from 'utils/date';
+import { toUnixTimestamp } from 'utils/date';
 import { Badge } from '@/components/ui/badge';
 
 export default function FeedbacksPage() {
@@ -160,7 +160,7 @@ export default function FeedbacksPage() {
       label: 'Copy Created Timestamp',
       onClick: () =>
         copyToClipboard(
-          toUnixTimestamps(row.original.createdAt.getTime()).toString(),
+          toUnixTimestamp(row.original.createdAt).toString(),
           'Created Timestamp',
         ),
     },
@@ -168,7 +168,7 @@ export default function FeedbacksPage() {
       label: 'Copy Updated Timestamp',
       onClick: () =>
         copyToClipboard(
-          toUnixTimestamps(row.original.updatedAt.getTime()).toString(),
+          toUnixTimestamp(row.original.updatedAt).toString(),
           'Updated Timestamp',
         ),
     },

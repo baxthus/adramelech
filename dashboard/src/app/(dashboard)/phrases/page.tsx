@@ -25,7 +25,7 @@ import { NewPhraseDialog } from './dialog';
 import { usePage } from '@/hooks/use-page';
 import { useSearch } from '@/hooks/use-search';
 import type { Phrase } from 'database/types';
-import { toUnixTimestamps } from 'utils/date';
+import { toUnixTimestamp } from 'utils/date';
 
 export default function PhrasesPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -131,7 +131,7 @@ export default function PhrasesPage() {
       label: 'Copy Unix Timestamp',
       onClick: () =>
         copyToClipboard(
-          toUnixTimestamps(row.original.createdAt.getTime()).toString(),
+          toUnixTimestamp(row.original.createdAt).toString(),
           'Unix Timestamp',
         ),
     },
