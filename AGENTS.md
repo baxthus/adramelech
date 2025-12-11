@@ -17,6 +17,7 @@
 - **Bot exports**: `export const command = <Command>{...}`, same for `event`, `component`
 - **Dashboard**: Server Actions with `'use server'`, `cn()` for class merging
 - **Database**: Prisma with NanoID keys, Zod schemas in `database/schemas.ts`
+- **Utils**: Shared utilities, import via `import { fn } from 'utils/module'`
 
 ## Tech Stack
-Bun runtime, TypeScript strict mode, discord.js (bot), Next.js 16 + React 19 (dashboard), Prisma 7 + PostgreSQL
+Bun runtime, TypeScript strict mode, discord.js (bot), Next.js 16 + React 19 (dashboard), Prisma 7 + PostgreSQL, shared utils package
