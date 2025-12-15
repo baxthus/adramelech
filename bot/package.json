@@ -25,7 +25,7 @@
     "@eslint/js": "^9.33.0",
     "@types/bun": "latest",
     "@types/common-tags": "^1.8.4",
-    "@types/node": "^24.3.0",
+    "@types/node": "^25.0.2",
     "@types/voca": "^1.4.6",
     "eslint": "^9.33.0",
     "globals": "^16.3.0",
