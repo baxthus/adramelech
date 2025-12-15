@@ -64,14 +64,12 @@ export function DashboardNavMain(
           {items.map(item => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
-                asChild
-                tooltip={item.title}
+                // tooltip={item.title}
                 onClick={() => setOpenMobile(false)}
+                render={<Link href={item.href} />}
               >
-                <Link href={item.href}>
-                  <item.icon />
-                  {item.title}
-                </Link>
+                <item.icon />
+                {item.title}
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}

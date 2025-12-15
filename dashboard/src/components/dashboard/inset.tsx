@@ -33,10 +33,7 @@ function BreadcrumbNavigation({
 
   return (
     <>
-      <Separator
-        orientation="vertical"
-        className="mr-2 data-[orientation=vertical]:h-4"
-      />
+      <Separator orientation="vertical" className="mr-2" />
       <Breadcrumb>
         <BreadcrumbList>
           {breadcrumbs.map((breadcrumb, index) => {
@@ -52,8 +49,8 @@ function BreadcrumbNavigation({
                   {isActive ? (
                     <BreadcrumbPage>{breadcrumb.title}</BreadcrumbPage>
                   ) : (
-                    <BreadcrumbLink asChild>
-                      <Link href={breadcrumb.href}>{breadcrumb.title}</Link>
+                    <BreadcrumbLink render={<Link href={breadcrumb.href} />}>
+                      {breadcrumb.title}
                     </BreadcrumbLink>
                   )}
                 </BreadcrumbItem>

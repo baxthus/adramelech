@@ -85,14 +85,18 @@ export default function ProfilesPage() {
       accessorKey: 'discordId',
       header: 'Discord ID',
       cell: ({ row }) => (
-        <Button variant="link" className="px-0" asChild>
-          <Link
-            href={`https://discord.com/users/${row.original.discordId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {row.original.discordId}
-          </Link>
+        <Button
+          variant="link"
+          className="px-0"
+          render={
+            <Link
+              href={`https://discord.com/users/${row.original.discordId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            />
+          }
+        >
+          {row.original.discordId}
         </Button>
       ),
     },
@@ -125,13 +129,13 @@ export default function ProfilesPage() {
       cell: ({ row }) => (
         <div className="text-right">
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-sm">
-                <span className="sr-only">Open Menu</span>
-                <MoreVertical />
-              </Button>
+            <DropdownMenuTrigger
+              render={<Button variant="ghost" size="icon-sm" />}
+            >
+              <span className="sr-only">Open Menu</span>
+              <MoreVertical />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="min-w-[150px]">
               {mapToDropdownMenuItems(getRowActions(row))}
             </DropdownMenuContent>
           </DropdownMenu>

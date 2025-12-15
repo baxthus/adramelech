@@ -58,25 +58,22 @@ export function NewPhraseDialog({
     <Dialog
       open={open}
       onOpenChange={state => {
+        if (!state && isPending) return;
         form.reset();
         reset();
         setOpen(state);
       }}
     >
-      <DialogTrigger asChild>
-        <Button size={slick ? 'sm' : 'icon'}>
-          <Plus />
-          {slick && 'New Phrase'}
-        </Button>
+      <DialogTrigger render={<Button size={slick ? 'sm' : 'icon'} />}>
+        <Plus />
+        {slick && 'New Phrase'}
       </DialogTrigger>
 
       <DialogContent
         showCloseButton={false}
-        onEscapeKeyDown={isPending ? e => e.preventDefault() : undefined}
-        onPointerDownOutside={isPending ? e => e.preventDefault() : undefined}
         className="max-h-full overflow-y-auto"
       >
-        <DialogHeader className="mb-2">
+        <DialogHeader>
           <DialogTitle>New Phrase</DialogTitle>
         </DialogHeader>
 
@@ -128,10 +125,10 @@ export function NewPhraseDialog({
             )}
 
             <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline" disabled={isPending}>
-                  Close
-                </Button>
+              <DialogClose
+                render={<Button variant="outline" disabled={isPending} />}
+              >
+                Close
               </DialogClose>
               <Button type="submit" disabled={isPending}>
                 {isPending && <Spinner />}

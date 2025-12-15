@@ -27,23 +27,18 @@ export const mapToDropdownMenuItems = (items: DropdownItem[]) =>
         key={index}
         onClick={item.onClick}
         variant={item.variant}
-        asChild={!!item.href}
+        render={
+          item.href ? (
+            <Link
+              href={item.href}
+              target={item.href.startsWith('http') ? '_blank' : undefined}
+              rel="noopener noreferrer"
+            />
+          ) : undefined
+        }
       >
-        {item.href ? (
-          <Link
-            href={item.href}
-            target={item.href.startsWith('http') ? '_blank' : undefined}
-            rel="noopener noreferrer"
-          >
-            {item.icon}
-            {item.label}
-          </Link>
-        ) : (
-          <>
-            {item.icon}
-            {item.label}
-          </>
-        )}
+        {item.icon}
+        {item.label}
       </DropdownMenuItem>
     );
   });

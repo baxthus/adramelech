@@ -72,29 +72,33 @@ export function DashboardNavUser() {
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <UserView user={user} identifier={identifier} />
-              <ChevronsUpDown className="ml-auto size-4" />
-            </SidebarMenuButton>
+          <DropdownMenuTrigger
+            render={
+              <SidebarMenuButton
+                size="lg"
+                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              />
+            }
+          >
+            <UserView user={user} identifier={identifier} />
+            <ChevronsUpDown className="ml-auto size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+            className="min-w-56 rounded-lg"
             side={isMobile ? 'bottom' : 'right'}
             align="end"
             sideOffset={4}
           >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <UserView user={user} identifier={identifier} />
-              </div>
-            </DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="p-0 font-normal">
+                <div className="text-foreground flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                  <UserView user={user} identifier={identifier} />
+                </div>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem onSelect={() => openUserProfile()}>
+              <DropdownMenuItem onClick={() => openUserProfile()}>
                 <User />
                 Profile
               </DropdownMenuItem>
@@ -108,28 +112,30 @@ export function DashboardNavUser() {
                 </DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
                   <DropdownMenuSubContent>
-                    <DropdownMenuItem onSelect={() => setTheme('system')}>
+                    <DropdownMenuItem onClick={() => setTheme('system')}>
                       <Monitor />
                       System
                     </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => setTheme('light')}>
+                    <DropdownMenuItem onClick={() => setTheme('light')}>
                       <Sun />
                       Light
                     </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => setTheme('dark')}>
+                    <DropdownMenuItem onClick={() => setTheme('dark')}>
                       <Moon />
                       Dark
                     </DropdownMenuItem>
                   </DropdownMenuSubContent>
                 </DropdownMenuPortal>
               </DropdownMenuSub>
-              <DropdownMenuItem asChild>
-                <Link href={env.NEXT_PUBLIC_REPOSITORY_URL} target="_blank">
-                  <Github />
-                  Source Code
-                </Link>
+              <DropdownMenuItem
+                render={
+                  <Link href={env.NEXT_PUBLIC_REPOSITORY_URL} target="_blank" />
+                }
+              >
+                <Github />
+                Source Code
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => signOut()}>
+              <DropdownMenuItem onClick={() => signOut()}>
                 <LogOut />
                 Sign Out
               </DropdownMenuItem>

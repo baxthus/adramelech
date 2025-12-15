@@ -88,10 +88,12 @@ export default function FeedbacksPage() {
       accessorKey: 'profileId',
       header: 'Profile ID',
       cell: ({ row }) => (
-        <Button variant="link" asChild className="px-0">
-          <Link href={`/profiles?search=${row.original.profileId}`}>
-            {row.original.profileId}
-          </Link>
+        <Button
+          variant="link"
+          className="px-0"
+          render={<Link href={`/profiles?search=${row.original.profileId}`} />}
+        >
+          {row.original.profileId}
         </Button>
       ),
     },
@@ -122,17 +124,19 @@ export default function FeedbacksPage() {
       id: 'actions',
       cell: ({ row }) => (
         <div className="ml-2 space-x-2 text-right">
-          <Button variant="secondary" size="icon-sm" asChild>
-            <Link href={`/feedbacks/${row.original.id}`}>
-              <Eye />
-            </Link>
+          <Button
+            variant="secondary"
+            size="icon-sm"
+            render={<Link href={`/feedbacks/${row.original.id}`} />}
+          >
+            <Eye />
           </Button>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-sm">
-                <span className="sr-only">Open Menu</span>
-                <MoreVertical />
-              </Button>
+            <DropdownMenuTrigger
+              render={<Button variant="ghost" size="icon-sm" />}
+            >
+              <span className="sr-only">Open Menu</span>
+              <MoreVertical />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {mapToDropdownMenuItems(getRowActions(row))}

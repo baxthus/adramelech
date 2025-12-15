@@ -99,11 +99,11 @@ export default function PhrasesPage() {
       cell: ({ row }) => (
         <div className="ml-2 text-right">
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-sm">
-                <span className="sr-only">Open Menu</span>
-                <MoreVertical />
-              </Button>
+            <DropdownMenuTrigger
+              render={<Button variant="ghost" size="icon-sm" />}
+            >
+              <span className="sr-only">Open Menu</span>
+              <MoreVertical />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {mapToDropdownMenuItems(getRowActions(row))}

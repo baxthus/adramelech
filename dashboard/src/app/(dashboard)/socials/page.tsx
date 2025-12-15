@@ -76,10 +76,12 @@ export default function SocialsPage() {
       accessorKey: 'profileId',
       header: 'Profile ID',
       cell: ({ row }) => (
-        <Button variant="link" asChild className="px-0">
-          <Link href={`/profiles?search=${row.original.profileId}`}>
-            {row.original.profileId}
-          </Link>
+        <Button
+          variant="link"
+          className="px-0"
+          render={<Link href={`/profiles?search=${row.original.profileId}`} />}
+        >
+          {row.original.profileId}
         </Button>
       ),
     },
@@ -91,10 +93,12 @@ export default function SocialsPage() {
       accessorKey: 'url',
       header: 'URL',
       cell: ({ row }) => (
-        <Button variant="link" asChild className="px-0">
-          <Link href={row.original.url} target="_blank">
-            {row.original.url}
-          </Link>
+        <Button
+          variant="link"
+          className="px-0"
+          render={<Link href={row.original.url} target="_blank" />}
+        >
+          {row.original.url}
         </Button>
       ),
     },
@@ -103,11 +107,11 @@ export default function SocialsPage() {
       cell: ({ row }) => (
         <div className="text-right">
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-sm">
-                <span className="sr-only">Open menu</span>
-                <MoreVertical />
-              </Button>
+            <DropdownMenuTrigger
+              render={<Button variant="ghost" size="icon-sm" />}
+            >
+              <span className="sr-only">Open menu</span>
+              <MoreVertical />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {mapToDropdownMenuItems(getRowActions(row))}
