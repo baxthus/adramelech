@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
-import { Boldonse, Inter } from 'next/font/google';
+import { Boldonse, Noto_Sans } from 'next/font/google';
 import './globals.css';
 import Providers from './providers';
 
-const inter = Inter({
+const notoSans = Noto_Sans({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-noto-sans',
   display: 'swap',
   fallback: ['sans-serif'],
 });
@@ -29,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${boldonse.variable} antialiased`}>
+      <body className={`${notoSans.variable} ${boldonse.variable} antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>
