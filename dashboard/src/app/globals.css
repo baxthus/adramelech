@@ -138,3 +138,7 @@ button:not([data-slot='tooltip-trigger']),
 div[data-slot='dropdown-menu-item'] {
   @apply cursor-pointer;
 }
+
+.multiple-table-actions-container {
+  @apply flex items-center justify-end gap-2;
+}

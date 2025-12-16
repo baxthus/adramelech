@@ -105,7 +105,7 @@ export default function SocialsPage() {
     {
       id: 'actions',
       cell: ({ row }) => (
-        <div className="text-right">
+        <div className="ml-2 text-right">
           <DropdownMenu>
             <DropdownMenuTrigger
               render={<Button variant="ghost" size="icon-sm" />}
@@ -113,7 +113,7 @@ export default function SocialsPage() {
               <span className="sr-only">Open menu</span>
               <MoreVertical />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="min-w-fit">
               {mapToDropdownMenuItems(getRowActions(row))}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -139,6 +139,7 @@ export default function SocialsPage() {
       label: 'Copy URL',
       onClick: () => copyToClipboard(row.original.url, 'URL'),
     },
+    { type: 'separator' },
     {
       label: 'Delete',
       variant: 'destructive',

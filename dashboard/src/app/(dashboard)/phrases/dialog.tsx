@@ -74,7 +74,7 @@ export function NewPhraseDialog({
         className="max-h-full overflow-y-auto"
       >
         <DialogHeader>
-          <DialogTitle>New Phrase</DialogTitle>
+          <DialogTitle className="text-base">New Phrase</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)}>

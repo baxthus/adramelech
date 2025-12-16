@@ -123,7 +123,7 @@ export default function FeedbacksPage() {
     {
       id: 'actions',
       cell: ({ row }) => (
-        <div className="ml-2 space-x-2 text-right">
+        <div className="multiple-table-actions-container ml-2">
           <Button
             variant="secondary"
             size="icon-sm"
@@ -138,7 +138,7 @@ export default function FeedbacksPage() {
               <span className="sr-only">Open Menu</span>
               <MoreVertical />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="min-w-fit">
               {mapToDropdownMenuItems(getRowActions(row))}
             </DropdownMenuContent>
           </DropdownMenu>

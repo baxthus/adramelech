@@ -105,7 +105,7 @@ export default function PhrasesPage() {
               <span className="sr-only">Open Menu</span>
               <MoreVertical />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="min-w-fit">
               {mapToDropdownMenuItems(getRowActions(row))}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -128,11 +128,11 @@ export default function PhrasesPage() {
       onClick: () => copyToClipboard(row.original.source, 'Source'),
     },
     {
-      label: 'Copy Unix Timestamp',
+      label: 'Copy Created Timestamp',
       onClick: () =>
         copyToClipboard(
           toUnixTimestamp(row.original.createdAt).toString(),
-          'Unix Timestamp',
+          'Created Timestamp',
         ),
     },
     { type: 'separator' },

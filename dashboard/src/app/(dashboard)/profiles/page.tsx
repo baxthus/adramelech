@@ -127,7 +127,7 @@ export default function ProfilesPage() {
     {
       id: 'actions',
       cell: ({ row }) => (
-        <div className="text-right">
+        <div className="ml-2 text-right">
           <DropdownMenu>
             <DropdownMenuTrigger
               render={<Button variant="ghost" size="icon-sm" />}
@@ -135,7 +135,7 @@ export default function ProfilesPage() {
               <span className="sr-only">Open Menu</span>
               <MoreVertical />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[150px]">
+            <DropdownMenuContent align="end" className="min-w-fit">
               {mapToDropdownMenuItems(getRowActions(row))}
             </DropdownMenuContent>
           </DropdownMenu>
