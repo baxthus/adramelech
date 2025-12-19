@@ -29,7 +29,7 @@ function addCommand(client: CustomClient, rawCommand: unknown, file: string) {
   if (rawCommand === null) return;
   const result = commandSchema.safeParse(rawCommand);
   if (!result.success) {
-    logger.error(`Invalid command file: ${file}`, result.error.errors);
+    logger.error(`Invalid command file: ${file}`, result.error.issues);
     return;
   }
   const command = result.data as Command;
@@ -50,7 +50,7 @@ function registerEvent(
   if (rawEvent === null) return;
   const result = eventSchema.safeParse(rawEvent);
   if (!result.success) {
-    logger.error(`Invalid event file: ${file}`, result.error.errors);
+    logger.error(`Invalid event file: ${file}`, result.error.issues);
     return;
   }
   const event = result.data;
@@ -71,7 +71,7 @@ function addComponent(
   if (rawComponent === null) return;
   const result = componentSchema.safeParse(rawComponent);
   if (!result.success) {
-    logger.error(`Invalid component file: ${file}`, result.error.errors);
+    logger.error(`Invalid component file: ${file}`, result.error.issues);
     return;
   }
   const component = result.data;
@@ -87,7 +87,7 @@ function addModal(client: CustomClient, rawModal: unknown, file: string) {
   if (rawModal === null) return;
   const result = modalSchema.safeParse(rawModal);
   if (!result.success) {
-    logger.error(`Invalid modal file: ${file}`, result.error.errors);
+    logger.error(`Invalid modal file: ${file}`, result.error.issues);
     return;
   }
   const modal = result.data;
