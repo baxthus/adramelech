@@ -15,13 +15,8 @@
     "typescript": "^5"
   },
   "trustedDependencies": [
-    "@heroui/shared-utils",
-    "@prisma/client",
-    "@prisma/engines",
     "@tailwindcss/oxide",
-    "better-sqlite3",
     "esbuild",
-    "prisma",
     "sharp",
     "unrs-resolver"
   ],
