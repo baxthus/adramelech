@@ -4,24 +4,19 @@ import z from 'zod';
 import logger from '~/logger';
 
 const configSchema = z.object({
-  BOT_TOKEN: z.string(),
-  BOT_ID: z.string(),
-  PRESENCE_TYPE: z
-    .string()
-    .nonempty()
-    .transform(Number)
-    .transform((val) => z.enum(ActivityType).parse(val)),
-  PRESENCE_NAME: z.string(),
-  EMBED_COLOR: z.string().nonempty().transform(Number),
+  BOT_TOKEN: z.string().min(1),
+  BOT_ID: z.string().min(1),
+  PRESENCE_TYPE: z.coerce.number().pipe(z.enum(ActivityType)),
+  PRESENCE_NAME: z.string().min(1),
+  EMBED_COLOR: z.coerce.number(),
   AUTHOR_URL: z.url().default('https://www.pudim.com.br'),
   REPOSITORY_URL: z.url(),
-  DEFAULT_COOLDOWN_SECONDS: z.string().nonempty().transform(Number),
+  DEFAULT_COOLDOWN_SECONDS: z.coerce.number().int().positive(),
   USER_AGENT: z.string().default('adramelech'),
   OPENWEATHER_KEY: z.string().optional(),
   DATABASE_URL: z
     .url()
     .default('postgres://postgres:hunter2@localhost/adramelech'),
-  API_PORT: z.string().nonempty().transform(Number).default(51964),
 });
 
 function validateConfig() {
