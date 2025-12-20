@@ -1,6 +1,18 @@
 import { or, sql, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { db } from '.';
+import { type Result } from 'utils/result';
+
+export async function testConnection(): Promise<Result<number>> {
+  const start = performance.now();
+  try {
+    await db.execute(sql`SELECT 1`);
+    const end = performance.now();
+    return { data: end - start };
+  } catch (error) {
+    return { error: new Error('Database connection failed') };
+  }
+}
 
 export function conditionsToWhere(
   conditions: (SQL | undefined)[]

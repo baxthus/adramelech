@@ -7,7 +7,7 @@ import {
 } from 'discord.js';
 import ky from 'ky';
 import z from 'zod';
-import type { Result } from '~/common/result';
+import type { Result } from 'utils/result';
 import type { Command } from '~/types/command';
 import { sendError } from '~/utils/sendError';
 import config from '~/config';

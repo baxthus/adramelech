@@ -10,7 +10,7 @@ import {
 import ky from 'ky';
 import v from 'voca';
 import z from 'zod';
-import type { Result } from '~/common/result';
+import type { Result } from 'utils/result';
 import {
   executeCommandFromTree,
   type Command,
