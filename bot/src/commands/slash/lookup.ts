@@ -7,7 +7,7 @@ import {
 } from 'discord.js';
 import ky from 'ky';
 import z from 'zod';
-import type { Result } from 'utils/result';
+import { Result } from 'utils/result';
 import type { Command } from '~/types/command';
 import { sendError } from '~/utils/sendError';
 import config from '~/config';
@@ -53,12 +53,11 @@ export const command = <Command>{
     await intr.deferReply();
 
     const target = intr.options.getString('target', true);
-    const ip: Result<string> = z.union([z.ipv4(), z.ipv6()]).safeParse(target)
-      .success
-      ? { data: target }
+    const ip = z.union([z.ipv4(), z.ipv6()]).safeParse(target).success
+      ? Result.success<string, string>(target)
       : await getIpFromDomain(target);
 
-    if (ip.error) return await sendError(intr, ip.error.message);
+    if (ip.isFailure()) return await sendError(intr, ip.error);
 
     const response = await ky
       .get(`https://ipwho.is/${ip.data}`, {
@@ -148,14 +147,16 @@ export const command = <Command>{
   },
 };
 
-async function getIpFromDomain(domain: string): Promise<Result<string>> {
+async function getIpFromDomain(
+  domain: string,
+): Promise<Result<string, string>> {
   const response = (await ky.get(`https://da.gd/host/${domain}`).text()).trim();
   if (!response || response.startsWith('No'))
-    return { error: new Error('Failed to get IP from domain') };
+    return Result.failure('Failed to get IP from domain');
 
-  return {
-    data: response.includes(',')
+  return Result.success(
+    response.includes(',')
       ? response.substring(0, response.indexOf(','))
       : response,
-  };
+  );
 }

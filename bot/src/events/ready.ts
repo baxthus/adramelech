@@ -4,7 +4,6 @@ import type { CustomClient } from '~';
 import logger from '~/logger';
 import kleur from 'kleur';
 import { testConnection } from 'database/utils';
-import { unwrapOrElse } from 'utils/result';
 
 export const event = <Event>{
   name: Events.ClientReady,
@@ -17,7 +16,7 @@ export const event = <Event>{
     logger.log(`${library} | ${runtime}`);
 
     logger.log();
-    const dbLatency = unwrapOrElse(await testConnection(), (err) => {
+    const dbLatency = (await testConnection()).unwrapOrElse((err) => {
       logger.error(err);
       process.exit(1);
     });

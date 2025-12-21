@@ -10,7 +10,7 @@ import {
 import ky from 'ky';
 import v from 'voca';
 import z from 'zod';
-import type { Result } from 'utils/result';
+import { Result } from 'utils/result';
 import {
   executeCommandFromTree,
   type Command,
@@ -131,7 +131,7 @@ async function repo(intr: ChatInputCommandInteraction) {
     `/repos/${user}/${repo}`,
     repositorySchema,
   );
-  if (response.error) return await sendError(intr, response.error.message);
+  if (response.error) return await sendError(intr, response.error);
   const data = response.data;
 
   const container = new ContainerBuilder({
@@ -202,7 +202,7 @@ async function repo(intr: ChatInputCommandInteraction) {
 
   if (response.data.license) {
     const licenseResult = await getLicenseInfo(response.data.license.key);
-    if (licenseResult.data) {
+    if (licenseResult.isSuccess()) {
       container.addSeparatorComponents({ type: ComponentType.Separator });
       container.addTextDisplayComponents({
         type: ComponentType.TextDisplay,
@@ -222,6 +222,11 @@ async function repo(intr: ChatInputCommandInteraction) {
           ],
         });
       }
+    } else {
+      container.addTextDisplayComponents({
+        type: ComponentType.TextDisplay,
+        content: '## License\n```Custom License```',
+      });
     }
   }
 
@@ -239,24 +244,17 @@ async function repo(intr: ChatInputCommandInteraction) {
 async function user(intr: ChatInputCommandInteraction) {
   const username = intr.options.getString('user', true);
 
-  const [userResult, socialsResult] = await Promise.allSettled([
+  const [userResult, socialsResult] = await Promise.all([
     fetchGitHubData(`/users/${username}`, userSchema),
     fetchGitHubData(`/users/${username}/social_accounts`, socialsSchema),
   ]);
 
-  if (userResult.status === 'rejected' || userResult.value.error) {
-    const error =
-      userResult.status === 'rejected'
-        ? new Error('Failed to fetch user data')
-        : userResult.value.error;
-    return await sendError(intr, error!.message);
+  if (userResult.isFailure()) {
+    return await sendError(intr, userResult.error);
   }
-  const user = userResult.value.data;
+  const user = userResult.data;
 
-  const socials =
-    socialsResult.status === 'fulfilled' && !socialsResult.value.error
-      ? socialsResult.value.data
-      : [];
+  const socials = socialsResult.isSuccess() ? socialsResult.data : [];
 
   const userActionRow: APIComponentInMessageActionRow[] = [
     {
@@ -355,7 +353,7 @@ async function user(intr: ChatInputCommandInteraction) {
 async function fetchGitHubData<T>(
   endpoint: string,
   schema: z.ZodType<T>,
-): Promise<Result<T>> {
+): Promise<Result<T, string>> {
   try {
     const response = await ky
       .get(BASE_URL + endpoint, {
@@ -364,37 +362,38 @@ async function fetchGitHubData<T>(
       .json();
     const result = schema.safeParse(response);
     if (!result.success)
-      return { error: new Error(`Validation failed: ${result.error.message}`) };
-    return { data: result.data };
+      return Result.failure(`Validation failed: ${result.error.message}`);
+    return Result.success(result.data);
   } catch (error) {
-    return {
-      error: error instanceof Error ? error : new Error('Unknown error'),
-    };
+    return Result.failure(
+      error instanceof Error ? error.message : 'Unknown error',
+    );
   }
 }
 
 async function getLicenseInfo(key: string): Promise<
-  Result<{
-    content: string;
-    html_url: string;
-  }>
+  Result<
+    {
+      content: string;
+      html_url: string;
+    },
+    string
+  >
 > {
   if (key === 'other') {
-    return { data: { content: 'Other', html_url: '' } };
+    return Result.success({ content: 'Other', html_url: '' });
   }
 
   const result = await fetchGitHubData(`/licenses/${key}`, licenseSchema);
-  if (result.error) return result;
+  if (result.isFailure()) return Result.failure(result.error);
 
-  return {
-    data: {
-      content: stripIndents`
+  return Result.success({
+    content: stripIndents`
       **Name:** ${v.titleCase(result.data.name)}
       **Permissions:** ${result.data.permissions.join(', ')}
       **Conditions:** ${result.data.conditions.join(', ')}
       **Limitations:** ${result.data.limitations.join(', ')}
       `,
-      html_url: result.data.html_url,
-    },
-  };
+    html_url: result.data.html_url,
+  });
 }
