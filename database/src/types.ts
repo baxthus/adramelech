@@ -1,4 +1,4 @@
-import type z from 'zod';
+import type z from 'zod/v3';
 import type { phraseCreateSchema } from './validations';
 import type { feedbackStatusEnum, phrases } from './schema';
 
