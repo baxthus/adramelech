@@ -7,7 +7,7 @@ export function testConnection(): ResultAsync<number, string> {
   const start = performance.now();
   const result = fromAsyncThrowable(
     () => db.execute(sql`SELECT 1`),
-    (e) => (e instanceof Error ? e.message : 'Failed to connect to database')
+    () => 'Failed to connect to database'
   )();
   // Use a map instead of using the value directly to keep the original error
   return result.map(() => performance.now() - start);

@@ -20,7 +20,7 @@ const configSchema = z.object({
 });
 
 function validateConfig() {
-  const result = configSchema.loose().safeParse(process.env);
+  const result = configSchema.safeParse(process.env);
   if (!result.success) {
     const u = kleur.underline;
     for (const error of result.error.issues) {
