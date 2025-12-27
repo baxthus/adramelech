@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { setStatus } from './actions';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
+import { statusTransitions } from './logic';
 
 export function StatusUpdate({
   queryClient,
@@ -26,12 +27,6 @@ export function StatusUpdate({
   status: FeedbackStatus;
 }) {
   const [value, setValue] = useState<FeedbackStatus | null>(null);
-
-  const statusTransitions = new Map<FeedbackStatus, FeedbackStatus[]>([
-    ['OPEN', ['ACKNOWLEDGED']],
-    ['ACKNOWLEDGED', ['CLOSED', 'ACCEPTED', 'REJECTED']],
-    ['ACCEPTED', ['RESOLVED']],
-  ]);
 
   const availableTransitions = statusTransitions.get(status) ?? [];
   const items = [

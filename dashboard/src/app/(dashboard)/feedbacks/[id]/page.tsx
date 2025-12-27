@@ -14,7 +14,14 @@ import { Badge } from '@/components/ui/badge';
 import { FeedbackStatusClasses } from '../utils';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { StatusUpdate } from './stauts-update';
+import { StatusUpdate } from './status-update';
+import { FeedbackResponseForm } from './response-form';
+import {
+  AlertDescription,
+  AlertTitle,
+  Alert as CnAlert,
+} from '@/components/ui/alert';
+import { TriangleAlert } from 'lucide-react';
 
 export default function FeedbackPage({
   params,
@@ -51,6 +58,24 @@ export default function FeedbackPage({
 
   return (
     <div className="space-y-4">
+      <CnAlert>
+        <TriangleAlert />
+        <AlertTitle>Attention!</AlertTitle>
+        <AlertDescription>
+          <p>
+            Make sure to provide a response (if required){' '}
+            <span className="font-bold">before</span> updating the feedback
+            status to a final state (rejected, resolved, or closed).
+            <br />
+            Once feedback reaches a final state, the response can no longer be
+            edited.
+          </p>
+          <p>
+            Note: Accepted is <span className="font-bold">not</span> considered
+            a final state, as the feedback still needs to be resolved
+          </p>
+        </AlertDescription>
+      </CnAlert>
       <Card className="w-full">
         <CardHeader>
           <CardTitle className="text-lg">Feedback Report</CardTitle>
@@ -119,6 +144,19 @@ export default function FeedbackPage({
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Response</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <FeedbackResponseForm
+            queryClient={queryClient}
+            id={feedback!.id}
+            status={feedback!.status}
+            response={feedback!.response}
+          />
         </CardContent>
       </Card>
     </div>
