@@ -7,11 +7,11 @@ import {
 } from 'discord.js';
 import ky from 'ky';
 import z from 'zod';
-import { Result } from 'utils/result';
 import type { Command } from '~/types/command';
 import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
+import { err, fromAsyncThrowable, ok } from 'neverthrow';
 
 const schema = z.object({
   success: z.boolean(),
@@ -54,20 +54,27 @@ export const command = <Command>{
 
     const target = intr.options.getString('target', true);
     const ip = z.union([z.ipv4(), z.ipv6()]).safeParse(target).success
-      ? Result.success<string, string>(target)
+      ? ok(target)
       : await getIpFromDomain(target);
 
-    if (ip.isFailure()) return await sendError(intr, ip.error);
+    if (ip.isErr()) return await sendError(intr, ip.error);
 
-    const response = await ky
-      .get(`https://ipwho.is/${ip.data}`, {
+    const response = await fromAsyncThrowable(
+      ky.get(`https://ipwho.is/${ip.value}`, {
         headers: {
           'User-Agent': 'curl', // shh... you didn't see this :3
         },
-      })
-      .json();
-    const { data, error } = schema.safeParse(response);
-    if (error) return await sendError(intr, 'Failed to parse response');
+      }).json,
+      (error) =>
+        error instanceof Error
+          ? error.message
+          : 'Failed to fetch IP information',
+    )().andThen((json) => {
+      const parsed = schema.safeParse(json);
+      return parsed.success ? ok(parsed.data) : err('Failed to parse response');
+    });
+    if (response.isErr()) return await sendError(intr, response.error);
+    const data = response.value;
 
     const mapsUrl = new URL('https://www.google.com/maps/search/');
     mapsUrl.searchParams.set('api', '1');
@@ -84,8 +91,8 @@ export const command = <Command>{
               type: ComponentType.TextDisplay,
               content: stripIndents`
               # Lookup
-              **IP:** ${ip.data}
-              **Domain:** ${target === ip.data ? 'None' : target}
+              **IP:** ${ip.value}
+              **Domain:** ${target === ip.value ? 'None' : target}
               **Type:** ${data.type}
               `,
             },
@@ -147,16 +154,12 @@ export const command = <Command>{
   },
 };
 
-async function getIpFromDomain(
-  domain: string,
-): Promise<Result<string, string>> {
-  const response = (await ky.get(`https://da.gd/host/${domain}`).text()).trim();
-  if (!response || response.startsWith('No'))
-    return Result.failure('Failed to get IP from domain');
-
-  return Result.success(
-    response.includes(',')
-      ? response.substring(0, response.indexOf(','))
-      : response,
-  );
-}
+const getIpFromDomain = (domain: string) =>
+  fromAsyncThrowable(ky.get(`https://da.gd/host/${domain}`).text, (error) =>
+    error instanceof Error ? error.message : 'Failed to get IP from domain',
+  )().andThen((text) => {
+    const res = text.trim();
+    if (!res || res.startsWith('No'))
+      return err('Failed to get IP from domain');
+    return ok(res.includes(',') ? res.substring(0, res.indexOf(',')) : res);
+  });

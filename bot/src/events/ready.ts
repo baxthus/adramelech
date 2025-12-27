@@ -16,10 +16,13 @@ export const event = <Event>{
     logger.log(`${library} | ${runtime}`);
 
     logger.log();
-    const dbLatency = (await testConnection()).unwrapOrElse((err) => {
-      logger.error(err);
-      process.exit(1);
-    });
+    const dbLatency = await testConnection().match(
+      (latency) => latency,
+      (err) => {
+        logger.error(err);
+        process.exit(1);
+      },
+    );
     logger.log(
       kleur.green(
         ` Database connected successfully! ${kleur.dim(`- ${dbLatency.toFixed(2)}ms`)}`,

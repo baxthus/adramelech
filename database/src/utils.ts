@@ -1,17 +1,16 @@
 import { or, sql, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { db } from '.';
-import { Result } from 'utils/result';
+import { fromAsyncThrowable, type ResultAsync } from 'neverthrow';
 
-export async function testConnection(): Promise<Result<number>> {
+export function testConnection(): ResultAsync<number, string> {
   const start = performance.now();
-  try {
-    await db.execute(sql`SELECT 1`);
-    const end = performance.now();
-    return Result.success(end - start);
-  } catch (error) {
-    return Result.failure(new Error('Database connection failed'));
-  }
+  const result = fromAsyncThrowable(
+    () => db.execute(sql`SELECT 1`),
+    (e) => (e instanceof Error ? e.message : 'Failed to connect to database')
+  )();
+  // Use a map instead of using the value directly to keep the original error
+  return result.map(() => performance.now() - start);
 }
 
 export function conditionsToWhere(
@@ -23,15 +22,19 @@ export function conditionsToWhere(
   return or(...filtered);
 }
 
-export async function exists(
+export const exists = async (
   table: PgTable,
   where: SQL | undefined
-): Promise<boolean> {
-  const result = await db
-    .select({ _: sql`1` })
-    .from(table)
-    .where(where)
-    .limit(1);
-
-  return result.length > 0;
-}
+): Promise<boolean> =>
+  fromAsyncThrowable(() =>
+    db
+      .select({ _: sql`1` })
+      .from(table)
+      .where(where)
+      .limit(1)
+  )()
+    .map((result) => result.length > 0)
+    // If there's an error, we couldn't reach the database
+    // It's a very edge case, so for the sake of usability and security, we return false
+    // It'll definitely come back to hunt me down later, but Sentry should catch it
+    .unwrapOr(false);

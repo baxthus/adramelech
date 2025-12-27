@@ -10,7 +10,6 @@ import {
 import ky from 'ky';
 import v from 'voca';
 import z from 'zod';
-import { Result } from 'utils/result';
 import {
   executeCommandFromTree,
   type Command,
@@ -19,6 +18,7 @@ import {
 import config from '~/config';
 import { stripIndents } from 'common-tags';
 import { sendError } from '~/utils/sendError';
+import { err, fromAsyncThrowable, ok, type Result } from 'neverthrow';
 
 const BASE_URL = 'https://api.github.com';
 
@@ -131,8 +131,8 @@ async function repo(intr: ChatInputCommandInteraction) {
     `/repos/${user}/${repo}`,
     repositorySchema,
   );
-  if (response.error) return await sendError(intr, response.error);
-  const data = response.data;
+  if (response.isErr()) return await sendError(intr, response.error);
+  const data = response.value;
 
   const container = new ContainerBuilder({
     accent_color: config.EMBED_COLOR,
@@ -200,16 +200,16 @@ async function repo(intr: ChatInputCommandInteraction) {
     ],
   });
 
-  if (response.data.license) {
-    const licenseResult = await getLicenseInfo(response.data.license.key);
-    if (licenseResult.isSuccess()) {
+  if (response.value.license) {
+    const licenseResult = await getLicenseInfo(response.value.license.key);
+    if (licenseResult.isOk()) {
       container.addSeparatorComponents({ type: ComponentType.Separator });
       container.addTextDisplayComponents({
         type: ComponentType.TextDisplay,
-        content: `## License\n${licenseResult.data.content}`,
+        content: `## License\n${licenseResult.value.content}`,
       });
 
-      if (licenseResult.data.html_url) {
+      if (licenseResult.value.html_url) {
         container.addActionRowComponents({
           type: ComponentType.ActionRow,
           components: [
@@ -217,16 +217,11 @@ async function repo(intr: ChatInputCommandInteraction) {
               type: ComponentType.Button,
               style: ButtonStyle.Link,
               label: 'License Page',
-              url: licenseResult.data.html_url,
+              url: licenseResult.value.html_url,
             },
           ],
         });
       }
-    } else {
-      container.addTextDisplayComponents({
-        type: ComponentType.TextDisplay,
-        content: '## License\n```Custom License```',
-      });
     }
   }
 
@@ -249,12 +244,10 @@ async function user(intr: ChatInputCommandInteraction) {
     fetchGitHubData(`/users/${username}/social_accounts`, socialsSchema),
   ]);
 
-  if (userResult.isFailure()) {
-    return await sendError(intr, userResult.error);
-  }
-  const user = userResult.data;
+  if (userResult.isErr()) return await sendError(intr, userResult.error);
+  const user = userResult.value;
 
-  const socials = socialsResult.isSuccess() ? socialsResult.data : [];
+  const socials = socialsResult.unwrapOr([]);
 
   const userActionRow: APIComponentInMessageActionRow[] = [
     {
@@ -354,21 +347,22 @@ async function fetchGitHubData<T>(
   endpoint: string,
   schema: z.ZodType<T>,
 ): Promise<Result<T, string>> {
-  try {
-    const response = await ky
-      .get(BASE_URL + endpoint, {
-        headers: { 'User-Agent': config.USER_AGENT },
-      })
-      .json();
-    const result = schema.safeParse(response);
-    if (!result.success)
-      return Result.failure(`Validation failed: ${result.error.message}`);
-    return Result.success(result.data);
-  } catch (error) {
-    return Result.failure(
-      error instanceof Error ? error.message : 'Unknown error',
-    );
-  }
+  const result = await fromAsyncThrowable(
+    ky.get(BASE_URL + endpoint, {
+      headers: { 'User-Agent': config.USER_AGENT },
+    }).json,
+    (error) =>
+      error instanceof Error
+        ? error.message
+        : 'Failed to fetch data from GitHub API',
+  )().andThen((response) => {
+    const parsed = schema.safeParse(response);
+    if (!parsed.success)
+      return err(`Validation failed: ${parsed.error.message}`);
+    return ok(parsed.data);
+  });
+  if (result.isErr()) return err(result.error);
+  return ok(result.value);
 }
 
 async function getLicenseInfo(key: string): Promise<
@@ -380,20 +374,18 @@ async function getLicenseInfo(key: string): Promise<
     string
   >
 > {
-  if (key === 'other') {
-    return Result.success({ content: 'Other', html_url: '' });
-  }
+  if (key === 'other') return ok({ content: 'Other', html_url: '' });
 
   const result = await fetchGitHubData(`/licenses/${key}`, licenseSchema);
-  if (result.isFailure()) return Result.failure(result.error);
+  if (result.isErr()) return err(result.error);
 
-  return Result.success({
+  return ok({
     content: stripIndents`
-      **Name:** ${v.titleCase(result.data.name)}
-      **Permissions:** ${result.data.permissions.join(', ')}
-      **Conditions:** ${result.data.conditions.join(', ')}
-      **Limitations:** ${result.data.limitations.join(', ')}
+      **Name:** ${v.titleCase(result.value.name)}
+      **Permissions:** ${result.value.permissions.join(', ')}
+      **Conditions:** ${result.value.conditions.join(', ')}
+      **Limitations:** ${result.value.limitations.join(', ')}
       `,
-    html_url: result.data.html_url,
+    html_url: result.value.html_url,
   });
 }

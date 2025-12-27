@@ -22,6 +22,7 @@
   ],
   "dependencies": {
     "drizzle-orm": "^0.45.1",
+    "neverthrow": "^8.2.0",
     "zod": "^4.2.1"
   }
 }
