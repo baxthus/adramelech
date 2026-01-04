@@ -12,6 +12,7 @@ import {
 import { sendError } from '~/utils/sendError.ts';
 import config from '~/config.ts';
 import { stripIndents } from 'common-tags';
+import { fromAsyncThrowable } from 'neverthrow';
 
 export const command = <Command>{
   data: new SlashCommandBuilder()
@@ -48,7 +49,6 @@ export const command = <Command>{
       return await sendError(intr, "You can't ban yourself");
     if (user.id === intr.client.user.id)
       return await sendError(intr, "You can't ban me OwO");
-
     if (user.id === intr.guild?.ownerId)
       return await sendError(intr, "You can't ban the server owner");
 
@@ -60,14 +60,15 @@ export const command = <Command>{
     )
       return await sendError(intr, "I can't ban this user");
 
-    try {
-      await member.ban({
-        reason,
-        deleteMessageSeconds: pruneDays * 86400,
-      });
-    } catch {
-      return await sendError(intr, 'An error occurred while banning the user');
-    }
+    const banResult = await fromAsyncThrowable(
+      () =>
+        member.ban({
+          reason,
+          deleteMessageSeconds: pruneDays * 86400,
+        }),
+      (e) => `Failed to ban user:\n${String(e)}`,
+    )();
+    if (banResult.isErr()) return await sendError(intr, banResult.error);
 
     await intr.reply({
       flags: ephemeral
@@ -99,35 +100,36 @@ export const command = <Command>{
       ],
     });
 
-    try {
-      await user.send({
-        flags: MessageFlags.IsComponentsV2,
-        components: [
-          {
-            type: ComponentType.Container,
-            accent_color: Colors.Red,
-            components: [
-              {
-                type: ComponentType.TextDisplay,
-                content: stripIndents`
-                # You have been banned
-                ### Guild
-                \`\`\`${intr.guild?.name}\`\`\`
-                `,
-              },
-              {
-                type: ComponentType.TextDisplay,
-                content: stripIndents`
-                ### Reason
-                \`\`\`${reason}\`\`\`
-                `,
-              },
-            ],
-          },
-        ],
-      });
-    } catch {
-      await sendError(intr, 'Failed to notify the user about the ban');
-    }
+    const notifyResult = await fromAsyncThrowable(
+      () =>
+        user.send({
+          flags: MessageFlags.IsComponentsV2,
+          components: [
+            {
+              type: ComponentType.Container,
+              accent_color: Colors.Red,
+              components: [
+                {
+                  type: ComponentType.TextDisplay,
+                  content: stripIndents`
+                  # You have been banned
+                  ### Guild
+                  \`\`\`${intr.guild?.name}\`\`\`
+                  `,
+                },
+                {
+                  type: ComponentType.TextDisplay,
+                  content: stripIndents`
+                  ### Reason
+                  \`\`\`${reason}\`\`\`
+                  `,
+                },
+              ],
+            },
+          ],
+        }),
+      (e) => `Failed to notify the user about the ban:\n${String(e)}`,
+    )();
+    if (notifyResult.isErr()) return await sendError(intr, notifyResult.error);
   },
 };

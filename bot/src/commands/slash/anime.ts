@@ -15,6 +15,7 @@ import {
 import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import StringBuilder from '~/tools/StringBuilder';
+import { fromAsyncThrowable, okAsync, errAsync } from 'neverthrow';
 
 enum AnimeImageAgeRating {
   Safe = 'safe',
@@ -23,12 +24,14 @@ enum AnimeImageAgeRating {
   Explicit = 'explicit',
 }
 
-const animeImageSchema = z.array(
-  z.object({
-    url: z.url(),
-    source_url: z.url().nullish(),
-  }),
-);
+const animeImageSchema = z
+  .array(
+    z.object({
+      url: z.url(),
+      source_url: z.url().nullish(),
+    }),
+  )
+  .length(1);
 
 const nekoImageSchema = z.object({
   url: z.url(),
@@ -94,20 +97,28 @@ async function animeImage(intr: ChatInputCommandInteraction) {
       'This command can only be used in NSFW channels',
     );
 
-  const response = await ky('https://api.nekosapi.com/v4/images/random', {
-    searchParams: {
-      rating,
-      limit: 1,
-    },
-    headers: {
-      'User-Agent': config.USER_AGENT,
-    },
-  }).json();
-  const { data, error } = animeImageSchema.safeParse(response);
-  if (error) return await sendError(intr, error.message);
+  const result = await fromAsyncThrowable(
+    ky.get('https://api.nekosapi.com/v4/images/random', {
+      searchParams: {
+        rating,
+        limit: 1,
+      },
+      headers: {
+        'User-Agent': config.USER_AGENT,
+      },
+    }).json,
+    (e) => `Failed to fetch image:\n${String(e)}`,
+  )().andThen((response) => {
+    const parsed = animeImageSchema.safeParse(response);
+    return parsed.success
+      ? okAsync(parsed.data)
+      : errAsync(parsed.error.message);
+  });
+  if (result.isErr()) return await sendError(intr, result.error);
 
   const footer = new StringBuilder();
-  if (data[0]?.source_url) footer.appendLine(`> Source: ${data[0].source_url}`);
+  if (result.value[0]?.source_url)
+    footer.appendLine(`> Source: ${result.value[0].source_url}`);
   footer.append(`> Powered by NekosAPI`);
 
   await intr.followUp({
@@ -122,7 +133,7 @@ async function animeImage(intr: ChatInputCommandInteraction) {
             items: [
               {
                 media: {
-                  url: data[0]!.url,
+                  url: result.value[0]!.url,
                 },
               },
             ],
@@ -140,9 +151,16 @@ async function animeImage(intr: ChatInputCommandInteraction) {
 async function nekoImage(intr: ChatInputCommandInteraction) {
   await intr.deferReply();
 
-  const response = await ky('https://nekos.life/api/v2/img/neko').json();
-  const { data, error } = nekoImageSchema.safeParse(response);
-  if (error) return await sendError(intr, error.message);
+  const result = await fromAsyncThrowable(
+    ky.get('https://nekos.life/api/v2/img/neko').json,
+    (e) => `Failed to fetch image:\n${String(e)}`,
+  )().andThen((response) => {
+    const parsed = nekoImageSchema.safeParse(response);
+    return parsed.success
+      ? okAsync(parsed.data)
+      : errAsync(parsed.error.message);
+  });
+  if (result.isErr()) return await sendError(intr, result.error);
 
   await intr.followUp({
     flags: MessageFlags.IsComponentsV2,
@@ -156,7 +174,7 @@ async function nekoImage(intr: ChatInputCommandInteraction) {
             items: [
               {
                 media: {
-                  url: data.url,
+                  url: result.value.url,
                 },
               },
             ],

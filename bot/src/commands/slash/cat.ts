@@ -4,12 +4,15 @@ import { ComponentType, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import ky from 'ky';
 import { sendError } from '~/utils/sendError.ts';
 import config from '~/config.ts';
+import { errAsync, fromAsyncThrowable, okAsync } from 'neverthrow';
 
-const schema = z.array(
-  z.object({
-    url: z.url(),
-  }),
-);
+const schema = z
+  .array(
+    z.object({
+      url: z.url(),
+    }),
+  )
+  .length(1);
 
 export const command = <Command>{
   data: new SlashCommandBuilder()
@@ -20,11 +23,16 @@ export const command = <Command>{
   async execute(intr) {
     await intr.deferReply();
 
-    const response = await ky(
-      'https://api.thecatapi.com/v1/images/search',
-    ).json();
-    const { data, error } = schema.safeParse(response);
-    if (error) return await sendError(intr, 'Failed to fetch the cat image');
+    const result = await fromAsyncThrowable(
+      ky('https://api.thecatapi.com/v1/images/search').json,
+      (e) => `Failed to fetch the cat image:\n${String(e)}`,
+    )().andThen((response) => {
+      const parsed = schema.safeParse(response);
+      return parsed.success
+        ? okAsync(parsed.data)
+        : errAsync(parsed.error.message);
+    });
+    if (result.isErr()) return await sendError(intr, result.error);
 
     await intr.followUp({
       flags: MessageFlags.IsComponentsV2,
@@ -38,7 +46,7 @@ export const command = <Command>{
               items: [
                 {
                   media: {
-                    url: data[0]!.url,
+                    url: result.value[0]!.url,
                   },
                 },
               ],

@@ -14,6 +14,7 @@ import type { Command } from '~/types/command';
 import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import { toUnixTimestamp } from 'utils/date';
+import { fromAsyncThrowable } from 'neverthrow';
 
 export const command = <Command>{
   data: new SlashCommandBuilder()
@@ -58,19 +59,14 @@ export const command = <Command>{
     if (!messages.length)
       return await sendError(intr, 'No messages found to delete');
 
-    let deleted: number;
-    try {
-      deleted = (await (intr.channel as TextChannel).bulkDelete(messages, true))
-        .size;
-    } catch (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      error: any
-    ) {
-      return await sendError(intr, error.message);
-    }
+    const result = await fromAsyncThrowable(
+      () => (intr.channel as TextChannel).bulkDelete(messages, true),
+      (e) => `Failed to delete messages:\n${String(e)}`,
+    )().map((deletedMessages) => deletedMessages.size);
+    if (result.isErr()) return await sendError(intr, result.error);
 
     const message = new StringBuilder();
-    message.appendLine(`# Successfully cleared ${deleted} messages`);
+    message.appendLine(`# Successfully cleared ${result.value} messages`);
     if (secondsBeforeAutoDelete)
       message.appendLine(
         `### This message will be auto-deleted ${time(
@@ -99,11 +95,7 @@ export const command = <Command>{
     if (!secondsBeforeAutoDelete) return;
 
     setTimeout(async () => {
-      try {
-        await intr.deleteReply();
-      } catch {
-        // nothing
-      }
+      fromAsyncThrowable(() => intr.deleteReply())();
     }, secondsBeforeAutoDelete * 1000);
   },
 };

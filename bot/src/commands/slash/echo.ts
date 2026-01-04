@@ -11,6 +11,7 @@ import type { Command } from '~/types/command';
 import type { Modal } from '~/types/modal';
 import { sendError } from '~/utils/sendError';
 import { UIBuilder } from '~/services/UIBuilder';
+import { fromAsyncThrowable } from 'neverthrow';
 
 export const command = <Command>{
   data: new SlashCommandBuilder()
@@ -43,24 +44,24 @@ export const modal = <Modal>{
   async execute(intr) {
     const message = intr.fields.getTextInputValue('message');
 
-    try {
-      const channel = intr.channel as TextChannel;
-      await channel.send({
-        flags: MessageFlags.IsComponentsV2,
-        components: [
-          {
-            type: ComponentType.TextDisplay,
-            content: `\`\`\`${message}\`\`\``,
-          },
-          {
-            type: ComponentType.TextDisplay,
-            content: `> ${userMention(intr.user.id)}`,
-          },
-        ],
-      });
-    } catch {
-      return await sendError(intr, 'Failed to send message');
-    }
+    const result = await fromAsyncThrowable(
+      () =>
+        (intr.channel as TextChannel).send({
+          flags: MessageFlags.IsComponentsV2,
+          components: [
+            {
+              type: ComponentType.TextDisplay,
+              content: `\`\`\`${message}\`\`\``,
+            },
+            {
+              type: ComponentType.TextDisplay,
+              content: `> ${userMention(intr.user.id)}`,
+            },
+          ],
+        }),
+      (e) => `Failed to send message:\n${String(e)}`,
+    )();
+    if (result.isErr()) return await sendError(intr, result.error);
 
     await intr.reply(
       UIBuilder.createGenericSuccess('# Message sent successfully'),

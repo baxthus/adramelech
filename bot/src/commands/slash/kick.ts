@@ -12,6 +12,7 @@ import type { Command } from '~/types/command';
 import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
+import { fromAsyncThrowable } from 'neverthrow';
 
 export const command = <Command>{
   data: new SlashCommandBuilder()
@@ -42,7 +43,6 @@ export const command = <Command>{
       return await sendError(intr, "You can't kick yourself");
     if (user.id === intr.client.user.id)
       return await sendError(intr, "You can't kick me OwO");
-
     if (user.id === intr.guild?.ownerId)
       return await sendError(intr, "You can't kick the server owner");
 
@@ -54,11 +54,11 @@ export const command = <Command>{
     )
       return await sendError(intr, "I can't kick this user");
 
-    try {
-      await member.kick(reason);
-    } catch {
-      return await sendError(intr, 'An error occurred while kicking the user');
-    }
+    const result = await fromAsyncThrowable(
+      () => member.kick(reason),
+      (e) => `Failed to kick user:\n${String(e)}`,
+    )();
+    if (result.isErr()) return await sendError(intr, result.error);
 
     await intr.reply({
       flags: ephemeral
@@ -90,35 +90,36 @@ export const command = <Command>{
       ],
     });
 
-    try {
-      await user.send({
-        flags: MessageFlags.IsComponentsV2,
-        components: [
-          {
-            type: ComponentType.Container,
-            accent_color: Colors.Red,
-            components: [
-              {
-                type: ComponentType.TextDisplay,
-                content: stripIndents`
+    const notifyResult = await fromAsyncThrowable(
+      () =>
+        user.send({
+          flags: MessageFlags.IsComponentsV2,
+          components: [
+            {
+              type: ComponentType.Container,
+              accent_color: Colors.Red,
+              components: [
+                {
+                  type: ComponentType.TextDisplay,
+                  content: stripIndents`
                 # You have been kicked
                 ### Guild
                 \`\`\`${intr.guild?.name}\`\`\`
                 `,
-              },
-              {
-                type: ComponentType.TextDisplay,
-                content: stripIndents`
+                },
+                {
+                  type: ComponentType.TextDisplay,
+                  content: stripIndents`
                 ### Reason
                 \`\`\`${reason}\`\`\`
                 `,
-              },
-            ],
-          },
-        ],
-      });
-    } catch {
-      await sendError(intr, 'Failed to notify the user about the kick');
-    }
+                },
+              ],
+            },
+          ],
+        }),
+      (e) => `Failed to notify the user about the kick:\n${String(e)}`,
+    )();
+    if (notifyResult.isErr()) return await sendError(intr, notifyResult.error);
   },
 };

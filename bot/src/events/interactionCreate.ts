@@ -20,6 +20,7 @@ import type { Component } from '~/types/component';
 import type { Modal } from '~/types/modal';
 import config from '~/config';
 import type { Event } from '~/types/event';
+import { fromAsyncThrowable } from 'neverthrow';
 
 export type CommandInteraction =
   | ChatInputCommandInteraction
@@ -227,20 +228,17 @@ async function handleTypeMismatch(
   );
 }
 
-async function executeInteraction(
+const executeInteraction = async (
   interactionType: string,
   name: string,
   fn: () => Promise<void>,
   intr: Interaction,
-) {
-  try {
-    await fn();
-  } catch (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    error: any
-  ) {
-    await sendError(intr, error.message);
-    logger.error(`Error executing ${interactionType} ${name}`);
-    logger.error(error);
-  }
-}
+) =>
+  fromAsyncThrowable(fn, (e) => e as Error)().match(
+    () => {},
+    async (error) => {
+      await sendError(intr, error.message);
+      logger.error(`Error executing ${interactionType} ${name}`);
+      logger.error(error);
+    },
+  );

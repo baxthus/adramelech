@@ -11,7 +11,7 @@ import type { Command } from '~/types/command';
 import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
-import { err, fromAsyncThrowable, ok } from 'neverthrow';
+import { errAsync, fromAsyncThrowable, ok, okAsync } from 'neverthrow';
 
 const schema = z.object({
   success: z.boolean(),
@@ -53,10 +53,10 @@ export const command = <Command>{
     await intr.deferReply();
 
     const target = intr.options.getString('target', true);
+
     const ip = z.union([z.ipv4(), z.ipv6()]).safeParse(target).success
       ? ok(target)
       : await getIpFromDomain(target);
-
     if (ip.isErr()) return await sendError(intr, ip.error);
 
     const response = await fromAsyncThrowable(
@@ -71,7 +71,9 @@ export const command = <Command>{
           : 'Failed to fetch IP information',
     )().andThen((json) => {
       const parsed = schema.safeParse(json);
-      return parsed.success ? ok(parsed.data) : err('Failed to parse response');
+      return parsed.success
+        ? okAsync(parsed.data)
+        : errAsync('Failed to parse response');
     });
     if (response.isErr()) return await sendError(intr, response.error);
     const data = response.value;
@@ -160,6 +162,8 @@ const getIpFromDomain = (domain: string) =>
   )().andThen((text) => {
     const res = text.trim();
     if (!res || res.startsWith('No'))
-      return err('Failed to get IP from domain');
-    return ok(res.includes(',') ? res.substring(0, res.indexOf(',')) : res);
+      return errAsync('Failed to get IP from domain');
+    return okAsync(
+      res.includes(',') ? res.substring(0, res.indexOf(',')) : res,
+    );
   });

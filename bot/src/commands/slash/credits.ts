@@ -9,6 +9,7 @@ import UnicodeSheet from '~/tools/UnicodeSheet';
 import type { Command } from '~/types/command';
 import { sendError } from '~/utils/sendError';
 import config from '~/config';
+import { fromThrowable } from 'neverthrow';
 
 export const command = <Command>{
   data: new SlashCommandBuilder()
@@ -32,21 +33,21 @@ export const command = <Command>{
         uses: cmd.uses!.join('; '),
       }));
 
-    let content: string;
-    try {
-      content = new UnicodeSheet(separateRows)
-        .addColumn(
-          'Command',
-          credits.map((c) => c.name),
-        )
-        .addColumn(
-          'Uses',
-          credits.map((cmd) => cmd.uses),
-        )
-        .build();
-    } catch {
-      return await sendError(intr, 'Failed to build the credits table');
-    }
+    const result = fromThrowable(
+      () =>
+        new UnicodeSheet(separateRows)
+          .addColumn(
+            'Command',
+            credits.map((c) => c.name),
+          )
+          .addColumn(
+            'Uses',
+            credits.map((cmd) => cmd.uses),
+          )
+          .build(),
+      (e) => `Failed to build the credits table:\n${String(e)}`,
+    )();
+    if (result.isErr()) return await sendError(intr, result.error);
 
     await intr.followUp({
       flags: MessageFlags.IsComponentsV2,
@@ -70,7 +71,7 @@ export const command = <Command>{
       ],
       files: [
         {
-          attachment: Buffer.from(content),
+          attachment: Buffer.from(result.value),
           name: 'credits.txt',
         },
       ],

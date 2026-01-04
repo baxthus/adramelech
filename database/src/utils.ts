@@ -5,12 +5,10 @@ import { fromAsyncThrowable, type ResultAsync } from 'neverthrow';
 
 export function testConnection(): ResultAsync<number, string> {
   const start = performance.now();
-  const result = fromAsyncThrowable(
+  return fromAsyncThrowable(
     () => db.execute(sql`SELECT 1`),
     () => 'Failed to connect to database'
-  )();
-  // Use a map instead of using the value directly to keep the original error
-  return result.map(() => performance.now() - start);
+  )().map(() => performance.now() - start);
 }
 
 export function conditionsToWhere(

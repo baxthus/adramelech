@@ -10,6 +10,7 @@ import type { Command } from '~/types/command';
 import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
+import { errAsync, fromAsyncThrowable, okAsync } from 'neverthrow';
 
 export const command = <Command>{
   data: new SlashCommandBuilder()
@@ -27,14 +28,23 @@ export const command = <Command>{
     await intr.deferReply();
 
     const url = intr.options.getString('url', true);
-    const match = z.url().safeParse(url);
-    if (!match.success) return await sendError(intr, 'Invalid URL');
+    if (!z.url().safeParse(url).success)
+      return await sendError(intr, 'Invalid URL');
 
-    const response = await ky
-      .get(`https://is.gd/create.php?format=simple&url=${url}`)
-      .text();
-    if (!response || response.startsWith('Error'))
-      return await sendError(intr, 'Failed to shorten URL');
+    const result = await fromAsyncThrowable(
+      ky.get('https://is.gd/create.php', {
+        searchParams: {
+          format: 'simple',
+          url: url,
+        },
+      }).text,
+      (e) => `Failed to shorten URL: ${e}`,
+    )().andThen((response) =>
+      !response || response.startsWith('Error')
+        ? errAsync('Failed to shorten URL')
+        : okAsync(response),
+    );
+    if (result.isErr()) return await sendError(intr, result.error);
 
     await intr.followUp({
       flags: MessageFlags.IsComponentsV2,
@@ -54,7 +64,7 @@ export const command = <Command>{
               type: ComponentType.TextDisplay,
               content: stripIndents`
               ### :inbox_tray: Shortened URL
-              \`\`\`${response}\`\`\`
+              \`\`\`${result.value}\`\`\`
               `,
             },
             {

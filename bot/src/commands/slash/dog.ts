@@ -4,6 +4,7 @@ import z from 'zod';
 import type { Command } from '~/types/command';
 import config from '~/config';
 import { sendError } from '~/utils/sendError';
+import { errAsync, fromAsyncThrowable, okAsync } from 'neverthrow';
 
 const schema = z.object({
   status: z.literal('success'),
@@ -19,11 +20,16 @@ export const command = <Command>{
   async execute(intr) {
     await intr.deferReply();
 
-    const response = await ky
-      .get('https://dog.ceo/api/breeds/image/random')
-      .json();
-    const { data, error } = schema.safeParse(response);
-    if (error) return await sendError(intr, 'Failed to parse dog image');
+    const result = await fromAsyncThrowable(
+      ky.get('https://dog.ceo/api/breeds/image/random').json,
+      (e) => `Failed to fetch dog image:\n${String(e)}`,
+    )().andThen((json) => {
+      const parsed = schema.safeParse(json);
+      return parsed.success
+        ? okAsync(parsed.data)
+        : errAsync(parsed.error.message);
+    });
+    if (result.isErr()) return await sendError(intr, result.error);
 
     await intr.followUp({
       flags: MessageFlags.IsComponentsV2,
@@ -37,7 +43,7 @@ export const command = <Command>{
               items: [
                 {
                   media: {
-                    url: data.message,
+                    url: result.value.message,
                   },
                 },
               ],

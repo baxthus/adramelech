@@ -7,6 +7,7 @@ import {
   type ChatInputCommandInteraction,
 } from 'discord.js';
 import ky from 'ky';
+import { errAsync, fromAsyncThrowable, okAsync } from 'neverthrow';
 import v from 'voca';
 import z from 'zod';
 import config from '~/config';
@@ -15,10 +16,13 @@ import { sendError } from '~/utils/sendError';
 
 const BASE_URL = 'https://api.openweathermap.org';
 
-const geoSchema = z.object({
-  lat: z.number(),
-  lon: z.number(),
-});
+const geoSchema = z
+  .object({
+    lat: z.number(),
+    lon: z.number(),
+  })
+  .array()
+  .length(1);
 
 const weatherSchema = z.object({
   id: z.number(),
@@ -30,7 +34,7 @@ const weatherSchema = z.object({
         description: z.string(),
       }),
     )
-    .min(1),
+    .length(1),
   main: z.object({
     temp: z.number(),
     feels_like: z.number(),
@@ -47,10 +51,7 @@ const weatherSchema = z.object({
     gust: z.number().nullish(), // Present most of the time, but not always
   }),
   sys: z.object({
-    country: z
-      .string()
-      .length(2)
-      .transform((c) => v.lowerCase(c)),
+    country: z.string().length(2).transform(v.lowerCase),
   }),
 });
 
@@ -81,24 +82,43 @@ export const command = <Command>{
     const city = intr.options.getString('city', true);
     const country = intr.options.getString('country', true);
 
-    const geoUrl = new URL(`${BASE_URL}/geo/1.0/direct`);
-    geoUrl.searchParams.set('q', `${city},${country}`);
-    geoUrl.searchParams.append('limit', '1');
-    geoUrl.searchParams.append('appid', config.OPENWEATHER_KEY);
+    const geoResult = await fromAsyncThrowable(
+      ky.get(`${BASE_URL}/geo/1.0/direct`, {
+        searchParams: {
+          q: `${city},${country}`,
+          limit: '1',
+          appid: config.OPENWEATHER_KEY,
+        },
+      }).json,
+      (e) => `Failed to fetch geolocation data: ${String(e)}`,
+    )().andThen((json) => {
+      const parsed = geoSchema.safeParse(json);
+      return parsed.success
+        ? okAsync(parsed.data)
+        : errAsync(parsed.error.message);
+    });
+    if (geoResult.isErr()) return await sendError(intr, geoResult.error);
 
-    const geoResponse = await ky.get(geoUrl).json();
-    const geo = geoSchema.array().safeParse(geoResponse);
-    if (geo.error) return await sendError(intr, 'Invalid location');
-
-    const weatherUrl = new URL(`${BASE_URL}/data/2.5/weather`);
-    weatherUrl.searchParams.append('lat', geo.data[0]!.lat.toString());
-    weatherUrl.searchParams.append('lon', geo.data[0]!.lon.toString());
-    weatherUrl.searchParams.append('units', 'metric');
-    weatherUrl.searchParams.append('appid', config.OPENWEATHER_KEY);
-    weatherUrl.searchParams.append('lang', 'en');
-    const weatherResponse = await ky.get(weatherUrl).json();
-    const { data: weather, error } = weatherSchema.safeParse(weatherResponse);
-    if (error) return await sendError(intr, 'Failed to retrieve weather data');
+    const weatherResult = await fromAsyncThrowable(
+      ky.get(`${BASE_URL}/data/2.5/weather`, {
+        searchParams: {
+          lat: geoResult.value[0]!.lat.toString(),
+          lon: geoResult.value[0]!.lon.toString(),
+          units: 'metric',
+          appid: config.OPENWEATHER_KEY,
+          lang: 'en',
+        },
+      }).json,
+      (e) => `Failed to fetch weather data: ${String(e)}`,
+    )().andThen((json) => {
+      const parsed = weatherSchema.safeParse(json);
+      return parsed.success
+        ? okAsync(parsed.data)
+        : errAsync(parsed.error.message);
+    });
+    if (weatherResult.isErr())
+      return await sendError(intr, weatherResult.error);
+    const weather = weatherResult.value;
 
     await intr.followUp({
       flags: MessageFlags.IsComponentsV2,

@@ -18,7 +18,7 @@ import {
 import config from '~/config';
 import { stripIndents } from 'common-tags';
 import { sendError } from '~/utils/sendError';
-import { err, fromAsyncThrowable, ok, type Result } from 'neverthrow';
+import { errAsync, okAsync, ResultAsync } from 'neverthrow';
 
 const BASE_URL = 'https://api.github.com';
 
@@ -343,49 +343,39 @@ async function user(intr: ChatInputCommandInteraction) {
   });
 }
 
-async function fetchGitHubData<T>(
+const fetchGitHubData = <T>(
   endpoint: string,
   schema: z.ZodType<T>,
-): Promise<Result<T, string>> {
-  const result = await fromAsyncThrowable(
+): ResultAsync<T, string> =>
+  ResultAsync.fromThrowable(
     ky.get(BASE_URL + endpoint, {
       headers: { 'User-Agent': config.USER_AGENT },
     }).json,
-    (error) =>
-      error instanceof Error
-        ? error.message
-        : 'Failed to fetch data from GitHub API',
+    (e) => `Failed to fetch data from GitHub:\n${String(e)}`,
   )().andThen((response) => {
     const parsed = schema.safeParse(response);
-    if (!parsed.success)
-      return err(`Validation failed: ${parsed.error.message}`);
-    return ok(parsed.data);
+    return parsed.success
+      ? okAsync(parsed.data)
+      : errAsync(parsed.error.message);
   });
-  if (result.isErr()) return err(result.error);
-  return ok(result.value);
-}
 
-async function getLicenseInfo(key: string): Promise<
-  Result<
-    {
-      content: string;
-      html_url: string;
-    },
-    string
-  >
-> {
-  if (key === 'other') return ok({ content: 'Other', html_url: '' });
-
-  const result = await fetchGitHubData(`/licenses/${key}`, licenseSchema);
-  if (result.isErr()) return err(result.error);
-
-  return ok({
+const getLicenseInfo = (
+  key: string,
+): ResultAsync<
+  {
+    content: string;
+    html_url: string;
+  },
+  string
+> => {
+  if (key === 'other') return okAsync({ content: 'Other', html_url: '' });
+  return fetchGitHubData(`/licenses/${key}`, licenseSchema).map((result) => ({
     content: stripIndents`
-      **Name:** ${v.titleCase(result.value.name)}
-      **Permissions:** ${result.value.permissions.join(', ')}
-      **Conditions:** ${result.value.conditions.join(', ')}
-      **Limitations:** ${result.value.limitations.join(', ')}
+      **Name:** ${v.titleCase(result.name)}
+      **Permissions:** ${result.permissions.join(', ')}
+      **Conditions:** ${result.conditions.join(', ')}
+      **Limitations:** ${result.limitations.join(', ')}
       `,
-    html_url: result.value.html_url,
-  });
-}
+    html_url: result.html_url,
+  }));
+};

@@ -9,6 +9,7 @@ import type { Command } from '~/types/command';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
 import { sendError } from '~/utils/sendError';
+import { errAsync, fromAsyncThrowable, okAsync } from 'neverthrow';
 
 const badResponses = [
   'Malformed',
@@ -39,13 +40,17 @@ export const command = <Command>{
 
     const target = intr.options.getString('target', true);
 
-    const response = await ky
-      .get(`https://da.gd/w/${target}`, {
+    const result = await fromAsyncThrowable(
+      ky.get(`https://da.gd/w/${target}`, {
         timeout: 10000, // 10 seconds
-      })
-      .text();
-    if (!response.trim() || badResponses.some((r) => response.includes(r)))
-      return await sendError(intr, 'No information found');
+      }).text,
+      (e) => `Failed to fetch WHOIS information: ${String(e)}`,
+    )().andThen((text) =>
+      !text.trim() || badResponses.some((r) => text.includes(r))
+        ? errAsync('No information found')
+        : okAsync(text),
+    );
+    if (result.isErr()) return await sendError(intr, result.error);
 
     await intr.followUp({
       flags: MessageFlags.IsComponentsV2,
@@ -81,7 +86,7 @@ export const command = <Command>{
       ],
       files: [
         {
-          attachment: Buffer.from(response),
+          attachment: Buffer.from(result.value),
           name: 'whois.txt',
         },
       ],

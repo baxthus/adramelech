@@ -9,6 +9,12 @@ import UnicodeSheet from '~/tools/UnicodeSheet';
 import type { Command } from '~/types/command';
 import { sendError } from '~/utils/sendError';
 import config from '~/config';
+import {
+  errAsync,
+  fromAsyncThrowable,
+  fromThrowable,
+  okAsync,
+} from 'neverthrow';
 
 type DnsRecord = {
   type: string;
@@ -39,31 +45,37 @@ export const command = <Command>{
     const domain = intr.options.getString('domain', true);
     const separateRows = intr.options.getBoolean('separate-rows') ?? false;
 
-    const response = await ky.get(`https://da.gd/dns/${domain}`).text();
-    const records = parseResponse(response);
-
-    if (records.length === 0)
-      return await sendError(intr, 'No DNS record found for this domain');
-
-    let content: string;
-    try {
-      content = new UnicodeSheet(separateRows)
-        .addColumn(
-          'Type',
-          records.map((record) => record.type),
-        )
-        .addColumn(
-          'Revalidate In',
-          records.map((record) => record.revalidateIn),
-        )
-        .addColumn(
-          'Content',
-          records.map((record) => record.content),
-        )
-        .build();
-    } catch {
-      return await sendError(intr, 'Failed to build the Unicode Sheet');
-    }
+    const result = await fromAsyncThrowable(
+      ky.get(`https://da.gd/dns/${domain}`).text,
+      (e) => `Failed to fetch DNS records:\n${String(e)}`,
+    )()
+      .andThen((response) => {
+        const records = parseResponse(response);
+        return records.length > 0
+          ? okAsync(records)
+          : errAsync('No DNS record found for this domain');
+      })
+      .andThen((records) =>
+        fromThrowable(
+          () =>
+            new UnicodeSheet(separateRows)
+              .addColumn(
+                'Type',
+                records.map((record) => record.type),
+              )
+              .addColumn(
+                'Revalidate In',
+                records.map((record) => record.revalidateIn),
+              )
+              .addColumn(
+                'Content',
+                records.map((record) => record.content),
+              )
+              .build(),
+          (e) => `Failed to build the Unicode Sheet:\n${String(e)}`,
+        )(),
+      );
+    if (result.isErr()) return await sendError(intr, result.error);
 
     await intr.followUp({
       flags: MessageFlags.IsComponentsV2,
@@ -91,7 +103,7 @@ export const command = <Command>{
       ],
       files: [
         {
-          attachment: Buffer.from(content),
+          attachment: Buffer.from(result.value),
           name: 'records.txt',
         },
       ],
