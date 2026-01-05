@@ -1,0 +1,5 @@
+version: '3'
+
+include:
+  - database/compose.yaml
+  - redis/compose.yaml

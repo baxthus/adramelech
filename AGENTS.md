@@ -4,7 +4,7 @@
 - **Lint**: `bun run lint` (in bot/ or dashboard/)
 - **Format**: `bun run format` (in bot/ or dashboard/)
 - **Dev**: `task bot` or `task dashboard` (from root)
-- **Database**: `task up`, `task down`, `task push`, `task studio`
+- **Database/Redis**: `task up`, `task down`, `task push`, `task studio`
 
 ## Code Style
 - **Formatting**: 2 spaces, semicolons, single quotes, trailing commas, 80 char width
@@ -17,7 +17,8 @@
 - **Bot exports**: `export const command = <Command>{...}`, same for `event`, `component`
 - **Dashboard**: Server Actions with `'use server'`, `cn()` for class merging
 - **Database**: Drizzle ORM with NanoID keys, schema in `database/src/schema.ts`, Arktype validations in `database/src/validations.ts`
+- **Redis**: Bun's native `RedisClient`, import via `import redis from 'redis'`, utils via `import { fn } from 'redis/utils'`
 - **Utils**: Shared utilities, import via `import { fn } from 'utils/module'`
 
 ## Tech Stack
-Bun runtime, TypeScript strict mode, discord.js (bot), Next.js 16 + React 19 (dashboard), Drizzle ORM + PostgreSQL, shared utils package
+Bun runtime, TypeScript strict mode, discord.js (bot), Next.js 16 + React 19 (dashboard), Drizzle ORM + PostgreSQL, Redis (Bun native client), shared utils package

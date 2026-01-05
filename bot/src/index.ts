@@ -16,7 +16,6 @@ export class CustomClient extends Client {
   events: Collection<string, EventInfer> = new Collection();
   components: Collection<string, ComponentInfer> = new Collection();
   modals: Collection<string, ModalInfer> = new Collection();
-  cooldowns: Collection<string, Collection<string, number>> = new Collection();
 }
 
 export const client = new CustomClient({

@@ -20,13 +20,11 @@ tasks:
     cmds:
       - bun run dev
 
-  # Database
+  # Database / Valkey
   up:
-    dir: '{{.DATABASE}}'
     cmds:
       - podman-compose up -d
   down:
-    dir: '{{.DATABASE}}'
     cmds:
       - podman-compose down
   push:

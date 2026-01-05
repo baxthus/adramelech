@@ -68,7 +68,7 @@ export const command = <CommandInfer>{
         .setDescription('The country the city is in')
         .setRequired(true),
     ),
-  cooldown: 10 * 60, // 10 minutes because the API is expensive
+  cooldown: 10 * 60, // 10 minutes
   uses: ['OpenWeatherMap'],
   async execute(intr: ChatInputCommandInteraction) {
     if (!config.OPENWEATHER_KEY)

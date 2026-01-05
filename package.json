@@ -6,7 +6,8 @@
     "database",
     "dashboard",
     "bot",
-    "utils"
+    "utils",
+    "redis"
   ],
   "devDependencies": {
     "@types/bun": "latest"

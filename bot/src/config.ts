@@ -14,11 +14,10 @@ const Config = type({
   DEFAULT_COOLDOWN_SECONDS: 'string.numeric.parse |> number.integer > 0',
   USER_AGENT: 'string = "adramelech"',
   OPENWEATHER_KEY: 'string?',
-  DATABASE_URL: type('string.url').narrow((s) => s.startsWith('postgres://')),
 });
 
 function validateConfig() {
-  const out = Config(process.env);
+  const out = Config(Bun.env);
   if (out instanceof type.errors) {
     const u = kleur.underline;
     for (const error of out) {

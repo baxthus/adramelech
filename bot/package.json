@@ -15,11 +15,13 @@
     "@sentry/bun": "^10.5.0",
     "common-tags": "^1.8.2",
     "database": "workspace:*",
+    "date-fns": "^4.1.0",
     "discord.js": "^14.21.0",
     "kleur": "^4.1.5",
     "ky": "^1.9.0",
-    "voca": "^1.4.1",
-    "utils": "workspace:*"
+    "redis": "workspace:*",
+    "utils": "workspace:*",
+    "voca": "^1.4.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",

@@ -3,7 +3,8 @@ import type { EventInfer } from '~/types/event';
 import type { CustomClient } from '~';
 import logger from '~/logger';
 import kleur from 'kleur';
-import { testConnection } from 'database/utils';
+import { testConnection as dbTestConnection } from 'database/utils';
+import { testConnection as redisTestConnection } from 'redis/utils';
 
 export const event = <EventInfer>{
   name: Events.ClientReady,
@@ -16,7 +17,8 @@ export const event = <EventInfer>{
     logger.log(`${library} | ${runtime}`);
 
     logger.log();
-    const dbLatency = await testConnection().match(
+
+    const dbLatency = await dbTestConnection().match(
       (latency) => latency,
       (err) => {
         logger.error(err);
@@ -25,9 +27,23 @@ export const event = <EventInfer>{
     );
     logger.log(
       kleur.green(
-        ` Database connected successfully! ${kleur.dim(`- ${dbLatency.toFixed(2)}ms`)}`,
+        ` Database connected successfully! ${kleur.dim(`- ${dbLatency.toFixed(2)}ms`)}`,
       ),
     );
+
+    const redisLatency = await redisTestConnection().match(
+      (latency) => latency,
+      (err) => {
+        logger.error(err);
+        process.exit(1);
+      },
+    );
+    logger.log(
+      kleur.green(
+        ` Redis connected successfully! ${kleur.dim(`- ${redisLatency.toFixed(2)}ms`)}`,
+      ),
+    );
+
     logger.log();
 
     logger.log(kleur.green(` Online as ${kleur.bold(client.user!.tag)}`));

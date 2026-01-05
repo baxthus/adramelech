@@ -1,6 +1,5 @@
 import {
   type AutocompleteInteraction,
-  Collection,
   Events,
   InteractionType,
   type ModalSubmitInteraction,
@@ -21,6 +20,8 @@ import type { ModalInfer } from '~/types/modal';
 import config from '~/config';
 import type { EventInfer } from '~/types/event';
 import { fromAsyncThrowable } from 'neverthrow';
+import redis from 'redis';
+import { formatDistanceToNow } from 'date-fns';
 
 export type CommandInteraction =
   | ChatInputCommandInteraction
@@ -61,7 +62,7 @@ async function handleCommands(intr: CommandInteraction, client: CustomClient) {
     return;
   }
 
-  if (isOnCooldown(client, intr, command, intr.commandName)) return;
+  if (await isOnCooldown(intr, command, intr.commandName)) return;
   if (!(await handlePreconditions(intr, command))) return;
 
   const commandType = command.data.toJSON().type;
@@ -94,7 +95,7 @@ async function handleComponents(
     return;
   }
 
-  if (isOnCooldown(client, intr, component, intr.customId)) return;
+  if (await isOnCooldown(intr, component, intr.customId)) return;
   if (!(await handlePreconditions(intr, component))) return;
 
   if (intr.componentType !== component.type) {
@@ -126,7 +127,7 @@ async function handleModals(
     return;
   }
 
-  if (isOnCooldown(client, intr, modal, intr.customId)) return;
+  if (await isOnCooldown(intr, modal, intr.customId)) return;
   if (!(await handlePreconditions(intr, modal))) return;
 
   if (intr.type !== InteractionType.ModalSubmit) {
@@ -184,33 +185,34 @@ async function handlePreconditions(
   return true;
 }
 
-function isOnCooldown(
-  client: CustomClient,
+async function isOnCooldown(
   intr: Interaction,
   item: CommandInfer | ComponentInfer | ModalInfer,
   name: string,
-): boolean {
+): Promise<boolean> {
   if (!item.cooldown || Bun.env.NODE_ENV === 'development') return false;
 
-  const cooldowns = client.cooldowns.get(name) ?? new Collection();
-  client.cooldowns.set(name, cooldowns);
-
-  const now = Date.now();
-  const timestamps = client.cooldowns.get(name)!;
-  const cooldownAmount =
-    (typeof item.cooldown === 'boolean'
-      ? config.DEFAULT_COOLDOWN_SECONDS
-      : item.cooldown) * 1000;
-
-  const userCooldown = timestamps.get(intr.user.id);
-  if (userCooldown && now < userCooldown) {
-    const remainingTime = Math.round((userCooldown - now) / 1000);
-    sendError(intr, `Your on cooldown for ${remainingTime} seconds`);
+  const cooldown = await redis.get(`cooldown:${name}:${intr.user.id}`);
+  if (cooldown) {
+    const remainingTime = formatDistanceToNow(parseInt(cooldown), {
+      addSuffix: true,
+    });
+    await sendError(intr, `You're on cooldown. Try again ${remainingTime}`);
     return true;
   }
 
-  cooldowns.set(intr.user.id, now + cooldownAmount);
-  setTimeout(() => timestamps.delete(intr.user.id), cooldownAmount);
+  const cooldownSeconds =
+    typeof item.cooldown === 'boolean'
+      ? config.DEFAULT_COOLDOWN_SECONDS
+      : item.cooldown;
+
+  const expiration = Date.now() + cooldownSeconds * 1000;
+  await redis.setex(
+    `cooldown:${name}:${intr.user.id}`,
+    cooldownSeconds,
+    expiration.toString(),
+  );
+
   return false;
 }
 
