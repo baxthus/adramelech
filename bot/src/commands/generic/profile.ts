@@ -17,24 +17,24 @@ import {
   type User,
   type UserContextMenuCommandInteraction,
 } from 'discord.js';
-import { z } from 'zod/mini';
 import config from '~/config';
 import { UIBuilder } from '~/services/UIBuilder';
 import {
   executeCommandFromTree,
-  type Command,
   type CommandGroupExecutors,
+  type CommandInfer,
 } from '~/types/command';
-import type { Component } from '~/types/component';
-import type { Modal } from '~/types/modal';
+import type { ComponentInfer } from '~/types/component';
+import type { ModalInfer } from '~/types/modal';
 import { sendError } from '~/utils/sendError';
 import { db } from 'database';
 import { profiles, socials } from 'database/schema';
 import { and, asc, eq, ilike } from 'drizzle-orm';
 import { exists } from 'database/utils';
 import { toUnixTimestamp } from 'utils/date';
+import { ArkErrors, type } from 'arktype';
 
-export const commands = <Command[]>[
+export const commands = <CommandInfer[]>[
   {
     data: new SlashCommandBuilder()
       .setName('profile')
@@ -375,7 +375,7 @@ async function addSocial(intr: ChatInputCommandInteraction) {
   const name = intr.options.getString('name', true).trim();
   const link = intr.options.getString('link', true).trim();
 
-  if (!z.url().safeParse(link).success)
+  if (type('string.url')(link) instanceof ArkErrors)
     return await sendError(intr, 'The provided link is not a valid URL');
 
   if (
@@ -481,7 +481,7 @@ async function removeSocial(intr: ChatInputCommandInteraction) {
   );
 }
 
-export const component = <Component>{
+export const component = <ComponentInfer>{
   type: ComponentType.Button,
   customId: 'button-delete-profile',
   async execute(interaction) {
@@ -499,7 +499,7 @@ export const component = <Component>{
   },
 };
 
-export const modal = <Modal>{
+export const modal = <ModalInfer>{
   customId: 'modal-edit-bio',
   async execute(intr) {
     await intr.deferReply({ flags: MessageFlags.Ephemeral });

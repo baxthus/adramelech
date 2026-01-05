@@ -7,22 +7,22 @@ import {
 } from 'discord.js';
 import {
   executeCommandFromTree,
-  type Command,
   type CommandExecutors,
+  type CommandInfer,
 } from '~/types/command';
 import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
 import v from 'voca';
 import { UIBuilder } from '~/services/UIBuilder';
-import type { Modal } from '~/types/modal';
+import type { ModalInfer } from '~/types/modal';
 import { and, desc, eq, ilike, inArray, type SQL } from 'drizzle-orm';
 import { feedbacks, profiles } from 'database/schema';
 import { db } from 'database';
 import { exists } from 'database/utils';
 import { toUnixTimestamp } from 'utils/date';
 
-export const command = <Command>{
+export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
     .setName('feedback')
     .setDescription('Send suggestions/bug reports to the bot developers')
@@ -257,7 +257,7 @@ async function closeFeedback(intr: ChatInputCommandInteraction) {
   );
 }
 
-export const modal = <Modal>{
+export const modal = <ModalInfer>{
   customId: 'modal-feedback',
   async execute(intr) {
     await intr.deferReply({ flags: MessageFlags.Ephemeral });

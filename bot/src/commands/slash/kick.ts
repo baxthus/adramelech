@@ -8,13 +8,13 @@ import {
   userMention,
   type ChatInputCommandInteraction,
 } from 'discord.js';
-import type { Command } from '~/types/command';
+import type { CommandInfer } from '~/types/command';
 import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
 import { fromAsyncThrowable } from 'neverthrow';
 
-export const command = <Command>{
+export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
     .setName('kick')
     .setDescription('Kick a member')

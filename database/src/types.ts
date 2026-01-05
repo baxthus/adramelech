@@ -1,9 +1,8 @@
-import type z from 'zod/v3';
-import type { phraseCreateSchema } from './validations';
-import type { feedbackStatusEnum, phrases } from './schema';
+import type { FeedbackStatus, PhraseCreate } from './validations';
+import type { phrases } from './schema';
 
-export type PhraseCreate = z.infer<typeof phraseCreateSchema>;
+export type PhraseCreateInfer = typeof PhraseCreate.infer;
 
-export type FeedbackStatus = (typeof feedbackStatusEnum.enumValues)[number];
+export type FeedbackStatusInfer = typeof FeedbackStatus.infer;
 
 export type Phrase = typeof phrases.$inferSelect;

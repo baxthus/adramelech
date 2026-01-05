@@ -1,24 +1,25 @@
 'use server';
 
-import { defaultGetActionsSchema } from '@/schemas/actions';
+import { DefaultGetActions } from '@/schemas/actions';
 import { protect } from '@/utils/auth';
+import { ArkErrors } from 'arktype';
 import { db } from 'database';
 import { socials } from 'database/schema';
 import { asc, eq, ilike, or, type SQL } from 'drizzle-orm';
-import z from 'zod';
+import { NanoID } from 'utils/types';
 
 const pageSize = 10;
 
 export async function getSocials(search?: string, page: number = 1) {
   await protect();
 
-  const parsed = defaultGetActionsSchema.parse({ search, page });
+  const parsed = DefaultGetActions.assert({ search, page });
 
   let where: SQL | undefined;
   if (parsed.search) {
-    const isNanoid = z.nanoid().safeParse(parsed.search).success;
+    const isNanoId = !(NanoID(parsed.search) instanceof ArkErrors);
 
-    if (isNanoid)
+    if (isNanoId)
       where = or(
         eq(socials.id, parsed.search),
         eq(socials.profileId, parsed.search),
@@ -55,7 +56,7 @@ export async function getSocials(search?: string, page: number = 1) {
 export async function deleteSocial(id: string) {
   await protect();
 
-  z.nanoid().parse(id);
+  NanoID.assert(id);
 
   const result = await db.delete(socials).where(eq(socials.id, id));
   if (!result.rowCount) throw new Error('Social not found');

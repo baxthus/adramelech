@@ -5,11 +5,11 @@ import {
   type ChatInputCommandInteraction,
 } from 'discord.js';
 import ky from 'ky';
-import type { Command } from '~/types/command';
+import type { CommandInfer } from '~/types/command';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
 import { sendError } from '~/utils/sendError';
-import { errAsync, fromAsyncThrowable, okAsync } from 'neverthrow';
+import { err, fromAsyncThrowable, ok } from 'neverthrow';
 
 const badResponses = [
   'Malformed',
@@ -23,7 +23,7 @@ const badResponses = [
   'Closing connection',
 ];
 
-export const command = <Command>{
+export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
     .setName('whois')
     .setDescription('Get information about a domain or IP address')
@@ -47,8 +47,8 @@ export const command = <Command>{
       (e) => `Failed to fetch WHOIS information: ${String(e)}`,
     )().andThen((text) =>
       !text.trim() || badResponses.some((r) => text.includes(r))
-        ? errAsync('No information found')
-        : okAsync(text),
+        ? err('No information found')
+        : ok(text),
     );
     if (result.isErr()) return await sendError(intr, result.error);
 

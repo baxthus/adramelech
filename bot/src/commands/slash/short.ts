@@ -5,14 +5,14 @@ import {
   type ChatInputCommandInteraction,
 } from 'discord.js';
 import ky from 'ky';
-import z from 'zod';
-import type { Command } from '~/types/command';
+import type { CommandInfer } from '~/types/command';
 import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
-import { errAsync, fromAsyncThrowable, okAsync } from 'neverthrow';
+import { err, fromAsyncThrowable, ok } from 'neverthrow';
+import { type } from 'arktype';
 
-export const command = <Command>{
+export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
     .setName('short')
     .setDescription('Shorten a URL')
@@ -28,7 +28,7 @@ export const command = <Command>{
     await intr.deferReply();
 
     const url = intr.options.getString('url', true);
-    if (!z.url().safeParse(url).success)
+    if (type('string.url')(url) instanceof type.errors)
       return await sendError(intr, 'Invalid URL');
 
     const result = await fromAsyncThrowable(
@@ -41,8 +41,8 @@ export const command = <Command>{
       (e) => `Failed to shorten URL: ${e}`,
     )().andThen((response) =>
       !response || response.startsWith('Error')
-        ? errAsync('Failed to shorten URL')
-        : okAsync(response),
+        ? err('Failed to shorten URL')
+        : ok(response),
     );
     if (result.isErr()) return await sendError(intr, result.error);
 

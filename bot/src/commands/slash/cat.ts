@@ -1,20 +1,19 @@
-import z from 'zod';
-import type { Command } from '~/types/command.ts';
+import type { CommandInfer } from '~/types/command.ts';
 import { ComponentType, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import ky from 'ky';
 import { sendError } from '~/utils/sendError.ts';
 import config from '~/config.ts';
-import { errAsync, fromAsyncThrowable, okAsync } from 'neverthrow';
+import { fromAsyncThrowable } from 'neverthrow';
+import { type } from 'arktype';
+import { arkToResult } from 'utils/validation';
 
-const schema = z
-  .array(
-    z.object({
-      url: z.url(),
-    }),
-  )
-  .length(1);
+const CatImages = type({
+  url: 'string.url',
+})
+  .array()
+  .exactlyLength(1);
 
-export const command = <Command>{
+export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
     .setName('cat')
     .setDescription('Get a random cat image'),
@@ -26,12 +25,7 @@ export const command = <Command>{
     const result = await fromAsyncThrowable(
       ky('https://api.thecatapi.com/v1/images/search').json,
       (e) => `Failed to fetch the cat image:\n${String(e)}`,
-    )().andThen((response) => {
-      const parsed = schema.safeParse(response);
-      return parsed.success
-        ? okAsync(parsed.data)
-        : errAsync(parsed.error.message);
-    });
+    )().andThen(arkToResult(CatImages));
     if (result.isErr()) return await sendError(intr, result.error);
 
     await intr.followUp({

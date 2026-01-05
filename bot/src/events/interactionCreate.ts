@@ -15,11 +15,11 @@ import {
 import logger from '~/logger';
 import { sendError } from '~/utils/sendError';
 import type { CustomClient } from '..';
-import type { Command } from '~/types/command';
-import type { Component } from '~/types/component';
-import type { Modal } from '~/types/modal';
+import type { CommandInfer } from '~/types/command';
+import type { ComponentInfer } from '~/types/component';
+import type { ModalInfer } from '~/types/modal';
 import config from '~/config';
-import type { Event } from '~/types/event';
+import type { EventInfer } from '~/types/event';
 import { fromAsyncThrowable } from 'neverthrow';
 
 export type CommandInteraction =
@@ -29,7 +29,7 @@ export type CommandInteraction =
   | PrimaryEntryPointCommandInteraction; // Don't know what this is
 export type ComponentInteraction = AnySelectMenuInteraction | ButtonInteraction;
 
-export const event = <Event>{
+export const event = <EventInfer>{
   name: Events.InteractionCreate,
   async execute(intr: Interaction) {
     const client = intr.client as CustomClient;
@@ -174,7 +174,7 @@ async function handlePreconditions(
     | ComponentInteraction
     | ModalSubmitInteraction
     | AutocompleteInteraction,
-  item: Command | Component | Modal,
+  item: CommandInfer | ComponentInfer | ModalInfer,
 ): Promise<boolean> {
   if (item.preconditions) {
     for (const precondition of item.preconditions) {
@@ -187,7 +187,7 @@ async function handlePreconditions(
 function isOnCooldown(
   client: CustomClient,
   intr: Interaction,
-  item: Command | Component | Modal,
+  item: CommandInfer | ComponentInfer | ModalInfer,
   name: string,
 ): boolean {
   if (!item.cooldown || Bun.env.NODE_ENV === 'development') return false;

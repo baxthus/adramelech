@@ -1,17 +1,18 @@
 import { ComponentType, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import ky from 'ky';
-import z from 'zod';
-import type { Command } from '~/types/command';
+import type { CommandInfer } from '~/types/command';
 import config from '~/config';
 import { sendError } from '~/utils/sendError';
-import { errAsync, fromAsyncThrowable, okAsync } from 'neverthrow';
+import { fromAsyncThrowable } from 'neverthrow';
+import { type } from 'arktype';
+import { arkToResult } from 'utils/validation';
 
-const schema = z.object({
-  status: z.literal('success'),
-  message: z.url(),
+const DogImage = type({
+  status: '"success"',
+  message: 'string.url',
 });
 
-export const command = <Command>{
+export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
     .setName('dog')
     .setDescription('Get a random dog image'),
@@ -23,12 +24,7 @@ export const command = <Command>{
     const result = await fromAsyncThrowable(
       ky.get('https://dog.ceo/api/breeds/image/random').json,
       (e) => `Failed to fetch dog image:\n${String(e)}`,
-    )().andThen((json) => {
-      const parsed = schema.safeParse(json);
-      return parsed.success
-        ? okAsync(parsed.data)
-        : errAsync(parsed.error.message);
-    });
+    )().andThen(arkToResult(DogImage));
     if (result.isErr()) return await sendError(intr, result.error);
 
     await intr.followUp({

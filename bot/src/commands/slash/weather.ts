@@ -1,3 +1,4 @@
+import { type } from 'arktype';
 import { stripIndents } from 'common-tags';
 import {
   ButtonStyle,
@@ -7,55 +8,51 @@ import {
   type ChatInputCommandInteraction,
 } from 'discord.js';
 import ky from 'ky';
-import { errAsync, fromAsyncThrowable, okAsync } from 'neverthrow';
-import v from 'voca';
-import z from 'zod';
+import { fromAsyncThrowable } from 'neverthrow';
+import { arkToResult } from 'utils/validation';
 import config from '~/config';
-import type { Command } from '~/types/command';
+import type { CommandInfer } from '~/types/command';
 import { sendError } from '~/utils/sendError';
 
 const BASE_URL = 'https://api.openweathermap.org';
 
-const geoSchema = z
-  .object({
-    lat: z.number(),
-    lon: z.number(),
-  })
+const Geos = type({
+  lat: 'number',
+  lon: 'number',
+})
   .array()
-  .length(1);
+  .exactlyLength(1);
 
-const weatherSchema = z.object({
-  id: z.number(),
-  name: z.string().nullish(),
-  weather: z
-    .array(
-      z.object({
-        main: z.string(),
-        description: z.string(),
-      }),
-    )
-    .length(1),
-  main: z.object({
-    temp: z.number(),
-    feels_like: z.number(),
-    temp_min: z.number(),
-    temp_max: z.number(),
-    pressure: z.number(),
-    humidity: z.number(),
-    sea_level: z.number(),
-    grnd_level: z.number(),
-  }),
-  wind: z.object({
-    speed: z.number(),
-    deg: z.number(),
-    gust: z.number().nullish(), // Present most of the time, but not always
-  }),
-  sys: z.object({
-    country: z.string().length(2).transform(v.lowerCase),
-  }),
+const Weather = type({
+  id: 'number',
+  name: 'string | null',
+  weather: type({
+    main: 'string',
+    description: 'string.capitalize',
+  })
+    .array()
+    .exactlyLength(1),
+  main: {
+    temp: 'number',
+    feels_like: 'number',
+    temp_min: 'number',
+    temp_max: 'number',
+    pressure: 'number',
+    humidity: 'number',
+    sea_level: 'number',
+    grnd_level: 'number',
+  },
+  wind: {
+    speed: 'number',
+    deg: 'number',
+    gust: 'number | null',
+  },
+  sys: {
+    country: 'string == 2 |> string.lower',
+  },
 });
 
-export const command = <Command>{
+export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
     .setName('weather')
     .setDescription('Get the current weather for a location')
@@ -91,12 +88,7 @@ export const command = <Command>{
         },
       }).json,
       (e) => `Failed to fetch geolocation data: ${String(e)}`,
-    )().andThen((json) => {
-      const parsed = geoSchema.safeParse(json);
-      return parsed.success
-        ? okAsync(parsed.data)
-        : errAsync(parsed.error.message);
-    });
+    )().andThen(arkToResult(Geos));
     if (geoResult.isErr()) return await sendError(intr, geoResult.error);
 
     const weatherResult = await fromAsyncThrowable(
@@ -110,12 +102,7 @@ export const command = <Command>{
         },
       }).json,
       (e) => `Failed to fetch weather data: ${String(e)}`,
-    )().andThen((json) => {
-      const parsed = weatherSchema.safeParse(json);
-      return parsed.success
-        ? okAsync(parsed.data)
-        : errAsync(parsed.error.message);
-    });
+    )().andThen(arkToResult(Weather));
     if (weatherResult.isErr())
       return await sendError(intr, weatherResult.error);
     const weather = weatherResult.value;
@@ -158,7 +145,7 @@ export const command = <Command>{
               **Ground level:** ${weather.main.grnd_level} hPa
               ## :cloud: Weather
               **Main:** ${weather.weather[0]?.main}
-              **Description:** ${v.titleCase(weather.weather[0]?.description)}
+              **Description:** ${weather.weather[0]?.description}
               ## :dash: Wind
               **Speed:** ${weather.wind.speed} m/s
               **Direction:** ${weather.wind.deg}º

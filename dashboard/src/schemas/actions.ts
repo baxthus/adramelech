@@ -1,6 +1,6 @@
-import z from 'zod';
+import { type } from 'arktype';
 
-export const defaultGetActionsSchema = z.object({
-  search: z.string().optional(),
-  page: z.number().int().positive().default(1),
+export const DefaultGetActions = type({
+  search: 'string?',
+  page: 'number.integer > 0 = 1',
 });

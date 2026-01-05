@@ -1,12 +1,13 @@
 import type { CustomClient } from '.';
-import { commandSchema, type Command } from '~/types/command';
-import { componentSchema } from '~/types/component';
-import { eventSchema } from '~/types/event';
-import { modalSchema } from '~/types/modal';
 import logger from '~/logger';
 import type { ClientEvents } from 'discord.js';
 import path from 'path';
 import findRecursively from '~/utils/findRecursively';
+import { Command } from './types/command';
+import { Event } from './types/event';
+import { Component } from './types/component';
+import { Modal } from './types/modal';
+import { ArkErrors } from 'arktype';
 
 // Be aware that this way of doing things allows for loading anything from any folder
 // Please respect the structure of the folders
@@ -15,24 +16,23 @@ import findRecursively from '~/utils/findRecursively';
 const FOLDERS_TO_LOAD = ['commands', 'events'];
 
 const EXPORT_TYPES = {
-  command: { singular: 'command', plural: 'commands', schema: commandSchema },
-  event: { singular: 'event', plural: 'events', schema: eventSchema },
+  command: { singular: 'command', plural: 'commands', schema: Command },
+  event: { singular: 'event', plural: 'events', schema: Event },
   component: {
     singular: 'component',
     plural: 'components',
-    schema: componentSchema,
+    schema: Component,
   },
-  modal: { singular: 'modal', plural: 'modals', schema: modalSchema },
+  modal: { singular: 'modal', plural: 'modals', schema: Modal },
 } as const;
 
 function addCommand(client: CustomClient, rawCommand: unknown, file: string) {
   if (rawCommand === null) return;
-  const result = commandSchema.safeParse(rawCommand);
-  if (!result.success) {
-    logger.error(`Invalid command file: ${file}`, result.error.issues);
+  const command = Command(rawCommand);
+  if (command instanceof ArkErrors) {
+    logger.error(`Invalid command file: ${file}`, command.summary);
     return;
   }
-  const command = result.data as Command;
   if (client.commands.has(command.data.name)) {
     logger.error(
       `Duplicate command name ${command.data.name} in ${file}. Overwriting`,
@@ -48,12 +48,11 @@ function registerEvent(
   file: string,
 ): void {
   if (rawEvent === null) return;
-  const result = eventSchema.safeParse(rawEvent);
-  if (!result.success) {
-    logger.error(`Invalid event file: ${file}`, result.error.issues);
+  const event = Event(rawEvent);
+  if (event instanceof ArkErrors) {
+    logger.error(`Invalid event file: ${file}`, event.summary);
     return;
   }
-  const event = result.data;
   // Use rawEvent so we bypass the type check
   const eventHandler = (...args: unknown[]) => rawEvent.execute(...args);
   if (event.once) {
@@ -69,12 +68,11 @@ function addComponent(
   file: string,
 ) {
   if (rawComponent === null) return;
-  const result = componentSchema.safeParse(rawComponent);
-  if (!result.success) {
-    logger.error(`Invalid component file: ${file}`, result.error.issues);
+  const component = Component(rawComponent);
+  if (component instanceof ArkErrors) {
+    logger.error(`Invalid component file: ${file}`, component.summary);
     return;
   }
-  const component = result.data;
   if (client.components.has(component.customId)) {
     logger.error(
       `Duplicate component id ${component.customId} in ${file}. Overwriting`,
@@ -85,12 +83,11 @@ function addComponent(
 
 function addModal(client: CustomClient, rawModal: unknown, file: string) {
   if (rawModal === null) return;
-  const result = modalSchema.safeParse(rawModal);
-  if (!result.success) {
-    logger.error(`Invalid modal file: ${file}`, result.error.issues);
+  const modal = Modal(rawModal);
+  if (modal instanceof ArkErrors) {
+    logger.error(`Invalid modal file: ${file}`, modal.summary);
     return;
   }
-  const modal = result.data;
   if (client.modals.has(modal.customId)) {
     logger.error(
       `Duplicate modal id ${modal.customId} in ${file}. Overwriting`,

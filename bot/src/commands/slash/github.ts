@@ -9,75 +9,72 @@ import {
 } from 'discord.js';
 import ky from 'ky';
 import v from 'voca';
-import z from 'zod';
 import {
   executeCommandFromTree,
-  type Command,
   type CommandExecutors,
+  type CommandInfer,
 } from '~/types/command';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
 import { sendError } from '~/utils/sendError';
-import { errAsync, okAsync, ResultAsync } from 'neverthrow';
+import { okAsync, ResultAsync } from 'neverthrow';
+import { type, type Type } from 'arktype';
+import { arkToResult } from 'utils/validation';
 
 const BASE_URL = 'https://api.github.com';
 
-const repositorySchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  html_url: z.url(),
-  description: z.string().nullish(),
-  fork: z.boolean(),
-  language: z.string().nullish(),
-  stargazers_count: z.number(),
-  watchers_count: z.number(),
-  forks_count: z.number(),
-  owner: z.object({
-    id: z.number(),
-    login: z.string(),
-    type: z.string(),
-    avatar_url: z.url(),
-  }),
-  license: z
-    .object({
-      key: z.string(),
-    })
-    .nullish(),
+const Repository = type({
+  id: 'number',
+  name: 'string',
+  html_url: 'string.url',
+  description: 'string | null',
+  fork: 'boolean',
+  language: 'string | null',
+  stargazers_count: 'number',
+  watchers_count: 'number',
+  forks_count: 'number',
+  owner: {
+    id: 'number',
+    login: 'string',
+    type: 'string',
+    avatar_url: 'string.url',
+  },
+  license: type({
+    key: 'string',
+  }).or('null'),
 });
 
-const licenseSchema = z.object({
-  name: z.string(),
-  html_url: z.url(),
-  permissions: z.array(z.string()),
-  conditions: z.array(z.string()),
-  limitations: z.array(z.string()),
+const License = type({
+  name: 'string.capitalize',
+  html_url: 'string.url',
+  permissions: 'string[]',
+  conditions: 'string[]',
+  limitations: 'string[]',
 });
 
-const userSchema = z.object({
-  id: z.number(),
-  login: z.string(),
-  type: z.string(),
-  name: z.string().nullish(),
-  company: z.string().nullish(),
-  blog: z.string().nullish(),
-  location: z.string().nullish(),
-  bio: z.string().nullish(),
-  public_repos: z.number(),
-  public_gists: z.number(),
-  followers: z.number(),
-  following: z.number(),
-  avatar_url: z.url(),
-  html_url: z.url(),
+const User = type({
+  id: 'number',
+  login: 'string',
+  type: 'string',
+  name: 'string | null',
+  company: 'string | null',
+  blog: 'string | null',
+  location: 'string | null',
+  bio: 'string | null',
+  public_repos: 'number',
+  public_gists: 'number',
+  followers: 'number',
+  following: 'number',
+  avatar_url: 'string.url',
+  html_url: 'string.url',
 });
 
-const socialsSchema = z.array(
-  z.object({
-    provider: z.string().transform((value) => v.titleCase(value)),
-    url: z.url(),
-  }),
-);
+const Socials = type({
+  provider: 'string.capitalize',
+  url: 'string.url',
+}).array();
 
-export const command = <Command>{
+export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
     .setName('github')
     .setDescription('Get GitHub information')
@@ -127,10 +124,7 @@ async function repo(intr: ChatInputCommandInteraction) {
   const user = intr.options.getString('user', true);
   const repo = intr.options.getString('repo', true);
 
-  const response = await fetchGitHubData(
-    `/repos/${user}/${repo}`,
-    repositorySchema,
-  );
+  const response = await fetchGitHubData(`/repos/${user}/${repo}`, Repository);
   if (response.isErr()) return await sendError(intr, response.error);
   const data = response.value;
 
@@ -240,8 +234,8 @@ async function user(intr: ChatInputCommandInteraction) {
   const username = intr.options.getString('user', true);
 
   const [userResult, socialsResult] = await Promise.all([
-    fetchGitHubData(`/users/${username}`, userSchema),
-    fetchGitHubData(`/users/${username}/social_accounts`, socialsSchema),
+    fetchGitHubData(`/users/${username}`, User),
+    fetchGitHubData(`/users/${username}/social_accounts`, Socials),
   ]);
 
   if (userResult.isErr()) return await sendError(intr, userResult.error);
@@ -343,21 +337,16 @@ async function user(intr: ChatInputCommandInteraction) {
   });
 }
 
-const fetchGitHubData = <T>(
+const fetchGitHubData = <T extends Type>(
   endpoint: string,
-  schema: z.ZodType<T>,
-): ResultAsync<T, string> =>
+  schema: T,
+): ResultAsync<T['infer'], string> =>
   ResultAsync.fromThrowable(
     ky.get(BASE_URL + endpoint, {
       headers: { 'User-Agent': config.USER_AGENT },
     }).json,
     (e) => `Failed to fetch data from GitHub:\n${String(e)}`,
-  )().andThen((response) => {
-    const parsed = schema.safeParse(response);
-    return parsed.success
-      ? okAsync(parsed.data)
-      : errAsync(parsed.error.message);
-  });
+  )().andThen(arkToResult(schema));
 
 const getLicenseInfo = (
   key: string,
@@ -369,9 +358,9 @@ const getLicenseInfo = (
   string
 > => {
   if (key === 'other') return okAsync({ content: 'Other', html_url: '' });
-  return fetchGitHubData(`/licenses/${key}`, licenseSchema).map((result) => ({
+  return fetchGitHubData(`/licenses/${key}`, License).map((result) => ({
     content: stripIndents`
-      **Name:** ${v.titleCase(result.name)}
+      **Name:** ${result.name}
       **Permissions:** ${result.permissions.join(', ')}
       **Conditions:** ${result.conditions.join(', ')}
       **Limitations:** ${result.limitations.join(', ')}

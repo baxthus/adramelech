@@ -11,9 +11,9 @@ import {
   type UserContextMenuCommandInteraction,
 } from 'discord.js';
 import config from '~/config';
-import type { Command } from '~/types/command';
+import type { CommandInfer } from '~/types/command';
 
-export const commands = <Array<Command>>[
+export const commands = <Array<CommandInfer>>[
   {
     data: new SlashCommandBuilder()
       .setName('avatar')

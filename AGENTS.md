@@ -13,10 +13,10 @@
 - **Naming**: camelCase files, PascalCase components/types, camelCase functions
 
 ## Patterns
-- **Error handling**: Use `Result<T, E>` class with `Result.success(data)`/`Result.failure(error)`, check with `.isSuccess()`/`.isFailure()`, access via `.data`/`.error` or `.unwrap()` methods. Zod `.safeParse()` for validation
+- **Error handling**: Use `Result<T, E>` class with `Result.success(data)`/`Result.failure(error)`, check with `.isSuccess()`/`.isFailure()`, access via `.data`/`.error` or `.unwrap()` methods. Arktype for validation
 - **Bot exports**: `export const command = <Command>{...}`, same for `event`, `component`
 - **Dashboard**: Server Actions with `'use server'`, `cn()` for class merging
-- **Database**: Drizzle ORM with NanoID keys, schema in `database/src/schema.ts`, Zod validations in `database/src/validations.ts`
+- **Database**: Drizzle ORM with NanoID keys, schema in `database/src/schema.ts`, Arktype validations in `database/src/validations.ts`
 - **Utils**: Shared utilities, import via `import { fn } from 'utils/module'`
 
 ## Tech Stack

@@ -1,33 +1,34 @@
 'use server';
 
-import { defaultGetActionsSchema } from '@/schemas/actions';
+import { DefaultGetActions } from '@/schemas/actions';
 import { protect } from '@/utils/auth';
+import { ArkErrors } from 'arktype';
 import { db } from 'database';
 import { feedbacks } from 'database/schema';
-import type { FeedbackStatus } from 'database/types';
-import { feedbackStatusSchema } from 'database/validations';
 import { desc, eq, ilike, or, type SQL } from 'drizzle-orm';
-import z from 'zod';
+import { NanoID } from 'utils/types';
+import { FeedbackStatus } from 'database/validations';
+import type { FeedbackStatusInfer } from 'database/types';
 
 const pageSize = 10;
 
 export async function getFeedbacks(search?: string, page: number = 1) {
   await protect();
 
-  const parsed = defaultGetActionsSchema.parse({ search, page });
+  const parsed = DefaultGetActions.assert({ search, page });
 
   let where: SQL | undefined;
   if (parsed.search) {
-    const isNanoid = z.nanoid().safeParse(parsed.search).success;
-    const isStatus = feedbackStatusSchema.safeParse(parsed.search).success;
+    const isNanoId = !(NanoID(parsed.search) instanceof ArkErrors);
+    const isStatus = !(FeedbackStatus(parsed.search) instanceof ArkErrors);
 
-    if (isNanoid)
+    if (isNanoId)
       where = or(
         eq(feedbacks.id, parsed.search),
         eq(feedbacks.profileId, parsed.search),
       );
     else if (isStatus)
-      where = eq(feedbacks.status, parsed.search as FeedbackStatus);
+      where = eq(feedbacks.status, parsed.search as FeedbackStatusInfer);
     else where = ilike(feedbacks.title, `%${parsed.search}%`);
   }
 
@@ -58,7 +59,7 @@ export async function getFeedbacks(search?: string, page: number = 1) {
 export async function deleteFeedback(id: string) {
   await protect();
 
-  z.nanoid().parse(id);
+  NanoID.assert(id);
 
   const result = await db.delete(feedbacks).where(eq(feedbacks.id, id));
   if (!result.rowCount) throw new Error('Feedback not found');

@@ -1,5 +1,4 @@
-import z from 'zod';
-import type { Command } from '~/types/command.ts';
+import type { CommandInfer } from '~/types/command.ts';
 import {
   ButtonStyle,
   type ChatInputCommandInteraction,
@@ -9,32 +8,34 @@ import {
 } from 'discord.js';
 import { sendError } from '~/utils/sendError.ts';
 import ky from 'ky';
-import { errAsync, fromAsyncThrowable, okAsync } from 'neverthrow';
+import { fromAsyncThrowable } from 'neverthrow';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
+import { type } from 'arktype';
+import { arkToResult } from 'utils/validation';
 
-const cepSchema = z.string().regex(/^\d{5}-?\d{3}$/);
+const CEP = type('string & /^\\d{5}-?\\d{3}$/');
 
-const schema = z.object({
-  name: z.string().optional(),
-  message: z.string().optional(),
-  type: z.string().optional(),
-  cep: cepSchema,
-  state: z.string().length(2),
-  city: z.string(),
-  neighborhood: z.string(),
-  street: z.string(),
-  service: z.string(),
-  location: z.object({
-    type: z.string(),
-    coordinates: z.object({
-      latitude: z.coerce.number().optional(),
-      longitude: z.coerce.number().optional(),
-    }),
-  }),
+const Search = type({
+  name: 'string?',
+  message: 'string?',
+  type: 'string?',
+  cep: CEP,
+  state: 'string == 2',
+  city: 'string',
+  neighborhood: 'string',
+  street: 'string',
+  service: 'string',
+  location: {
+    type: 'string',
+    coordinates: {
+      latitude: 'string.numeric.parse?',
+      longitude: 'string.numeric.parse?',
+    },
+  },
 });
 
-export const command = <Command>{
+export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
     .setName('cep-search')
     .setDescription('Search for a CEP (Brazilian ZIP code)')
@@ -50,18 +51,13 @@ export const command = <Command>{
     await intr.deferReply();
     const cep = intr.options.getString('cep', true);
 
-    if (!cepSchema.safeParse(cep).success)
+    if (CEP(cep) instanceof type.errors)
       return await sendError(intr, 'Invalid CEP format');
 
     const result = await fromAsyncThrowable(
       ky(`https://brasilapi.com.br/api/cep/v2/${cep}`).json,
       (e) => `Failed to fetch CEP data:\n${String(e)}`,
-    )().andThen((response) => {
-      const parsed = schema.safeParse(response);
-      return parsed.success
-        ? okAsync(parsed.data)
-        : errAsync(parsed.error.message);
-    });
+    )().andThen(arkToResult(Search));
     if (result.isErr()) return await sendError(intr, result.error);
     const data = result.value;
 

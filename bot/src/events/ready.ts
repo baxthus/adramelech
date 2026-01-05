@@ -1,11 +1,11 @@
 import { ActivityType, Events, version } from 'discord.js';
-import type { Event } from '~/types/event';
+import type { EventInfer } from '~/types/event';
 import type { CustomClient } from '~';
 import logger from '~/logger';
 import kleur from 'kleur';
 import { testConnection } from 'database/utils';
 
-export const event = <Event>{
+export const event = <EventInfer>{
   name: Events.ClientReady,
   once: true,
   async execute(client: CustomClient) {

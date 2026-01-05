@@ -1,9 +1,9 @@
-import z from 'zod/v3';
 import { feedbackStatusEnum } from './schema';
+import { type } from 'arktype';
 
-export const phraseCreateSchema = z.object({
-  content: z.string().min(1, 'Content cannot be empty'),
-  source: z.string().min(1, 'Source cannot be empty'),
+export const PhraseCreate = type({
+  content: 'string > 0',
+  source: 'string > 0',
 });
 
-export const feedbackStatusSchema = z.enum(feedbackStatusEnum.enumValues);
+export const FeedbackStatus = type.enumerated(...feedbackStatusEnum.enumValues);

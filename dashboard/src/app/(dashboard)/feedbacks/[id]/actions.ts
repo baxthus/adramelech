@@ -3,16 +3,17 @@
 import { protect } from '@/utils/auth';
 import { db } from 'database';
 import { feedbacks } from 'database/schema';
-import { FeedbackStatus } from 'database/types';
-import { feedbackStatusSchema } from 'database/validations';
 import { eq } from 'drizzle-orm';
-import z from 'zod';
 import { feedbackFinalStates, statusTransitions } from './logic';
+import { type } from 'arktype';
+import { NanoID } from 'utils/types';
+import { FeedbackStatus } from 'database/validations';
+import type { FeedbackStatusInfer } from 'database/types';
 
 export async function getFeedback(id: string) {
   await protect();
 
-  z.nanoid().parse(id);
+  NanoID.assert(id);
 
   const feedback = await db.query.feedbacks.findFirst({
     where: eq(feedbacks.id, id),
@@ -22,11 +23,11 @@ export async function getFeedback(id: string) {
   return feedback;
 }
 
-export async function setStatus(id: string, status: FeedbackStatus) {
+export async function setStatus(id: string, status: FeedbackStatusInfer) {
   await protect();
 
-  z.nanoid().parse(id);
-  feedbackStatusSchema.parse(status);
+  NanoID.assert(id);
+  FeedbackStatus.assert(status);
 
   const feedback = await db.query.feedbacks.findFirst({
     columns: { status: true },
@@ -49,8 +50,8 @@ export async function setStatus(id: string, status: FeedbackStatus) {
 export async function setResponse(id: string, response: string) {
   await protect();
 
-  z.nanoid().parse(id);
-  z.string().min(1).parse(response);
+  NanoID.assert(id);
+  type('string > 0').assert(response);
 
   const feedback = await db.query.feedbacks.findFirst({
     columns: { status: true },

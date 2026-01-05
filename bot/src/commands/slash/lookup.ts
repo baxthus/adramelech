@@ -3,41 +3,45 @@ import {
   ComponentType,
   MessageFlags,
   SlashCommandBuilder,
+  time,
+  TimestampStyles,
   type ChatInputCommandInteraction,
 } from 'discord.js';
 import ky from 'ky';
-import z from 'zod';
-import type { Command } from '~/types/command';
+import type { CommandInfer } from '~/types/command';
 import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
-import { errAsync, fromAsyncThrowable, ok, okAsync } from 'neverthrow';
+import { err, fromAsyncThrowable, ok } from 'neverthrow';
+import { type } from 'arktype';
+import { toUnixTimestamp } from 'utils/date';
+import { arkToResult } from 'utils/validation';
 
-const schema = z.object({
-  success: z.boolean(),
-  type: z.union([z.literal('IPv4'), z.literal('IPv6')]),
-  continent: z.string(),
-  country: z.string(),
-  country_code: z.string().length(2),
-  region: z.string(),
-  city: z.string(),
-  latitude: z.number(),
-  longitude: z.number(),
-  postal: z.string(),
-  connection: z.object({
-    asn: z.number(),
-    org: z.string(),
-    isp: z.string(),
-    domain: z.string(),
-  }),
-  timezone: z.object({
-    id: z.string(),
-    offset: z.number(),
-    utc: z.string(),
-  }),
+const Lookup = type({
+  success: 'boolean',
+  type: '"IPv4" | "IPv6"',
+  continent: 'string',
+  country: 'string',
+  country_code: 'string == 2',
+  region: 'string',
+  city: 'string',
+  latitude: 'number',
+  longitude: 'number',
+  postal: 'string',
+  connection: {
+    asn: 'number',
+    org: 'string',
+    isp: 'string',
+    domain: 'string',
+  },
+  timezone: {
+    id: 'string',
+    utc: 'string',
+    current_time: 'string.date.parse',
+  },
 });
 
-export const command = <Command>{
+export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
     .setName('lookup')
     .setDescription('Lookup a domain or IP address')
@@ -54,9 +58,10 @@ export const command = <Command>{
 
     const target = intr.options.getString('target', true);
 
-    const ip = z.union([z.ipv4(), z.ipv6()]).safeParse(target).success
-      ? ok(target)
-      : await getIpFromDomain(target);
+    const ip =
+      type('string.ip')(target) instanceof type.errors
+        ? await getIpFromDomain(target)
+        : ok(target);
     if (ip.isErr()) return await sendError(intr, ip.error);
 
     const response = await fromAsyncThrowable(
@@ -69,12 +74,7 @@ export const command = <Command>{
         error instanceof Error
           ? error.message
           : 'Failed to fetch IP information',
-    )().andThen((json) => {
-      const parsed = schema.safeParse(json);
-      return parsed.success
-        ? okAsync(parsed.data)
-        : errAsync('Failed to parse response');
-    });
+    )().andThen(arkToResult(Lookup));
     if (response.isErr()) return await sendError(intr, response.error);
     const data = response.value;
 
@@ -141,8 +141,8 @@ export const command = <Command>{
               content: stripIndents`
               ## Timezone
               **ID:** ${data.timezone.id}
-              **Offset:** ${data.timezone.offset}
               **UTC:** ${data.timezone.utc}
+              **Current Time:** ${time(toUnixTimestamp(data.timezone.current_time), TimestampStyles.ShortDateTime)}
               `,
             },
             {
@@ -162,8 +162,6 @@ const getIpFromDomain = (domain: string) =>
   )().andThen((text) => {
     const res = text.trim();
     if (!res || res.startsWith('No'))
-      return errAsync('Failed to get IP from domain');
-    return okAsync(
-      res.includes(',') ? res.substring(0, res.indexOf(',')) : res,
-    );
+      return err('Failed to get IP from domain');
+    return ok(res.includes(',') ? res.substring(0, res.indexOf(',')) : res);
   });

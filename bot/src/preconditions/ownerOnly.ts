@@ -1,7 +1,7 @@
-import type { Precondition } from '~/types/precondition';
+import { Precondition } from '~/types/precondition';
 import { sendError } from '~/utils/sendError';
 
-const execute: Precondition = async (intr) => {
+export default Precondition.from(async (intr) => {
   const application = await intr.client.application.fetch();
   const owner = await intr.client.users.fetch(application.owner!.id);
   if (intr.user.id !== owner.id) {
@@ -12,6 +12,4 @@ const execute: Precondition = async (intr) => {
     return false;
   }
   return true;
-};
-
-export default execute;
+});

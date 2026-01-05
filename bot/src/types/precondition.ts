@@ -1,3 +1,4 @@
+import { type } from 'arktype';
 import type {
   AutocompleteInteraction,
   CommandInteraction,
@@ -5,10 +6,13 @@ import type {
 } from 'discord.js';
 import type { ComponentInteraction } from '~/events/interactionCreate';
 
-export type Precondition = (
-  interaction:
-    | CommandInteraction
-    | ComponentInteraction
-    | ModalSubmitInteraction
-    | AutocompleteInteraction, // Controversial
-) => Promise<boolean>;
+export const Precondition =
+  type('Function').as<
+    (
+      interaction:
+        | CommandInteraction
+        | ComponentInteraction
+        | ModalSubmitInteraction
+        | AutocompleteInteraction,
+    ) => Promise<boolean>
+  >();

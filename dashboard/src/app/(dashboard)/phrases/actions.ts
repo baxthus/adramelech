@@ -1,25 +1,26 @@
 'use server';
 
-import { defaultGetActionsSchema } from '@/schemas/actions';
+import { DefaultGetActions } from '@/schemas/actions';
 import { protect } from '@/utils/auth';
+import { ArkErrors } from 'arktype';
 import { db } from 'database';
 import { phrases } from 'database/schema';
-import type { PhraseCreate } from 'database/types';
-import { phraseCreateSchema } from 'database/validations';
+import type { PhraseCreateInfer } from 'database/types';
+import { PhraseCreate } from 'database/validations';
 import { desc, eq, ilike, or, type SQL } from 'drizzle-orm';
-import z from 'zod';
+import { NanoID } from 'utils/types';
 
 const pageSize = 10;
 
 export async function getPhrases(search?: string, page: number = 1) {
   await protect();
 
-  const parsed = defaultGetActionsSchema.parse({ search, page });
+  const parsed = DefaultGetActions.assert({ search, page });
 
   let where: SQL | undefined;
   if (parsed.search) {
-    const isNanoid = z.nanoid().safeParse(parsed.search).success;
-    if (isNanoid) where = eq(phrases.id, parsed.search);
+    const isNanoId = !(NanoID(parsed.search) instanceof ArkErrors);
+    if (isNanoId) where = eq(phrases.id, parsed.search);
     else
       where = or(
         ilike(phrases.content, `%${parsed.search}%`),
@@ -47,10 +48,10 @@ export async function getPhrases(search?: string, page: number = 1) {
   };
 }
 
-export async function createPhrase(phrase: PhraseCreate) {
+export async function createPhrase(phrase: PhraseCreateInfer) {
   await protect();
 
-  const data = phraseCreateSchema.parse(phrase);
+  const data = PhraseCreate.assert(phrase);
 
   await db.insert(phrases).values(data);
 }
@@ -58,7 +59,7 @@ export async function createPhrase(phrase: PhraseCreate) {
 export async function deletePhrase(id: string) {
   await protect();
 
-  z.nanoid().parse(id);
+  NanoID.assert(id);
 
   const result = await db.delete(phrases).where(eq(phrases.id, id));
   if (!result.rowCount) throw new Error('Phrase not found');

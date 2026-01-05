@@ -7,11 +7,11 @@ import {
   TimestampStyles,
 } from 'discord.js';
 import type { CustomClient } from '~/index';
-import type { Command } from '~/types/command';
+import type { CommandInfer } from '~/types/command';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
 
-export const command = <Command>{
+export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
     .setName('about')
     .setDescription('About the bot'),

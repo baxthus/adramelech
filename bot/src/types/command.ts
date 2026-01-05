@@ -1,31 +1,28 @@
 import {
+  ContextMenuCommandBuilder,
+  SlashCommandBuilder,
   type AutocompleteInteraction,
   type ChatInputCommandInteraction,
   type CommandInteraction,
-  type ContextMenuCommandBuilder,
-  type SlashCommandBuilder,
 } from 'discord.js';
-import z from 'zod';
-import type { Precondition } from './precondition';
+import { Precondition } from './precondition';
 import { sendError } from '~/utils/sendError';
+import { type } from 'arktype';
 
-export const commandSchema = z.object({
-  data: z.custom<SlashCommandBuilder | ContextMenuCommandBuilder>(),
-  uses: z.array(z.string()).optional(),
-  cooldown: z.union([z.number(), z.boolean()]).optional(),
-  preconditions: z.array(z.custom<Precondition>()).optional(),
-  execute: z.function({
-    input: [z.custom<CommandInteraction>()],
-    output: z.promise(z.void()),
-  }),
-  autocomplete: z
-    .function({
-      input: [z.custom<AutocompleteInteraction>()],
-      output: z.promise(z.void()),
-    })
+export const Command = type({
+  data: type.or(
+    type.instanceOf(SlashCommandBuilder),
+    type.instanceOf(ContextMenuCommandBuilder),
+  ),
+  uses: 'string[]?',
+  cooldown: 'number | boolean ?',
+  preconditions: Precondition.array().optional(),
+  execute: type('Function').as<(intr: CommandInteraction) => Promise<void>>(),
+  autocomplete: type('Function')
+    .as<(intr: AutocompleteInteraction) => Promise<void>>()
     .optional(),
 });
-export type Command = z.infer<typeof commandSchema>;
+export type CommandInfer = typeof Command.infer;
 
 export type SubcommandExecutor = (
   intr: ChatInputCommandInteraction,

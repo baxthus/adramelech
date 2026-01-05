@@ -6,38 +6,42 @@ import {
   type TextChannel,
 } from 'discord.js';
 import ky from 'ky';
-import z from 'zod';
 import {
   executeCommandFromTree,
-  type Command,
   type CommandGroupExecutors,
+  type CommandInfer,
 } from '~/types/command';
 import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import StringBuilder from '~/tools/StringBuilder';
-import { fromAsyncThrowable, okAsync, errAsync } from 'neverthrow';
+import { fromAsyncThrowable } from 'neverthrow';
+import { type } from 'arktype';
+import { capitalize } from 'utils/text';
+import { arkToResult } from 'utils/validation';
 
-enum AnimeImageAgeRating {
-  Safe = 'safe',
-  Suggestive = 'suggestive',
-  Borderline = 'borderline',
-  Explicit = 'explicit',
-}
+const AnimeImageRatings = [
+  'safe',
+  'suggestive',
+  'borderline',
+  'explicit',
+] as const;
+const AnimeImageAgeRating = type
+  .enumerated(...AnimeImageRatings)
+  .or('null')
+  .pipe((v) => v || 'safe');
 
-const animeImageSchema = z
-  .array(
-    z.object({
-      url: z.url(),
-      source_url: z.url().nullish(),
-    }),
-  )
-  .length(1);
+const AnimeImages = type({
+  url: 'string.url',
+  source_url: 'string.url | null',
+})
+  .array()
+  .exactlyLength(1);
 
-const nekoImageSchema = z.object({
-  url: z.url(),
+const NekoImage = type({
+  url: 'string.url',
 });
 
-export const command = <Command>{
+export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
     .setName('anime')
     .setDescription('Anime related commands')
@@ -54,9 +58,9 @@ export const command = <Command>{
                 .setName('rating')
                 .setDescription('The rating of the image')
                 .setChoices(
-                  Object.entries(AnimeImageAgeRating).map(([key, value]) => ({
-                    name: key,
-                    value,
+                  AnimeImageRatings.map((rating) => ({
+                    name: capitalize(rating),
+                    value: rating,
                   })),
                 ),
             ),
@@ -81,11 +85,8 @@ const executors: CommandGroupExecutors = {
 async function animeImage(intr: ChatInputCommandInteraction) {
   await intr.deferReply();
 
-  const rating =
-    intr.options.getString('rating', false) ?? AnimeImageAgeRating.Safe;
-  if (
-    !Object.values(AnimeImageAgeRating).includes(rating as AnimeImageAgeRating)
-  )
+  const rating = AnimeImageAgeRating(intr.options.getString('rating'));
+  if (rating instanceof type.errors)
     return await sendError(intr, 'Invalid rating');
 
   if (
@@ -108,12 +109,7 @@ async function animeImage(intr: ChatInputCommandInteraction) {
       },
     }).json,
     (e) => `Failed to fetch image:\n${String(e)}`,
-  )().andThen((response) => {
-    const parsed = animeImageSchema.safeParse(response);
-    return parsed.success
-      ? okAsync(parsed.data)
-      : errAsync(parsed.error.message);
-  });
+  )().andThen(arkToResult(AnimeImages));
   if (result.isErr()) return await sendError(intr, result.error);
 
   const footer = new StringBuilder();
@@ -154,12 +150,7 @@ async function nekoImage(intr: ChatInputCommandInteraction) {
   const result = await fromAsyncThrowable(
     ky.get('https://nekos.life/api/v2/img/neko').json,
     (e) => `Failed to fetch image:\n${String(e)}`,
-  )().andThen((response) => {
-    const parsed = nekoImageSchema.safeParse(response);
-    return parsed.success
-      ? okAsync(parsed.data)
-      : errAsync(parsed.error.message);
-  });
+  )().andThen(arkToResult(NekoImage));
   if (result.isErr()) return await sendError(intr, result.error);
 
   await intr.followUp({

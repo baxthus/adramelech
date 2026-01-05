@@ -1,12 +1,12 @@
 import { ComponentType, MessageFlags, SlashCommandBuilder } from 'discord.js';
-import type { Command } from '~/types/command';
+import type { CommandInfer } from '~/types/command';
 import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import { db } from 'database';
 import { phrases } from 'database/schema';
 import { sql } from 'drizzle-orm';
 
-export const command = <Command>{
+export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
     .setName('phrase')
     .setDescription('Get a random phrase'),

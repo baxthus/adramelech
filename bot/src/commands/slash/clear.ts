@@ -10,13 +10,13 @@ import {
   type TextChannel,
 } from 'discord.js';
 import StringBuilder from '~/tools/StringBuilder';
-import type { Command } from '~/types/command';
+import type { CommandInfer } from '~/types/command';
 import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import { toUnixTimestamp } from 'utils/date';
 import { fromAsyncThrowable } from 'neverthrow';
 
-export const command = <Command>{
+export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
     .setName('clear')
     .setDescription('Clears the chat')
