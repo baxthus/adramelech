@@ -16,10 +16,7 @@ import {
 } from '~/types/command';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
-import { sendError } from '~/utils/sendError';
-import { okAsync, ResultAsync } from 'neverthrow';
 import { type, type Type } from 'arktype';
-import { arkToResult } from 'utils/validation';
 
 const BASE_URL = 'https://api.github.com';
 
@@ -124,9 +121,7 @@ async function repo(intr: ChatInputCommandInteraction) {
   const user = intr.options.getString('user', true);
   const repo = intr.options.getString('repo', true);
 
-  const response = await fetchGitHubData(`/repos/${user}/${repo}`, Repository);
-  if (response.isErr()) return await sendError(intr, response.error);
-  const data = response.value;
+  const data = await fetchGitHubData(`/repos/${user}/${repo}`, Repository);
 
   const container = new ContainerBuilder({
     accent_color: config.EMBED_COLOR,
@@ -194,28 +189,26 @@ async function repo(intr: ChatInputCommandInteraction) {
     ],
   });
 
-  if (response.value.license) {
-    const licenseResult = await getLicenseInfo(response.value.license.key);
-    if (licenseResult.isOk()) {
-      container.addSeparatorComponents({ type: ComponentType.Separator });
-      container.addTextDisplayComponents({
-        type: ComponentType.TextDisplay,
-        content: `## License\n${licenseResult.value.content}`,
-      });
+  if (data.license) {
+    const licenseData = await getLicenseInfo(data.license.key);
+    container.addSeparatorComponents({ type: ComponentType.Separator });
+    container.addTextDisplayComponents({
+      type: ComponentType.TextDisplay,
+      content: `## License\n${licenseData.content}`,
+    });
 
-      if (licenseResult.value.html_url) {
-        container.addActionRowComponents({
-          type: ComponentType.ActionRow,
-          components: [
-            {
-              type: ComponentType.Button,
-              style: ButtonStyle.Link,
-              label: 'License Page',
-              url: licenseResult.value.html_url,
-            },
-          ],
-        });
-      }
+    if (licenseData.html_url) {
+      container.addActionRowComponents({
+        type: ComponentType.ActionRow,
+        components: [
+          {
+            type: ComponentType.Button,
+            style: ButtonStyle.Link,
+            label: 'License Page',
+            url: licenseData.html_url,
+          },
+        ],
+      });
     }
   }
 
@@ -233,15 +226,10 @@ async function repo(intr: ChatInputCommandInteraction) {
 async function user(intr: ChatInputCommandInteraction) {
   const username = intr.options.getString('user', true);
 
-  const [userResult, socialsResult] = await Promise.all([
+  const [user, socials] = await Promise.all([
     fetchGitHubData(`/users/${username}`, User),
     fetchGitHubData(`/users/${username}/social_accounts`, Socials),
   ]);
-
-  if (userResult.isErr()) return await sendError(intr, userResult.error);
-  const user = userResult.value;
-
-  const socials = socialsResult.unwrapOr([]);
 
   const userActionRow: APIComponentInMessageActionRow[] = [
     {
@@ -340,25 +328,20 @@ async function user(intr: ChatInputCommandInteraction) {
 const fetchGitHubData = <T extends Type>(
   endpoint: string,
   schema: T,
-): ResultAsync<T['infer'], string> =>
-  ResultAsync.fromThrowable(
-    ky.get(BASE_URL + endpoint, {
+): Promise<T['infer']> =>
+  ky
+    .get(BASE_URL + endpoint, {
       headers: { 'User-Agent': config.USER_AGENT },
-    }).json,
-    (e) => `Failed to fetch data from GitHub:\n${String(e)}`,
-  )().andThen(arkToResult(schema));
+    })
+    .json()
+    .then(schema.assert);
 
-const getLicenseInfo = (
-  key: string,
-): ResultAsync<
-  {
-    content: string;
-    html_url: string;
-  },
-  string
-> => {
-  if (key === 'other') return okAsync({ content: 'Other', html_url: '' });
-  return fetchGitHubData(`/licenses/${key}`, License).map((result) => ({
+async function getLicenseInfo(key: string): Promise<{
+  content: string;
+  html_url: string;
+}> {
+  if (key === 'other') return { content: 'Other', html_url: '' };
+  return fetchGitHubData(`/licenses/${key}`, License).then((result) => ({
     content: stripIndents`
       **Name:** ${result.name}
       **Permissions:** ${result.permissions.join(', ')}
@@ -367,4 +350,4 @@ const getLicenseInfo = (
       `,
     html_url: result.html_url,
   }));
-};
+}

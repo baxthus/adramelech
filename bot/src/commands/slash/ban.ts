@@ -9,10 +9,10 @@ import {
   SlashCommandBuilder,
   userMention,
 } from 'discord.js';
-import { sendError } from '~/utils/sendError.ts';
 import config from '~/config.ts';
 import { stripIndents } from 'common-tags';
 import { fromAsyncThrowable } from 'neverthrow';
+import { ExpectedError } from '~/types/errors';
 
 export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
@@ -46,11 +46,11 @@ export const command = <CommandInfer>{
     const ephemeral = intr.options.getBoolean('ephemeral') ?? false;
 
     if (user.id === intr.user.id)
-      return await sendError(intr, "You can't ban yourself");
+      throw new ExpectedError("You can't ban yourself");
     if (user.id === intr.client.user.id)
-      return await sendError(intr, "You can't ban me OwO");
+      throw new ExpectedError("You can't ban me OwO");
     if (user.id === intr.guild?.ownerId)
-      return await sendError(intr, "You can't ban the server owner");
+      throw new ExpectedError("You can't ban the server owner");
 
     const member = intr.guild!.members.cache.get(user.id)!;
     const botMember = intr.guild!.members.cache.get(intr.client.user.id)!;
@@ -58,17 +58,12 @@ export const command = <CommandInfer>{
       member.roles.highest.comparePositionTo(botMember.roles.highest) >= 0 ||
       !member.bannable
     )
-      return await sendError(intr, "I can't ban this user");
+      throw new ExpectedError("I can't ban this user");
 
-    const banResult = await fromAsyncThrowable(
-      () =>
-        member.ban({
-          reason,
-          deleteMessageSeconds: pruneDays * 86400,
-        }),
-      (e) => `Failed to ban user:\n${String(e)}`,
-    )();
-    if (banResult.isErr()) return await sendError(intr, banResult.error);
+    await member.ban({
+      reason,
+      deleteMessageSeconds: pruneDays * 86400,
+    });
 
     await intr.reply({
       flags: ephemeral
@@ -100,36 +95,36 @@ export const command = <CommandInfer>{
       ],
     });
 
-    const notifyResult = await fromAsyncThrowable(
-      () =>
-        user.send({
-          flags: MessageFlags.IsComponentsV2,
-          components: [
-            {
-              type: ComponentType.Container,
-              accent_color: Colors.Red,
-              components: [
-                {
-                  type: ComponentType.TextDisplay,
-                  content: stripIndents`
+    const notifyResult = await fromAsyncThrowable(() =>
+      user.send({
+        flags: MessageFlags.IsComponentsV2,
+        components: [
+          {
+            type: ComponentType.Container,
+            accent_color: Colors.Red,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: stripIndents`
                   # You have been banned
                   ### Guild
                   \`\`\`${intr.guild?.name}\`\`\`
                   `,
-                },
-                {
-                  type: ComponentType.TextDisplay,
-                  content: stripIndents`
+              },
+              {
+                type: ComponentType.TextDisplay,
+                content: stripIndents`
                   ### Reason
                   \`\`\`${reason}\`\`\`
                   `,
-                },
-              ],
-            },
-          ],
-        }),
-      (e) => `Failed to notify the user about the ban:\n${String(e)}`,
+              },
+            ],
+          },
+        ],
+      }),
     )();
-    if (notifyResult.isErr()) return await sendError(intr, notifyResult.error);
+    // This one is expected because a lot of users have DMs disabled
+    if (notifyResult.isErr())
+      throw new ExpectedError('Failed to notify the user about the ban');
   },
 };

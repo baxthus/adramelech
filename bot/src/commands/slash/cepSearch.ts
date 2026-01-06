@@ -6,20 +6,15 @@ import {
   MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
-import { sendError } from '~/utils/sendError.ts';
 import ky from 'ky';
-import { fromAsyncThrowable } from 'neverthrow';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
 import { type } from 'arktype';
-import { arkToResult } from 'utils/validation';
+import { ExpectedError } from '~/types/errors';
 
 const CEP = type('string & /^\\d{5}-?\\d{3}$/');
 
 const Search = type({
-  name: 'string?',
-  message: 'string?',
-  type: 'string?',
   cep: CEP,
   state: 'string == 2',
   city: 'string',
@@ -52,17 +47,12 @@ export const command = <CommandInfer>{
     const cep = intr.options.getString('cep', true);
 
     if (CEP(cep) instanceof type.errors)
-      return await sendError(intr, 'Invalid CEP format');
+      throw new ExpectedError('Invalid CEP format');
 
-    const result = await fromAsyncThrowable(
-      ky(`https://brasilapi.com.br/api/cep/v2/${cep}`).json,
-      (e) => `Failed to fetch CEP data:\n${String(e)}`,
-    )().andThen(arkToResult(Search));
-    if (result.isErr()) return await sendError(intr, result.error);
-    const data = result.value;
-
-    if (data.name)
-      return await sendError(intr, JSON.stringify(data.name, null, 2));
+    const data = await ky
+      .get(`https://brasilapi.com.br/api/cep/v2/${cep}`)
+      .json()
+      .then(Search.assert);
 
     const mapsUrl = new URL('https://www.google.com/maps/search/');
     mapsUrl.searchParams.append('api', '1');

@@ -1,11 +1,8 @@
 import type { CommandInfer } from '~/types/command.ts';
 import { ComponentType, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import ky from 'ky';
-import { sendError } from '~/utils/sendError.ts';
 import config from '~/config.ts';
-import { fromAsyncThrowable } from 'neverthrow';
 import { type } from 'arktype';
-import { arkToResult } from 'utils/validation';
 
 const CatImages = type({
   url: 'string.url',
@@ -22,11 +19,10 @@ export const command = <CommandInfer>{
   async execute(intr) {
     await intr.deferReply();
 
-    const result = await fromAsyncThrowable(
-      ky('https://api.thecatapi.com/v1/images/search').json,
-      (e) => `Failed to fetch the cat image:\n${String(e)}`,
-    )().andThen(arkToResult(CatImages));
-    if (result.isErr()) return await sendError(intr, result.error);
+    const data = await ky
+      .get('https://api.thecatapi.com/v1/images/search')
+      .json()
+      .then(CatImages.assert);
 
     await intr.followUp({
       flags: MessageFlags.IsComponentsV2,
@@ -40,7 +36,7 @@ export const command = <CommandInfer>{
               items: [
                 {
                   media: {
-                    url: result.value[0]!.url,
+                    url: data[0]!.url,
                   },
                 },
               ],

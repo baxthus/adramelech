@@ -10,7 +10,6 @@ import {
   type CommandExecutors,
   type CommandInfer,
 } from '~/types/command';
-import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
 import v from 'voca';
@@ -21,6 +20,7 @@ import { feedbacks, profiles } from 'database/schema';
 import { db } from 'database';
 import { exists } from 'database/utils';
 import { toUnixTimestamp } from 'utils/date';
+import { ExpectedError } from '~/types/errors';
 
 export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
@@ -102,8 +102,7 @@ const executors: CommandExecutors = {
 
 async function createFeedback(intr: ChatInputCommandInteraction) {
   if (!(await exists(profiles, eq(profiles.discordId, intr.user.id))))
-    return await sendError(
-      intr,
+    throw new ExpectedError(
       'You need to register first using `/profile create` command',
     );
 
@@ -157,16 +156,13 @@ async function viewFeedback(intr: ChatInputCommandInteraction) {
     },
   });
   if (!profile)
-    return await sendError(
-      intr,
+    throw new ExpectedError(
       'You need to register first using `/profile create` command',
     );
+
   const feedback = profile.feedbacks[0];
   if (!feedback)
-    return await sendError(
-      intr,
-      'Feedback not found or does not belong to you',
-    );
+    throw new ExpectedError('Feedback not found or does not belong to you');
 
   await intr.followUp({
     flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -229,8 +225,7 @@ async function closeFeedback(intr: ChatInputCommandInteraction) {
     where: eq(profiles.discordId, intr.user.id),
   });
   if (!profile)
-    return await sendError(
-      intr,
+    throw new ExpectedError(
       'You need to register first using `/profile create` command',
     );
 
@@ -247,8 +242,7 @@ async function closeFeedback(intr: ChatInputCommandInteraction) {
       ),
     );
   if (!result.rowCount)
-    return await sendError(
-      intr,
+    throw new ExpectedError(
       'Failed to close feedback. It may not exist, not be open, or not belong to you',
     );
 
@@ -267,8 +261,7 @@ export const modal = <ModalInfer>{
       where: eq(profiles.discordId, intr.user.id),
     });
     if (!profile)
-      return await sendError(
-        intr,
+      throw new ExpectedError(
         'You need to register first using `/profile create` command',
       );
 

@@ -2,16 +2,15 @@ import {
   PermissionFlagsBits,
   SlashCommandBuilder,
   ComponentType,
+  TextChannel,
   TextInputStyle,
-  type TextChannel,
   MessageFlags,
   userMention,
 } from 'discord.js';
 import type { CommandInfer } from '~/types/command';
 import type { ModalInfer } from '~/types/modal';
-import { sendError } from '~/utils/sendError';
 import { UIBuilder } from '~/services/UIBuilder';
-import { fromAsyncThrowable } from 'neverthrow';
+import { ExpectedError } from '~/types/errors';
 
 export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
@@ -44,24 +43,31 @@ export const modal = <ModalInfer>{
   async execute(intr) {
     const message = intr.fields.getTextInputValue('message');
 
-    const result = await fromAsyncThrowable(
-      () =>
-        (intr.channel as TextChannel).send({
-          flags: MessageFlags.IsComponentsV2,
-          components: [
-            {
-              type: ComponentType.TextDisplay,
-              content: `\`\`\`${message}\`\`\``,
-            },
-            {
-              type: ComponentType.TextDisplay,
-              content: `> ${userMention(intr.user.id)}`,
-            },
-          ],
-        }),
-      (e) => `Failed to send message:\n${String(e)}`,
-    )();
-    if (result.isErr()) return await sendError(intr, result.error);
+    if (!(intr.channel instanceof TextChannel))
+      throw new ExpectedError('This command can only be used in text channels');
+
+    if (intr.guild) {
+      const me = intr.guild.members.me;
+      if (!me) throw new Error('Failed to fetch bot member in guild');
+      if (!me.permissionsIn(intr.channel).has(PermissionFlagsBits.SendMessages))
+        throw new ExpectedError(
+          "I don't have permission to send messages in this channel",
+        );
+    }
+
+    await intr.channel.send({
+      flags: MessageFlags.IsComponentsV2,
+      components: [
+        {
+          type: ComponentType.TextDisplay,
+          content: `\`\`\`${message}\`\`\``,
+        },
+        {
+          type: ComponentType.TextDisplay,
+          content: `> ${userMention(intr.user.id)}`,
+        },
+      ],
+    });
 
     await intr.reply(
       UIBuilder.createGenericSuccess('# Message sent successfully'),

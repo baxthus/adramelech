@@ -11,10 +11,10 @@ import {
 } from 'discord.js';
 import StringBuilder from '~/tools/StringBuilder';
 import type { CommandInfer } from '~/types/command';
-import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import { toUnixTimestamp } from 'utils/date';
 import { fromAsyncThrowable } from 'neverthrow';
+import { ExpectedError } from '~/types/errors';
 
 export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
@@ -42,6 +42,15 @@ export const command = <CommandInfer>{
   async execute(intr: ChatInputCommandInteraction) {
     await intr.deferReply(); // theoretically not needed, but testing proves otherwise
 
+    if (
+      !(intr.channel as TextChannel)
+        .permissionsFor(intr.guild!.members.me!)
+        ?.has(PermissionFlagsBits.ManageMessages)
+    )
+      throw new ExpectedError(
+        "I don't have permissions to manage messages in this channel",
+      );
+
     const amount = intr.options.getNumber('amount', true);
     const secondsBeforeAutoDelete =
       intr.options.getNumber('seconds-before-auto-delete') ?? 0;
@@ -57,16 +66,14 @@ export const command = <CommandInfer>{
       .map((msg) => msg.id);
 
     if (!messages.length)
-      return await sendError(intr, 'No messages found to delete');
+      throw new ExpectedError('No messages found to delete');
 
-    const result = await fromAsyncThrowable(
-      () => (intr.channel as TextChannel).bulkDelete(messages, true),
-      (e) => `Failed to delete messages:\n${String(e)}`,
-    )().map((deletedMessages) => deletedMessages.size);
-    if (result.isErr()) return await sendError(intr, result.error);
+    const deletedMessages = await (intr.channel as TextChannel)
+      .bulkDelete(messages, true)
+      .then((msgs) => msgs.size);
 
     const message = new StringBuilder();
-    message.appendLine(`# Successfully cleared ${result.value} messages`);
+    message.appendLine(`# Successfully cleared ${deletedMessages} messages`);
     if (secondsBeforeAutoDelete)
       message.appendLine(
         `### This message will be auto-deleted ${time(

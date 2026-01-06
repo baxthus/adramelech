@@ -6,11 +6,18 @@ import {
 } from 'discord.js';
 import ky from 'ky';
 import type { CommandInfer } from '~/types/command';
-import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
-import { err, fromAsyncThrowable, ok } from 'neverthrow';
 import { type } from 'arktype';
+import { ExpectedError } from '~/types/errors';
+
+const OkResponse = type({
+  shorturl: 'string.url',
+});
+
+const ErrorResponse = type({
+  errormessage: 'string',
+});
 
 export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
@@ -29,22 +36,24 @@ export const command = <CommandInfer>{
 
     const url = intr.options.getString('url', true);
     if (type('string.url')(url) instanceof type.errors)
-      return await sendError(intr, 'Invalid URL');
+      throw new ExpectedError('Invalid URL');
 
-    const result = await fromAsyncThrowable(
-      ky.get('https://is.gd/create.php', {
+    const data = await ky
+      .get('https://is.gd/create.php', {
         searchParams: {
-          format: 'simple',
+          format: 'json',
           url: url,
         },
-      }).text,
-      (e) => `Failed to shorten URL: ${e}`,
-    )().andThen((response) =>
-      !response || response.startsWith('Error')
-        ? err('Failed to shorten URL')
-        : ok(response),
-    );
-    if (result.isErr()) return await sendError(intr, result.error);
+      })
+      .json()
+      .then((json) => {
+        const out = OkResponse(json);
+        if (out instanceof type.errors) {
+          const errOut = ErrorResponse.assert(json);
+          throw new ExpectedError(errOut.errormessage);
+        }
+        return out;
+      });
 
     await intr.followUp({
       flags: MessageFlags.IsComponentsV2,
@@ -64,7 +73,7 @@ export const command = <CommandInfer>{
               type: ComponentType.TextDisplay,
               content: stripIndents`
               ### :inbox_tray: Shortened URL
-              \`\`\`${result.value}\`\`\`
+              \`\`\`${data.shorturl}\`\`\`
               `,
             },
             {

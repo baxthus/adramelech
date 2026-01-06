@@ -11,13 +11,11 @@ import {
   type CommandGroupExecutors,
   type CommandInfer,
 } from '~/types/command';
-import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import StringBuilder from '~/tools/StringBuilder';
-import { fromAsyncThrowable } from 'neverthrow';
 import { type } from 'arktype';
 import { capitalize } from 'utils/text';
-import { arkToResult } from 'utils/validation';
+import { ExpectedError } from '~/types/errors';
 
 const AnimeImageRatings = [
   'safe',
@@ -86,20 +84,16 @@ async function animeImage(intr: ChatInputCommandInteraction) {
   await intr.deferReply();
 
   const rating = AnimeImageAgeRating(intr.options.getString('rating'));
-  if (rating instanceof type.errors)
-    return await sendError(intr, 'Invalid rating');
+  if (rating instanceof type.errors) throw new ExpectedError('Invalid rating');
 
   if (
     !(intr.channel as TextChannel).nsfw &&
     ['borderline', 'explicit'].includes(rating)
   )
-    return await sendError(
-      intr,
-      'This command can only be used in NSFW channels',
-    );
+    throw new ExpectedError('This command can only be used in NSFW channels');
 
-  const result = await fromAsyncThrowable(
-    ky.get('https://api.nekosapi.com/v4/images/random', {
+  const data = await ky
+    .get('https://api.nekosapi.com/v4/images/random', {
       searchParams: {
         rating,
         limit: 1,
@@ -107,14 +101,12 @@ async function animeImage(intr: ChatInputCommandInteraction) {
       headers: {
         'User-Agent': config.USER_AGENT,
       },
-    }).json,
-    (e) => `Failed to fetch image:\n${String(e)}`,
-  )().andThen(arkToResult(AnimeImages));
-  if (result.isErr()) return await sendError(intr, result.error);
+    })
+    .json()
+    .then(AnimeImages.assert);
 
   const footer = new StringBuilder();
-  if (result.value[0]?.source_url)
-    footer.appendLine(`> Source: ${result.value[0].source_url}`);
+  if (data[0]?.source_url) footer.appendLine(`> Source: ${data[0].source_url}`);
   footer.append(`> Powered by NekosAPI`);
 
   await intr.followUp({
@@ -129,7 +121,7 @@ async function animeImage(intr: ChatInputCommandInteraction) {
             items: [
               {
                 media: {
-                  url: result.value[0]!.url,
+                  url: data[0]!.url,
                 },
               },
             ],
@@ -147,11 +139,10 @@ async function animeImage(intr: ChatInputCommandInteraction) {
 async function nekoImage(intr: ChatInputCommandInteraction) {
   await intr.deferReply();
 
-  const result = await fromAsyncThrowable(
-    ky.get('https://nekos.life/api/v2/img/neko').json,
-    (e) => `Failed to fetch image:\n${String(e)}`,
-  )().andThen(arkToResult(NekoImage));
-  if (result.isErr()) return await sendError(intr, result.error);
+  const data = await ky
+    .get('https://nekos.life/api/v2/img/neko')
+    .json()
+    .then(NekoImage.assert);
 
   await intr.followUp({
     flags: MessageFlags.IsComponentsV2,
@@ -165,7 +156,7 @@ async function nekoImage(intr: ChatInputCommandInteraction) {
             items: [
               {
                 media: {
-                  url: result.value.url,
+                  url: data.url,
                 },
               },
             ],

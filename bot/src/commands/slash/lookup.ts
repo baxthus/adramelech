@@ -9,13 +9,11 @@ import {
 } from 'discord.js';
 import ky from 'ky';
 import type { CommandInfer } from '~/types/command';
-import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
-import { err, fromAsyncThrowable, ok } from 'neverthrow';
 import { type } from 'arktype';
 import { toUnixTimestamp } from 'utils/date';
-import { arkToResult } from 'utils/validation';
+import { ExpectedError } from '~/types/errors';
 
 const Lookup = type({
   success: 'boolean',
@@ -61,22 +59,12 @@ export const command = <CommandInfer>{
     const ip =
       type('string.ip')(target) instanceof type.errors
         ? await getIpFromDomain(target)
-        : ok(target);
-    if (ip.isErr()) return await sendError(intr, ip.error);
+        : target;
 
-    const response = await fromAsyncThrowable(
-      ky.get(`https://ipwho.is/${ip.value}`, {
-        headers: {
-          'User-Agent': 'curl', // shh... you didn't see this :3
-        },
-      }).json,
-      (error) =>
-        error instanceof Error
-          ? error.message
-          : 'Failed to fetch IP information',
-    )().andThen(arkToResult(Lookup));
-    if (response.isErr()) return await sendError(intr, response.error);
-    const data = response.value;
+    const data = await ky
+      .get(`https://ipwhois.io/json/${ip}`)
+      .json()
+      .then(Lookup.assert);
 
     const mapsUrl = new URL('https://www.google.com/maps/search/');
     mapsUrl.searchParams.set('api', '1');
@@ -93,8 +81,8 @@ export const command = <CommandInfer>{
               type: ComponentType.TextDisplay,
               content: stripIndents`
               # Lookup
-              **IP:** ${ip.value}
-              **Domain:** ${target === ip.value ? 'None' : target}
+              **IP:** ${ip}
+              **Domain:** ${target === ip ? 'None' : target}
               **Type:** ${data.type}
               `,
             },
@@ -156,12 +144,14 @@ export const command = <CommandInfer>{
   },
 };
 
-const getIpFromDomain = (domain: string) =>
-  fromAsyncThrowable(ky.get(`https://da.gd/host/${domain}`).text, (error) =>
-    error instanceof Error ? error.message : 'Failed to get IP from domain',
-  )().andThen((text) => {
-    const res = text.trim();
-    if (!res || res.startsWith('No'))
-      return err('Failed to get IP from domain');
-    return ok(res.includes(',') ? res.substring(0, res.indexOf(',')) : res);
-  });
+const getIpFromDomain = (domain: string): Promise<string> =>
+  ky
+    .get(`https://da.gd/host/${domain}`)
+    .text()
+    .then((text) => {
+      const res = text.trim();
+      if (!res || res.startsWith('No'))
+        // Expected because not worth logging
+        throw new ExpectedError('Failed to get IP from domain');
+      return res.includes(',') ? res.substring(0, res.indexOf(',')) : res;
+    });

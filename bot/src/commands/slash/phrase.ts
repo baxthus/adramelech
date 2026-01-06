@@ -1,10 +1,10 @@
 import { ComponentType, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import type { CommandInfer } from '~/types/command';
-import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import { db } from 'database';
 import { phrases } from 'database/schema';
 import { sql } from 'drizzle-orm';
+import { ExpectedError } from '~/types/errors';
 
 export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
@@ -19,7 +19,7 @@ export const command = <CommandInfer>{
       .orderBy(sql`RANDOM()`)
       .limit(1);
     const phrase = result[0];
-    if (!phrase) return sendError(intr, 'No phrase found in the database');
+    if (!phrase) throw new ExpectedError('No phrase found in the database');
 
     await intr.followUp({
       flags: MessageFlags.IsComponentsV2,

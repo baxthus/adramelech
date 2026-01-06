@@ -9,10 +9,10 @@ import {
   type ChatInputCommandInteraction,
 } from 'discord.js';
 import type { CommandInfer } from '~/types/command';
-import { sendError } from '~/utils/sendError';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
 import { fromAsyncThrowable } from 'neverthrow';
+import { ExpectedError } from '~/types/errors';
 
 export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
@@ -40,11 +40,11 @@ export const command = <CommandInfer>{
     const ephemeral = intr.options.getBoolean('ephemeral') ?? false;
 
     if (user.id === intr.user.id)
-      return await sendError(intr, "You can't kick yourself");
+      throw new ExpectedError("You can't kick yourself");
     if (user.id === intr.client.user.id)
-      return await sendError(intr, "You can't kick me OwO");
+      throw new ExpectedError("You can't kick me OwO");
     if (user.id === intr.guild?.ownerId)
-      return await sendError(intr, "You can't kick the server owner");
+      throw new ExpectedError("You can't kick the server owner");
 
     const member = intr.guild!.members.cache.get(user.id)!;
     const botMember = intr.guild!.members.cache.get(intr.client.user.id)!;
@@ -52,13 +52,9 @@ export const command = <CommandInfer>{
       member.roles.highest.comparePositionTo(botMember.roles.highest) >= 0 ||
       !member.kickable
     )
-      return await sendError(intr, "I can't kick this user");
+      throw new ExpectedError("I can't kick this user");
 
-    const result = await fromAsyncThrowable(
-      () => member.kick(reason),
-      (e) => `Failed to kick user:\n${String(e)}`,
-    )();
-    if (result.isErr()) return await sendError(intr, result.error);
+    await member.kick(reason);
 
     await intr.reply({
       flags: ephemeral
@@ -90,36 +86,36 @@ export const command = <CommandInfer>{
       ],
     });
 
-    const notifyResult = await fromAsyncThrowable(
-      () =>
-        user.send({
-          flags: MessageFlags.IsComponentsV2,
-          components: [
-            {
-              type: ComponentType.Container,
-              accent_color: Colors.Red,
-              components: [
-                {
-                  type: ComponentType.TextDisplay,
-                  content: stripIndents`
+    const notifyResult = await fromAsyncThrowable(() =>
+      user.send({
+        flags: MessageFlags.IsComponentsV2,
+        components: [
+          {
+            type: ComponentType.Container,
+            accent_color: Colors.Red,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: stripIndents`
                 # You have been kicked
                 ### Guild
                 \`\`\`${intr.guild?.name}\`\`\`
                 `,
-                },
-                {
-                  type: ComponentType.TextDisplay,
-                  content: stripIndents`
+              },
+              {
+                type: ComponentType.TextDisplay,
+                content: stripIndents`
                 ### Reason
                 \`\`\`${reason}\`\`\`
                 `,
-                },
-              ],
-            },
-          ],
-        }),
-      (e) => `Failed to notify the user about the kick:\n${String(e)}`,
+              },
+            ],
+          },
+        ],
+      }),
     )();
-    if (notifyResult.isErr()) return await sendError(intr, notifyResult.error);
+    // This one is expected because a lot of users have DMs disabled
+    if (notifyResult.isErr())
+      throw new ExpectedError('Failed to notify user about the kick');
   },
 };

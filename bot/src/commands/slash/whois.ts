@@ -8,8 +8,7 @@ import ky from 'ky';
 import type { CommandInfer } from '~/types/command';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
-import { sendError } from '~/utils/sendError';
-import { err, fromAsyncThrowable, ok } from 'neverthrow';
+import { ExpectedError } from '~/types/errors';
 
 const badResponses = [
   'Malformed',
@@ -40,17 +39,13 @@ export const command = <CommandInfer>{
 
     const target = intr.options.getString('target', true);
 
-    const result = await fromAsyncThrowable(
-      ky.get(`https://da.gd/w/${target}`, {
-        timeout: 10000, // 10 seconds
-      }).text,
-      (e) => `Failed to fetch WHOIS information: ${String(e)}`,
-    )().andThen((text) =>
-      !text.trim() || badResponses.some((r) => text.includes(r))
-        ? err('No information found')
-        : ok(text),
-    );
-    if (result.isErr()) return await sendError(intr, result.error);
+    const data = await ky
+      .get(`https://da.gd/w/${target}`, {
+        timeout: 10000, // Just to be sure since I'm not sure about the behavior on fail
+      })
+      .text();
+    if (!data.trim() || badResponses.some((r) => data.includes(r)))
+      throw new ExpectedError('No information found');
 
     await intr.followUp({
       flags: MessageFlags.IsComponentsV2,
@@ -86,7 +81,7 @@ export const command = <CommandInfer>{
       ],
       files: [
         {
-          attachment: Buffer.from(result.value),
+          attachment: Buffer.from(data),
           name: 'whois.txt',
         },
       ],

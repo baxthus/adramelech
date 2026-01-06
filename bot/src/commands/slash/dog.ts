@@ -2,10 +2,7 @@ import { ComponentType, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import ky from 'ky';
 import type { CommandInfer } from '~/types/command';
 import config from '~/config';
-import { sendError } from '~/utils/sendError';
-import { fromAsyncThrowable } from 'neverthrow';
 import { type } from 'arktype';
-import { arkToResult } from 'utils/validation';
 
 const DogImage = type({
   status: '"success"',
@@ -21,11 +18,10 @@ export const command = <CommandInfer>{
   async execute(intr) {
     await intr.deferReply();
 
-    const result = await fromAsyncThrowable(
-      ky.get('https://dog.ceo/api/breeds/image/random').json,
-      (e) => `Failed to fetch dog image:\n${String(e)}`,
-    )().andThen(arkToResult(DogImage));
-    if (result.isErr()) return await sendError(intr, result.error);
+    const data = await ky
+      .get('https://dog.ceo/api/breeds/image/random')
+      .json()
+      .then(DogImage.assert);
 
     await intr.followUp({
       flags: MessageFlags.IsComponentsV2,
@@ -39,7 +35,7 @@ export const command = <CommandInfer>{
               items: [
                 {
                   media: {
-                    url: result.value.message,
+                    url: data.message,
                   },
                 },
               ],

@@ -8,20 +8,16 @@ import {
   type ChatInputCommandInteraction,
 } from 'discord.js';
 import ky from 'ky';
-import { fromAsyncThrowable } from 'neverthrow';
-import { arkToResult } from 'utils/validation';
 import config from '~/config';
 import type { CommandInfer } from '~/types/command';
-import { sendError } from '~/utils/sendError';
+import { ExpectedError } from '~/types/errors';
 
 const BASE_URL = 'https://api.openweathermap.org';
 
 const Geos = type({
   lat: 'number',
   lon: 'number',
-})
-  .array()
-  .exactlyLength(1);
+}).array();
 
 const Weather = type({
   id: 'number',
@@ -72,40 +68,43 @@ export const command = <CommandInfer>{
   uses: ['OpenWeatherMap'],
   async execute(intr: ChatInputCommandInteraction) {
     if (!config.OPENWEATHER_KEY)
-      return await sendError(intr, 'Weather API key is not configured');
+      throw new ExpectedError('OpenWeatherMap API key is not configured');
 
     await intr.deferReply();
 
     const city = intr.options.getString('city', true);
     const country = intr.options.getString('country', true);
 
-    const geoResult = await fromAsyncThrowable(
-      ky.get(`${BASE_URL}/geo/1.0/direct`, {
+    const geo = await ky
+      .get(`${BASE_URL}/geo/1.0/direct`, {
         searchParams: {
           q: `${city},${country}`,
           limit: '1',
           appid: config.OPENWEATHER_KEY,
         },
-      }).json,
-      (e) => `Failed to fetch geolocation data: ${String(e)}`,
-    )().andThen(arkToResult(Geos));
-    if (geoResult.isErr()) return await sendError(intr, geoResult.error);
+      })
+      .json()
+      .then((json) => {
+        const data = Geos.assert(json);
+        if (data.length === 0)
+          throw new ExpectedError(
+            `Could not find location for city "${city}" in country "${country}".`,
+          );
+        return data;
+      });
 
-    const weatherResult = await fromAsyncThrowable(
-      ky.get(`${BASE_URL}/data/2.5/weather`, {
+    const weather = await ky
+      .get(`${BASE_URL}/data/2.5/weather`, {
         searchParams: {
-          lat: geoResult.value[0]!.lat.toString(),
-          lon: geoResult.value[0]!.lon.toString(),
+          lat: geo[0]!.lat,
+          lon: geo[0]!.lon,
           units: 'metric',
           appid: config.OPENWEATHER_KEY,
           lang: 'en',
         },
-      }).json,
-      (e) => `Failed to fetch weather data: ${String(e)}`,
-    )().andThen(arkToResult(Weather));
-    if (weatherResult.isErr())
-      return await sendError(intr, weatherResult.error);
-    const weather = weatherResult.value;
+      })
+      .json()
+      .then(Weather.assert);
 
     await intr.followUp({
       flags: MessageFlags.IsComponentsV2,

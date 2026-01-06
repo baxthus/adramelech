@@ -7,14 +7,8 @@ import {
 import ky from 'ky';
 import UnicodeSheet from '~/tools/UnicodeSheet';
 import type { CommandInfer } from '~/types/command';
-import { sendError } from '~/utils/sendError';
 import config from '~/config';
-import {
-  errAsync,
-  fromAsyncThrowable,
-  fromThrowable,
-  okAsync,
-} from 'neverthrow';
+import { ExpectedError } from '~/types/errors';
 
 type DnsRecord = {
   type: string;
@@ -45,37 +39,27 @@ export const command = <CommandInfer>{
     const domain = intr.options.getString('domain', true);
     const separateRows = intr.options.getBoolean('separate-rows') ?? false;
 
-    const result = await fromAsyncThrowable(
-      ky.get(`https://da.gd/dns/${domain}`).text,
-      (e) => `Failed to fetch DNS records:\n${String(e)}`,
-    )()
-      .andThen((response) => {
-        const records = parseResponse(response);
-        return records.length > 0
-          ? okAsync(records)
-          : errAsync('No DNS record found for this domain');
-      })
-      .andThen((records) =>
-        fromThrowable(
-          () =>
-            new UnicodeSheet(separateRows)
-              .addColumn(
-                'Type',
-                records.map((record) => record.type),
-              )
-              .addColumn(
-                'Revalidate In',
-                records.map((record) => record.revalidateIn),
-              )
-              .addColumn(
-                'Content',
-                records.map((record) => record.content),
-              )
-              .build(),
-          (e) => `Failed to build the Unicode Sheet:\n${String(e)}`,
-        )(),
-      );
-    if (result.isErr()) return await sendError(intr, result.error);
+    const records = await ky
+      .get(`https://da.gd/dns/${domain}`)
+      .text()
+      .then(parseResponse);
+    if (records.length === 0)
+      throw new ExpectedError('No DNS record found for this domain');
+
+    const sheet = new UnicodeSheet(separateRows)
+      .addColumn(
+        'Type',
+        records.map((record) => record.type),
+      )
+      .addColumn(
+        'Revalidate In',
+        records.map((record) => record.revalidateIn),
+      )
+      .addColumn(
+        'Content',
+        records.map((record) => record.content),
+      )
+      .build();
 
     await intr.followUp({
       flags: MessageFlags.IsComponentsV2,
@@ -103,7 +87,7 @@ export const command = <CommandInfer>{
       ],
       files: [
         {
-          attachment: Buffer.from(result.value),
+          attachment: Buffer.from(sheet),
           name: 'records.txt',
         },
       ],

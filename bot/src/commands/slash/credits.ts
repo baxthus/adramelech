@@ -7,9 +7,7 @@ import {
 import type { CustomClient } from '~/index';
 import UnicodeSheet from '~/tools/UnicodeSheet';
 import type { CommandInfer } from '~/types/command';
-import { sendError } from '~/utils/sendError';
 import config from '~/config';
-import { fromThrowable } from 'neverthrow';
 
 export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
@@ -33,21 +31,16 @@ export const command = <CommandInfer>{
         uses: cmd.uses!.join('; '),
       }));
 
-    const result = fromThrowable(
-      () =>
-        new UnicodeSheet(separateRows)
-          .addColumn(
-            'Command',
-            credits.map((c) => c.name),
-          )
-          .addColumn(
-            'Uses',
-            credits.map((cmd) => cmd.uses),
-          )
-          .build(),
-      (e) => `Failed to build the credits table:\n${String(e)}`,
-    )();
-    if (result.isErr()) return await sendError(intr, result.error);
+    const sheet = new UnicodeSheet(separateRows)
+      .addColumn(
+        'Command',
+        credits.map((c) => c.name),
+      )
+      .addColumn(
+        'Uses',
+        credits.map((cmd) => cmd.uses),
+      )
+      .build();
 
     await intr.followUp({
       flags: MessageFlags.IsComponentsV2,
@@ -71,7 +64,7 @@ export const command = <CommandInfer>{
       ],
       files: [
         {
-          attachment: Buffer.from(result.value),
+          attachment: Buffer.from(sheet),
           name: 'credits.txt',
         },
       ],

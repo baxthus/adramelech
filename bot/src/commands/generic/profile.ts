@@ -26,13 +26,13 @@ import {
 } from '~/types/command';
 import type { ComponentInfer } from '~/types/component';
 import type { ModalInfer } from '~/types/modal';
-import { sendError } from '~/utils/sendError';
 import { db } from 'database';
 import { profiles, socials } from 'database/schema';
 import { and, asc, eq, ilike } from 'drizzle-orm';
 import { exists } from 'database/utils';
 import { toUnixTimestamp } from 'utils/date';
 import { ArkErrors, type } from 'arktype';
+import { ExpectedError } from '~/types/errors';
 
 export const commands = <CommandInfer[]>[
   {
@@ -194,8 +194,7 @@ async function viewProfile(intr: CommandInteraction, user: User) {
       },
     },
   });
-  if (!profile)
-    return await sendError(intr, 'This user does not have a profile');
+  if (!profile) throw new ExpectedError('This user does not have a profile');
 
   const haveSocials = profile.socials.length > 0;
 
@@ -262,9 +261,11 @@ async function createProfile(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
   if (await exists(profiles, eq(profiles.discordId, intr.user.id)))
-    return await sendError(intr, 'You already have a profile!');
+    throw new ExpectedError('You already have a profile!');
 
-  await db.insert(profiles).values({ discordId: intr.user.id });
+  const result = await db.insert(profiles).values({ discordId: intr.user.id });
+  if (!result.rowCount)
+    throw new Error('Failed to create user profile', { cause: result });
 
   await intr.followUp(
     UIBuilder.createGenericSuccess('# Your profile has been created!'),
@@ -275,7 +276,7 @@ async function deleteProfile(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
   if (!(await exists(profiles, eq(profiles.discordId, intr.user.id))))
-    return await sendError(intr, 'You do not have a profile to delete');
+    throw new ExpectedError('You do not have a profile to delete');
 
   await intr.followUp({
     flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -312,7 +313,7 @@ async function deleteProfile(intr: ChatInputCommandInteraction) {
 
 async function setBio(intr: ChatInputCommandInteraction) {
   if (!(await exists(profiles, eq(profiles.discordId, intr.user.id))))
-    return await sendError(intr, 'You do not have a profile to edit');
+    throw new ExpectedError('You do not have a profile to edit');
 
   await intr.showModal({
     title: 'Edit Bio',
@@ -335,7 +336,7 @@ async function setNickname(intr: ChatInputCommandInteraction) {
   await intr.deferReply({ flags: MessageFlags.Ephemeral });
 
   if (!(await exists(profiles, eq(profiles.discordId, intr.user.id))))
-    return await sendError(intr, 'You do not have a profile to edit');
+    throw new ExpectedError('You do not have a profile to edit');
 
   const nickname = intr.options.getString('nickname', true).trim();
 
@@ -344,7 +345,7 @@ async function setNickname(intr: ChatInputCommandInteraction) {
     .set({ nickname })
     .where(eq(profiles.discordId, intr.user.id));
   if (!result.rowCount)
-    return await sendError(intr, 'Failed to update your nickname');
+    throw new Error('Failed to update user nickname', { cause: result });
 
   await intr.followUp(
     UIBuilder.createGenericSuccess('# Your nickname has been updated!'),
@@ -363,12 +364,10 @@ async function addSocial(intr: ChatInputCommandInteraction) {
       },
     },
   });
-  if (!profile)
-    return await sendError(intr, 'You do not have a profile to edit');
+  if (!profile) throw new ExpectedError('You do not have a profile to edit');
 
   if (profile.socials.length >= 5)
-    return await sendError(
-      intr,
+    throw new ExpectedError(
       'You can only have up to 5 social links in your profile',
     );
 
@@ -376,15 +375,14 @@ async function addSocial(intr: ChatInputCommandInteraction) {
   const link = intr.options.getString('link', true).trim();
 
   if (type('string.url')(link) instanceof ArkErrors)
-    return await sendError(intr, 'The provided link is not a valid URL');
+    throw new ExpectedError('The provided link is not a valid URL');
 
   if (
     profile.socials.some(
       (social) => social.name.toLowerCase() === name.toLowerCase(),
     )
   )
-    return await sendError(
-      intr,
+    throw new ExpectedError(
       `You already have a social link with the name \`${name}\`. Please choose a different name`,
     );
 
@@ -406,17 +404,15 @@ async function removeBio(intr: ChatInputCommandInteraction) {
     columns: { bio: true },
     where: eq(profiles.discordId, intr.user.id),
   });
-  if (!profile)
-    return await sendError(intr, 'You do not have a profile to edit');
-  if (!profile.bio)
-    return await sendError(intr, 'You do not have a bio to remove');
+  if (!profile) throw new ExpectedError('You do not have a profile to edit');
+  if (!profile.bio) throw new ExpectedError('You do not have a bio to remove');
 
   const result = await db
     .update(profiles)
     .set({ bio: null })
     .where(eq(profiles.discordId, intr.user.id));
   if (!result.rowCount)
-    return await sendError(intr, 'Failed to remove your bio');
+    throw new Error('Failed to remove user bio', { cause: result });
 
   await intr.followUp(
     UIBuilder.createGenericSuccess('# Your bio has been removed!'),
@@ -430,17 +426,16 @@ async function removeNickname(intr: ChatInputCommandInteraction) {
     columns: { nickname: true },
     where: eq(profiles.discordId, intr.user.id),
   });
-  if (!profile)
-    return await sendError(intr, 'You do not have a profile to edit');
+  if (!profile) throw new ExpectedError('You do not have a profile to edit');
   if (!profile.nickname)
-    return await sendError(intr, 'You do not have a nickname to remove');
+    throw new ExpectedError('You do not have a nickname to remove');
 
   const result = await db
     .update(profiles)
     .set({ nickname: null })
     .where(eq(profiles.discordId, intr.user.id));
   if (!result.rowCount)
-    return await sendError(intr, 'Failed to remove your nickname');
+    throw new Error('Failed to remove user nickname', { cause: result });
 
   await intr.followUp(
     UIBuilder.createGenericSuccess('# Your nickname has been removed!'),
@@ -462,11 +457,9 @@ async function removeSocial(intr: ChatInputCommandInteraction) {
       },
     },
   });
-  if (!profile)
-    return await sendError(intr, 'You do not have a profile to edit');
+  if (!profile) throw new ExpectedError('You do not have a profile to edit');
   if (!profile.socials.length)
-    return await sendError(
-      intr,
+    throw new ExpectedError(
       'You do not have a social link with that ID to remove',
     );
 
@@ -474,7 +467,7 @@ async function removeSocial(intr: ChatInputCommandInteraction) {
     .delete(socials)
     .where(and(eq(socials.id, socialId), eq(socials.profileId, profile.id)));
   if (!result.rowCount)
-    return await sendError(intr, 'Failed to remove the social link');
+    throw new Error('Failed to remove the social link', { cause: result });
 
   await intr.followUp(
     UIBuilder.createGenericSuccess('# The social link has been removed!'),
@@ -491,7 +484,7 @@ export const component = <ComponentInfer>{
       .delete(profiles)
       .where(eq(profiles.discordId, interaction.user.id));
     if (!result.rowCount)
-      return await sendError(interaction, 'Failed to delete your profile');
+      throw new Error('Failed to delete user profile', { cause: result });
 
     await interaction.followUp(
       UIBuilder.createGenericSuccess('# Your profile has been deleted!'),
@@ -511,7 +504,7 @@ export const modal = <ModalInfer>{
       .set({ bio: content })
       .where(eq(profiles.discordId, intr.user.id));
     if (!result.rowCount)
-      return await sendError(intr, 'Failed to update your bio');
+      throw new Error('Failed to update user bio', { cause: result });
 
     await intr.followUp(
       UIBuilder.createGenericSuccess('# Your bio has been updated!'),

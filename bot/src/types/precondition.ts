@@ -14,5 +14,5 @@ export const Precondition =
         | ComponentInteraction
         | ModalSubmitInteraction
         | AutocompleteInteraction,
-    ) => Promise<boolean>
+    ) => Promise<void>
   >();

@@ -6,7 +6,6 @@ import {
   type CommandInteraction,
 } from 'discord.js';
 import { Precondition } from './precondition';
-import { sendError } from '~/utils/sendError';
 import { type } from 'arktype';
 
 export const Command = type({
@@ -53,5 +52,5 @@ export async function executeCommandFromTree(
   }
 
   if (executor) await executor(intr);
-  else await sendError(intr, 'Unknown subcommand');
+  else throw new Error('Unknown subcommand');
 }

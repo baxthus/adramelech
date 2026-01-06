@@ -22,6 +22,7 @@ import type { EventInfer } from '~/types/event';
 import { fromAsyncThrowable } from 'neverthrow';
 import redis from 'redis';
 import { formatDistanceToNow } from 'date-fns';
+import { ExpectedError } from '~/types/errors';
 
 export type CommandInteraction =
   | ChatInputCommandInteraction
@@ -177,12 +178,26 @@ async function handlePreconditions(
     | AutocompleteInteraction,
   item: CommandInfer | ComponentInfer | ModalInfer,
 ): Promise<boolean> {
+  const identification =
+    'commandName' in intr ? intr.commandName : intr.customId;
+  let failed = false;
+
   if (item.preconditions) {
     for (const precondition of item.preconditions) {
-      if (!(await precondition(intr))) return false;
+      fromAsyncThrowable(
+        () => precondition(intr),
+        (e) => e as Error,
+      )().match(
+        () => {},
+        async (error) => {
+          await handleError('precondition', identification, error, intr);
+          failed = true;
+        },
+      );
     }
   }
-  return true;
+
+  return !failed;
 }
 
 async function isOnCooldown(
@@ -238,9 +253,21 @@ const executeInteraction = async (
 ) =>
   fromAsyncThrowable(fn, (e) => e as Error)().match(
     () => {},
-    async (error) => {
-      await sendError(intr, error.message);
-      logger.error(`Error executing ${interactionType} ${name}`);
-      logger.error(error);
-    },
+    async (error) => handleError(interactionType, name, error, intr),
   );
+
+async function handleError(
+  interactionType: string,
+  name: string,
+  error: Error,
+  intr: Interaction,
+) {
+  const isExpected = error instanceof ExpectedError;
+  // Don't send detailed error messages for unexpected errors
+  await sendError(intr, isExpected ? error.message : undefined);
+  // Don't log expected errors, because... well... they're expected
+  if (!isExpected) {
+    logger.error(`Error executing ${interactionType} ${name}`);
+    logger.error(error);
+  }
+}
