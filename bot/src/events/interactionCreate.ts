@@ -1,3 +1,7 @@
+// IMPORTANT!!!
+// Hooks are not awaited intentionally, they're non-blocking!
+// Should be used only to side-effect loggings, metrics, etc
+
 import {
   type AutocompleteInteraction,
   Events,
@@ -78,12 +82,16 @@ async function handleCommands(intr: CommandInteraction, client: CustomClient) {
     return;
   }
 
-  await executeInteraction(
+  fromAsyncThrowable(() => command.hooks?.before?.(intr) ?? Promise.resolve())();
+  const success = await executeInteraction(
     'command',
     intr.commandName,
     () => command.execute(intr),
     intr,
   );
+  fromAsyncThrowable(
+    () => command.hooks?.after?.(intr, success) ?? Promise.resolve(),
+  )();
 }
 
 async function handleComponents(
@@ -110,12 +118,18 @@ async function handleComponents(
     return;
   }
 
-  await executeInteraction(
+  fromAsyncThrowable(
+    () => component.hooks?.before?.(intr) ?? Promise.resolve(),
+  )();
+  const success = await executeInteraction(
     'component',
     intr.customId,
     () => component.execute(intr),
     intr,
   );
+  fromAsyncThrowable(
+    () => component.hooks?.after?.(intr, success) ?? Promise.resolve(),
+  )();
 }
 
 async function handleModals(
@@ -142,12 +156,16 @@ async function handleModals(
     return;
   }
 
-  await executeInteraction(
+  fromAsyncThrowable(() => modal.hooks?.before?.(intr) ?? Promise.resolve())();
+  const success = await executeInteraction(
     'modal',
     intr.customId,
     () => modal.execute(intr),
     intr,
   );
+  fromAsyncThrowable(
+    () => modal.hooks?.after?.(intr, success) ?? Promise.resolve(),
+  )();
 }
 
 async function handleAutocomplete(
@@ -184,7 +202,7 @@ async function handlePreconditions(
 
   if (item.preconditions) {
     for (const precondition of item.preconditions) {
-      fromAsyncThrowable(
+      await fromAsyncThrowable(
         () => precondition(intr),
         (e) => e as Error,
       )().match(
@@ -250,10 +268,13 @@ const executeInteraction = async (
   name: string,
   fn: () => Promise<void>,
   intr: Interaction,
-) =>
+): Promise<boolean> =>
   fromAsyncThrowable(fn, (e) => e as Error)().match(
-    () => {},
-    async (error) => handleError(interactionType, name, error, intr),
+    () => true,
+    async (error) => {
+      await handleError(interactionType, name, error, intr);
+      return false;
+    },
   );
 
 async function handleError(

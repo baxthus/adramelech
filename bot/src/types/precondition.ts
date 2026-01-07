@@ -6,8 +6,8 @@ import type {
 } from 'discord.js';
 import type { ComponentInteraction } from '~/events/interactionCreate';
 
-export const Precondition =
-  type('Function').as<
+export const Preconditions = type('Function')
+  .as<
     (
       interaction:
         | CommandInteraction
@@ -15,4 +15,6 @@ export const Precondition =
         | ModalSubmitInteraction
         | AutocompleteInteraction,
     ) => Promise<void>
-  >();
+  >()
+  .array()
+  .optional();
