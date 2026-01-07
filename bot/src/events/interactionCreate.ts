@@ -1,7 +1,3 @@
-// IMPORTANT!!!
-// Hooks are not awaited intentionally, they're non-blocking!
-// Should be used only to side-effect loggings, metrics, etc
-
 import {
   type AutocompleteInteraction,
   Events,

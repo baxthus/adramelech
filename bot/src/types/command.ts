@@ -7,7 +7,6 @@ import {
 } from 'discord.js';
 import { Preconditions } from './precondition';
 import { type } from 'arktype';
-import { Hooks } from './hook';
 
 export const Command = type({
   data: type.or(
@@ -17,7 +16,6 @@ export const Command = type({
   uses: 'string[]?',
   cooldown: 'number | boolean ?',
   preconditions: Preconditions,
-  hooks: Hooks,
   execute: type('Function').as<(intr: CommandInteraction) => Promise<void>>(),
   autocomplete: type('Function')
     .as<(intr: AutocompleteInteraction) => Promise<void>>()
