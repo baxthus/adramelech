@@ -27,6 +27,8 @@ import { fromAsyncThrowable } from 'neverthrow';
 import redis from 'redis';
 import { formatDistanceToNow } from 'date-fns';
 import { ExpectedError } from '~/types/errors';
+import { trackCommand, trackComponent, trackModal } from 'redis/telemetry';
+import { fireAndForget } from 'utils/async';
 
 export type CommandInteraction =
   | ChatInputCommandInteraction
@@ -82,16 +84,15 @@ async function handleCommands(intr: CommandInteraction, client: CustomClient) {
     return;
   }
 
-  fromAsyncThrowable(() => command.hooks?.before?.(intr) ?? Promise.resolve())();
   const success = await executeInteraction(
     'command',
     intr.commandName,
     () => command.execute(intr),
     intr,
   );
-  fromAsyncThrowable(
-    () => command.hooks?.after?.(intr, success) ?? Promise.resolve(),
-  )();
+  fireAndForget(() =>
+    trackCommand(intr.commandName, intr.guildId || undefined, success),
+  );
 }
 
 async function handleComponents(
@@ -118,18 +119,15 @@ async function handleComponents(
     return;
   }
 
-  fromAsyncThrowable(
-    () => component.hooks?.before?.(intr) ?? Promise.resolve(),
-  )();
   const success = await executeInteraction(
     'component',
     intr.customId,
     () => component.execute(intr),
     intr,
   );
-  fromAsyncThrowable(
-    () => component.hooks?.after?.(intr, success) ?? Promise.resolve(),
-  )();
+  fireAndForget(() =>
+    trackComponent(intr.customId, intr.guildId || undefined, success),
+  );
 }
 
 async function handleModals(
@@ -156,16 +154,15 @@ async function handleModals(
     return;
   }
 
-  fromAsyncThrowable(() => modal.hooks?.before?.(intr) ?? Promise.resolve())();
   const success = await executeInteraction(
     'modal',
     intr.customId,
     () => modal.execute(intr),
     intr,
   );
-  fromAsyncThrowable(
-    () => modal.hooks?.after?.(intr, success) ?? Promise.resolve(),
-  )();
+  fireAndForget(() =>
+    trackModal(intr.customId, intr.guildId || undefined, success),
+  );
 }
 
 async function handleAutocomplete(
@@ -269,7 +266,7 @@ const executeInteraction = async (
   fn: () => Promise<void>,
   intr: Interaction,
 ): Promise<boolean> =>
-  fromAsyncThrowable(fn, (e) => e as Error)().match(
+  await fromAsyncThrowable(fn, (e) => e as Error)().match(
     () => true,
     async (error) => {
       await handleError(interactionType, name, error, intr);
