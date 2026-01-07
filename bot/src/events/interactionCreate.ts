@@ -23,6 +23,8 @@ import { fromAsyncThrowable } from 'neverthrow';
 import redis from 'redis';
 import { formatDistanceToNow } from 'date-fns';
 import { ExpectedError } from '~/types/errors';
+import { trackCommand, trackComponent, trackModal } from 'redis/telemetry';
+import { fireAndForget } from 'utils/async';
 
 export type CommandInteraction =
   | ChatInputCommandInteraction
@@ -78,11 +80,14 @@ async function handleCommands(intr: CommandInteraction, client: CustomClient) {
     return;
   }
 
-  await executeInteraction(
+  const success = await executeInteraction(
     'command',
     intr.commandName,
     () => command.execute(intr),
     intr,
+  );
+  fireAndForget(() =>
+    trackCommand(intr.commandName, intr.guildId || undefined, success),
   );
 }
 
@@ -110,11 +115,14 @@ async function handleComponents(
     return;
   }
 
-  await executeInteraction(
+  const success = await executeInteraction(
     'component',
     intr.customId,
     () => component.execute(intr),
     intr,
+  );
+  fireAndForget(() =>
+    trackComponent(intr.customId, intr.guildId || undefined, success),
   );
 }
 
@@ -142,11 +150,14 @@ async function handleModals(
     return;
   }
 
-  await executeInteraction(
+  const success = await executeInteraction(
     'modal',
     intr.customId,
     () => modal.execute(intr),
     intr,
+  );
+  fireAndForget(() =>
+    trackModal(intr.customId, intr.guildId || undefined, success),
   );
 }
 
@@ -184,7 +195,7 @@ async function handlePreconditions(
 
   if (item.preconditions) {
     for (const precondition of item.preconditions) {
-      fromAsyncThrowable(
+      await fromAsyncThrowable(
         () => precondition(intr),
         (e) => e as Error,
       )().match(
@@ -250,10 +261,13 @@ const executeInteraction = async (
   name: string,
   fn: () => Promise<void>,
   intr: Interaction,
-) =>
-  fromAsyncThrowable(fn, (e) => e as Error)().match(
-    () => {},
-    async (error) => handleError(interactionType, name, error, intr),
+): Promise<boolean> =>
+  await fromAsyncThrowable(fn, (e) => e as Error)().match(
+    () => true,
+    async (error) => {
+      await handleError(interactionType, name, error, intr);
+      return false;
+    },
   );
 
 async function handleError(
