@@ -1,37 +1,34 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
 version: '3'
 
-dotenv: ['.env']
-
 vars:
+  ENV_PREFIX: 'doppler run --'
   DASHBOARD: './dashboard'
   DATABASE: './database'
   BOT: './bot'
 
 tasks:
-  # Dashboard
+  # Development
   dashboard:
     dir: '{{.DASHBOARD}}'
     cmds:
-      - bun run dev
-
-  # Bot
+      - '{{.ENV_PREFIX}} bun run dev'
   bot:
     dir: '{{.BOT}}'
     cmds:
-      - bun run dev
+      - '{{.ENV_PREFIX}} bun run dev'
 
-  # Database / Valkey
-  up:
-    cmds:
-      - podman-compose up -d
-  down:
-    cmds:
-      - podman-compose down
-  push:
+  # Database
+  db:push:
     dir: '{{.DATABASE}}'
     cmds:
-      - bunx drizzle-kit push
-  studio:
+      - '{{.ENV_PREFIX}} bunx drizzle-kit push'
+  db:studio:
     dir: '{{.DATABASE}}'
     cmds:
-      - bunx drizzle-kit studio
+      - '{{.ENV_PREFIX}} bunx drizzle-kit studio'
+
+  # Infrastructure
+  up: podman-compose up -d
+  down: podman-compose down
