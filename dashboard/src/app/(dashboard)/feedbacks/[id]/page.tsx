@@ -3,7 +3,6 @@
 import { useAuth } from '@clerk/nextjs';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { use } from 'react';
-import { getFeedback } from './actions';
 import { Loading } from '@/components/loading';
 import { redirect } from 'next/navigation';
 import Alert from '@/components/alert';
@@ -22,6 +21,7 @@ import {
   Alert as CnAlert,
 } from '@/components/ui/alert';
 import { TriangleAlert } from 'lucide-react';
+import { getFeedback } from '@/actions/feedbacks';
 
 export default function FeedbackPage({
   params,

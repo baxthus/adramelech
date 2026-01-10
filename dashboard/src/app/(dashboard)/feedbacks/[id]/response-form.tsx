@@ -1,7 +1,6 @@
 import { arktypeResolver } from '@hookform/resolvers/arktype';
 import { useMutation, type QueryClient } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
-import { setResponse } from './actions';
 import { Field, FieldError, FieldGroup } from '@/components/ui/field';
 import { Textarea } from '@/components/ui/textarea';
 import Alert from '@/components/alert';
@@ -9,9 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
-import { feedbackFinalStates } from './logic';
 import { type } from 'arktype';
 import type { FeedbackStatusInfer } from 'database/types';
+import { setResponse } from '@/actions/feedbacks';
+import { feedbackFinalStates } from '@/definitions/feedbacks';
 
 type FeedbackResponseForm = {
   response: string;
@@ -40,8 +40,8 @@ export function FeedbackResponseForm({
 
   const { mutate, isPending, isError, error, reset } = useMutation({
     mutationFn: (data: FeedbackResponseForm) => setResponse(id, data.response),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['feedback', id] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['feedback', id] });
       toast.success('Feedback response submitted');
     },
   });

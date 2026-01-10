@@ -4,7 +4,6 @@ import { usePage } from '@/hooks/use-page';
 import { useSearch } from '@/hooks/use-search';
 import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { deleteFeedback, getFeedbacks } from './actions';
 import { toast } from 'sonner';
 import type { ColumnDef, Row } from '@tanstack/react-table';
 import { formatDate } from '@/utils/date';
@@ -27,6 +26,7 @@ import {
 import { toUnixTimestamp } from 'utils/date';
 import { Badge } from '@/components/ui/badge';
 import { FeedbackStatusClasses } from './utils';
+import { deleteFeedback, getFeedbacks } from '@/actions/feedbacks';
 
 export default function FeedbacksPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -55,8 +55,8 @@ export default function FeedbacksPage() {
       const toastId = toast.loading('Deleting feedback...');
       return { toastId };
     },
-    onSuccess: (_, __, context) => {
-      queryClient.invalidateQueries({ queryKey: ['feedbacks'] });
+    onSuccess: async (_, __, context) => {
+      await queryClient.invalidateQueries({ queryKey: ['feedbacks'] });
       toast.success('Feedback deleted', {
         id: context.toastId,
       });

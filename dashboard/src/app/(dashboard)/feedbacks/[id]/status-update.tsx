@@ -9,13 +9,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { QueryClient, useMutation } from '@tanstack/react-query';
-import { FeedbackStatus } from 'database/types';
 import { Check } from 'lucide-react';
 import { useState } from 'react';
-import { setStatus } from './actions';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
-import { statusTransitions } from './logic';
+import type { FeedbackStatusInfer } from 'database/types';
+import { setStatus } from '@/actions/feedbacks';
+import { statusTransitions } from '@/definitions/feedbacks';
 
 export function StatusUpdate({
   queryClient,
@@ -24,9 +24,9 @@ export function StatusUpdate({
 }: {
   queryClient: QueryClient;
   id: string;
-  status: FeedbackStatus;
+  status: FeedbackStatusInfer;
 }) {
-  const [value, setValue] = useState<FeedbackStatus | null>(null);
+  const [value, setValue] = useState<FeedbackStatusInfer | null>(null);
 
   const availableTransitions = statusTransitions.get(status) ?? [];
   const items = [
@@ -35,10 +35,10 @@ export function StatusUpdate({
   ];
 
   const mutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: FeedbackStatus }) =>
+    mutationFn: ({ id, status }: { id: string; status: FeedbackStatusInfer }) =>
       setStatus(id, status),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['feedback', id] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['feedback', id] });
       toast.success('Feedback status updated');
       setValue(null);
     },

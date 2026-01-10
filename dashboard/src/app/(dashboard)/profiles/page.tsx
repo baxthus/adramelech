@@ -3,7 +3,6 @@
 import DashboardInset from '@/components/dashboard/inset';
 import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { deleteProfile, getProfiles } from './actions';
 import { usePage } from '@/hooks/use-page';
 import { toast } from 'sonner';
 import type { ColumnDef, Row } from '@tanstack/react-table';
@@ -32,6 +31,7 @@ import { DataTable } from '@/components/dashboard/data-table';
 import { Nothing } from '@/components/nothing';
 import { useSearch } from '@/hooks/use-search';
 import { toUnixTimestamp } from 'utils/date';
+import { deleteProfile, getProfiles } from '@/actions/profiles';
 
 export default function ProfilesPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -60,8 +60,8 @@ export default function ProfilesPage() {
       const toastId = toast.loading('Deleting profile...');
       return { toastId };
     },
-    onSuccess: (_, __, context) => {
-      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+    onSuccess: async (_, __, context) => {
+      await queryClient.invalidateQueries({ queryKey: ['profiles'] });
       toast.success('Profile deleted', {
         id: context.toastId,
       });

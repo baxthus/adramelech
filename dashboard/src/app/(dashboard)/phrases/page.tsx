@@ -2,7 +2,6 @@
 
 import DashboardInset from '@/components/dashboard/inset';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { deletePhrase, getPhrases } from './actions';
 import { SearchField } from '@/components/search-field';
 import { Button } from '@/components/ui/button';
 import { MoreVertical, RefreshCw, Trash } from 'lucide-react';
@@ -26,6 +25,7 @@ import { usePage } from '@/hooks/use-page';
 import { useSearch } from '@/hooks/use-search';
 import type { Phrase } from 'database/types';
 import { toUnixTimestamp } from 'utils/date';
+import { deletePhrase, getPhrases } from '@/actions/phrases';
 
 export default function PhrasesPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -54,8 +54,8 @@ export default function PhrasesPage() {
       const toastId = toast.loading('Deleting phrase...');
       return { toastId };
     },
-    onSuccess: (_, __, context) => {
-      queryClient.invalidateQueries({ queryKey: ['phrases'] });
+    onSuccess: async (_, __, context) => {
+      await queryClient.invalidateQueries({ queryKey: ['phrases'] });
       toast.success('Phrase deleted', {
         id: context.toastId,
       });

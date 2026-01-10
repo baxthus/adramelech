@@ -1,6 +1,6 @@
 'use server';
 
-import { DefaultGetActions } from '@/schemas/actions';
+import { DefaultGetActions, pageSize } from '@/definitions/actions';
 import { protect } from '@/utils/auth';
 import { type } from 'arktype';
 import { db } from 'database';
@@ -8,9 +8,7 @@ import { profiles } from 'database/schema';
 import { desc, eq, ilike, or, type SQL } from 'drizzle-orm';
 import { NanoID } from 'utils/types';
 
-const pageSize = 10;
-
-export async function getProfiles(search?: string, page: number = 1) {
+export async function getProfiles(search?: string, page?: number) {
   await protect();
 
   const parsed = DefaultGetActions.assert({ search, page });
@@ -33,14 +31,14 @@ export async function getProfiles(search?: string, page: number = 1) {
 
   const offset = (parsed.page - 1) * pageSize;
 
-  const [totalCount, data] = await Promise.all([
-    db.$count(profiles, where),
+  const [data, totalCount] = await Promise.all([
     db.query.profiles.findMany({
       where,
       orderBy: [desc(profiles.createdAt)],
       offset,
       limit: pageSize,
     }),
+    db.$count(profiles, where),
   ]);
 
   const pageCount = Math.ceil(totalCount / pageSize);

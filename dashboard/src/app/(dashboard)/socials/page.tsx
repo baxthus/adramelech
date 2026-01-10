@@ -4,7 +4,6 @@ import { usePage } from '@/hooks/use-page';
 import { useSearch } from '@/hooks/use-search';
 import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { deleteSocial, getSocials } from './actions';
 import { toast } from 'sonner';
 import type { ColumnDef, Row } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
@@ -23,6 +22,7 @@ import Alert from '@/components/alert';
 import { DataTable } from '@/components/dashboard/data-table';
 import { mapToDropdownMenuItems, type DropdownItem } from '@/utils/dropdown';
 import { copyToClipboard } from '@/utils/clipboard';
+import { deleteSocial, getSocials } from '@/actions/socials';
 
 export default function SocialsPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -51,8 +51,8 @@ export default function SocialsPage() {
       const toastId = toast.loading('Deleting social...');
       return { toastId };
     },
-    onSuccess: (_, __, context) => {
-      queryClient.invalidateQueries({ queryKey: ['socials'] });
+    onSuccess: async (_, __, context) => {
+      await queryClient.invalidateQueries({ queryKey: ['socials'] });
       toast.success('Social deleted', {
         id: context.toastId,
       });

@@ -1,18 +1,16 @@
 'use server';
 
-import { DefaultGetActions } from '@/schemas/actions';
 import { protect } from '@/utils/auth';
-import { ArkErrors } from 'arktype';
-import { db } from 'database';
-import { phrases } from 'database/schema';
-import type { PhraseCreateInfer } from 'database/types';
-import { PhraseCreate } from 'database/validations';
 import { desc, eq, ilike, or, type SQL } from 'drizzle-orm';
 import { NanoID } from 'utils/types';
+import { ArkErrors } from 'arktype';
+import { phrases } from 'database/schema';
+import { db } from 'database';
+import type { PhraseCreateInfer } from 'database/types';
+import { PhraseCreate } from 'database/validations';
+import { DefaultGetActions, pageSize } from '@/definitions/actions';
 
-const pageSize = 10;
-
-export async function getPhrases(search?: string, page: number = 1) {
+export async function getPhrases(search?: string, page?: number) {
   await protect();
 
   const parsed = DefaultGetActions.assert({ search, page });
@@ -20,6 +18,7 @@ export async function getPhrases(search?: string, page: number = 1) {
   let where: SQL | undefined;
   if (parsed.search) {
     const isNanoId = !(NanoID(parsed.search) instanceof ArkErrors);
+
     if (isNanoId) where = eq(phrases.id, parsed.search);
     else
       where = or(
@@ -30,14 +29,14 @@ export async function getPhrases(search?: string, page: number = 1) {
 
   const offset = (parsed.page - 1) * pageSize;
 
-  const [totalCount, data] = await Promise.all([
-    db.$count(phrases, where),
+  const [data, totalCount] = await Promise.all([
     db.query.phrases.findMany({
       where,
       orderBy: [desc(phrases.createdAt)],
       offset,
       limit: pageSize,
     }),
+    db.$count(phrases, where),
   ]);
 
   const pageCount = Math.ceil(totalCount / pageSize);

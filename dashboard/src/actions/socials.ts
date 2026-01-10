@@ -1,6 +1,6 @@
 'use server';
 
-import { DefaultGetActions } from '@/schemas/actions';
+import { DefaultGetActions, pageSize } from '@/definitions/actions';
 import { protect } from '@/utils/auth';
 import { ArkErrors } from 'arktype';
 import { db } from 'database';
@@ -8,9 +8,7 @@ import { socials } from 'database/schema';
 import { asc, eq, ilike, or, type SQL } from 'drizzle-orm';
 import { NanoID } from 'utils/types';
 
-const pageSize = 10;
-
-export async function getSocials(search?: string, page: number = 1) {
+export async function getSocials(search?: string, page?: number) {
   await protect();
 
   const parsed = DefaultGetActions.assert({ search, page });
@@ -28,21 +26,21 @@ export async function getSocials(search?: string, page: number = 1) {
       where = or(
         ilike(socials.name, `%${parsed.search}%`),
         // I'll have to trust that the bot is doing proper URL validation
-        // Because I want full text search on URLs
+        // because I want full text search on URLs
         ilike(socials.url, `%${parsed.search}%`),
       );
   }
 
   const offset = (parsed.page - 1) * pageSize;
 
-  const [totalCount, data] = await Promise.all([
-    db.$count(socials, where),
+  const [data, totalCount] = await Promise.all([
     db.query.socials.findMany({
       where,
       orderBy: [asc(socials.name)],
       limit: pageSize,
       offset,
     }),
+    db.$count(socials, where),
   ]);
 
   const pageCount = Math.ceil(totalCount / pageSize);

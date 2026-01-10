@@ -12,7 +12,6 @@ import { useMutation, type QueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import { arktypeResolver } from '@hookform/resolvers/arktype';
-import { createPhrase } from './actions';
 import { useState } from 'react';
 import {
   Field,
@@ -26,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import Alert from '@/components/alert';
 import type { PhraseCreateInfer } from 'database/types';
 import { PhraseCreate } from 'database/validations';
+import { createPhrase } from '@/actions/phrases';
 
 export function NewPhraseDialog({
   queryClient,
@@ -46,8 +46,8 @@ export function NewPhraseDialog({
 
   const { mutate, isPending, isError, error, reset } = useMutation({
     mutationFn: (phrase: PhraseCreateInfer) => createPhrase(phrase),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phrases'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['phrases'] });
       setOpen(false);
     },
   });
