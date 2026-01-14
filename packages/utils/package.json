@@ -1,0 +1,21 @@
+{
+  "name": "@repo/utils",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./*": {
+      "import": "./src/*.ts",
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

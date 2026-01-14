@@ -1,0 +1,21 @@
+{
+  "name": "@repo/redis",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "infra:up": "podman-compose up -d",
+    "infra:down": "podman-compose down"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "@repo/database",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "import": "./src/*.ts",
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "db:push": "bunx drizzle-kit push",
+    "db:studio": "bunx drizzle-kit studio",
+    "type-check": "tsc --noEmit",
+    "infra:up": "podman-compose up -d",
+    "infra:down": "podman-compose down"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/bun": "latest",
+    "@types/pg": "^8.16.0",
+    "drizzle-kit": "^0.31.8"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "nanoid": "^5.1.6",
+    "pg": "^8.16.3"
+  }
+}
