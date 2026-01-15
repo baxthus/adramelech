@@ -13,8 +13,8 @@ import StringBuilder from '~/tools/StringBuilder';
 import type { CommandInfer } from '~/types/command';
 import config from '~/config';
 import { toUnixTimestamp } from '@repo/utils/date';
-import { fromAsyncThrowable } from 'neverthrow';
 import { ExpectedError } from '~/types/errors';
+import { Result } from 'better-result';
 
 export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
@@ -102,7 +102,7 @@ export const command = <CommandInfer>{
     if (!secondsBeforeAutoDelete) return;
 
     setTimeout(async () => {
-      fromAsyncThrowable(() => intr.deleteReply())();
+      await Result.tryPromise(() => intr.deleteReply());
     }, secondsBeforeAutoDelete * 1000);
   },
 };

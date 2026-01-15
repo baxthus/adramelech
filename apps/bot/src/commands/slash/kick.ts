@@ -11,8 +11,8 @@ import {
 import type { CommandInfer } from '~/types/command';
 import config from '~/config';
 import { stripIndents } from 'common-tags';
-import { fromAsyncThrowable } from 'neverthrow';
 import { ExpectedError } from '~/types/errors';
+import { Result } from 'better-result';
 
 export const command = <CommandInfer>{
   data: new SlashCommandBuilder()
@@ -86,7 +86,7 @@ export const command = <CommandInfer>{
       ],
     });
 
-    const notifyResult = await fromAsyncThrowable(() =>
+    const notifyResult = await Result.tryPromise(() =>
       user.send({
         flags: MessageFlags.IsComponentsV2,
         components: [
@@ -113,9 +113,9 @@ export const command = <CommandInfer>{
           },
         ],
       }),
-    )();
+    );
     // This one is expected because a lot of users have DMs disabled
-    if (notifyResult.isErr())
+    if (Result.isError(notifyResult))
       throw new ExpectedError('Failed to notify user about the kick');
   },
 };

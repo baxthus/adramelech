@@ -19,12 +19,16 @@ import type { ComponentInfer } from '~/types/component';
 import type { ModalInfer } from '~/types/modal';
 import config from '~/config';
 import type { EventInfer } from '~/types/event';
-import { fromAsyncThrowable } from 'neverthrow';
 import redis from '@repo/redis';
 import { formatDistanceToNow } from 'date-fns';
 import { ExpectedError } from '~/types/errors';
-import { trackCommand, trackComponent, trackModal } from '@repo/redis/telemetry';
+import {
+  trackCommand,
+  trackComponent,
+  trackModal,
+} from '@repo/redis/telemetry';
 import { fireAndForget } from '@repo/utils/async';
+import { Result } from 'better-result';
 
 export type CommandInteraction =
   | ChatInputCommandInteraction
@@ -195,16 +199,11 @@ async function handlePreconditions(
 
   if (item.preconditions) {
     for (const precondition of item.preconditions) {
-      await fromAsyncThrowable(
-        () => precondition(intr),
-        (e) => e as Error,
-      )().match(
-        () => {},
-        async (error) => {
-          await handleError('precondition', identification, error, intr);
-          failed = true;
-        },
-      );
+      const result = await Result.tryPromise(() => precondition(intr));
+      if (Result.isError(result)) {
+        await handleError('precondition', identification, result.error, intr);
+        failed = true;
+      }
     }
   }
 
@@ -256,19 +255,18 @@ async function handleTypeMismatch(
   );
 }
 
-const executeInteraction = async (
+async function executeInteraction(
   interactionType: string,
   name: string,
   fn: () => Promise<void>,
   intr: Interaction,
-): Promise<boolean> =>
-  await fromAsyncThrowable(fn, (e) => e as Error)().match(
-    () => true,
-    async (error) => {
-      await handleError(interactionType, name, error, intr);
-      return false;
-    },
-  );
+): Promise<boolean> {
+  const result = await Result.tryPromise(() => fn());
+  if (Result.isOk(result)) return true;
+
+  await handleError(interactionType, name, result.error, intr);
+  return false;
+}
 
 async function handleError(
   interactionType: string,

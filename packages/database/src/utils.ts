@@ -1,14 +1,15 @@
 import { or, sql, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { db } from '.';
-import { fromAsyncThrowable, type ResultAsync } from 'neverthrow';
+import { Result } from 'better-result';
 
-export function testConnection(): ResultAsync<number, string> {
+export async function testConnection(): Promise<Result<number, string>> {
   const start = performance.now();
-  return fromAsyncThrowable(
-    () => db.execute(sql`SELECT 1`),
-    () => 'Failed to connect to database'
-  )().map(() => performance.now() - start);
+  const query = await Result.tryPromise(() => db.execute(sql`SELECT 1`));
+  const end = performance.now();
+  return query
+    .map(() => end - start)
+    .mapError(() => 'Failed to connect to database');
 }
 
 export function conditionsToWhere(
@@ -24,13 +25,15 @@ export const exists = async (
   table: PgTable,
   where: SQL | undefined
 ): Promise<boolean> =>
-  fromAsyncThrowable(() =>
-    db
-      .select({ _: sql`1` })
-      .from(table)
-      .where(where)
-      .limit(1)
-  )()
+  (
+    await Result.tryPromise(() =>
+      db
+        .select({ _: sql`1` })
+        .from(table)
+        .where(where)
+        .limit(1)
+    )
+  )
     .map((result) => result.length > 0)
     // If there's an error, we couldn't reach the database
     // It's a very edge case, so for the sake of usability and security, we return false

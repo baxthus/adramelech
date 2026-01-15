@@ -27,8 +27,8 @@
   ],
   "dependencies": {
     "arktype": "^2.1.29",
-    "drizzle-orm": "^0.45.1",
-    "neverthrow": "^8.2.0"
+    "better-result": "^2.0.0",
+    "drizzle-orm": "^0.45.1"
   },
   "packageManager": "bun@1.2.18"
 }

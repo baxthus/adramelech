@@ -1,10 +1,10 @@
-import { fromAsyncThrowable, type ResultAsync } from 'neverthrow';
 import redis from '.';
+import { Result } from 'better-result';
 
-export function testConnection(): ResultAsync<number, string> {
+export async function testConnection(): Promise<Result<number, string>> {
   const start = performance.now();
-  return fromAsyncThrowable(
-    () => redis.ping(),
-    () => 'Failed to connect to Redis'
-  )().map(() => performance.now() - start);
+  const result = await Result.tryPromise(() => redis.ping());
+  return result
+    .map(() => performance.now() - start)
+    .mapError(() => 'Failed to connect to Redis');
 }
