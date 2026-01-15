@@ -5,6 +5,7 @@ import logger from '~/logger';
 import kleur from 'kleur';
 import { testConnection as dbTestConnection } from '@repo/database/utils';
 import { testConnection as redisTestConnection } from '@repo/redis/utils';
+import { Result } from 'better-result';
 
 export const event = <EventInfer>{
   name: Events.ClientReady,
@@ -18,29 +19,25 @@ export const event = <EventInfer>{
 
     logger.log();
 
-    const dbLatency = await dbTestConnection().match(
-      (latency) => latency,
-      (err) => {
-        logger.error(err);
-        process.exit(1);
-      },
-    );
+    const dbLatency = await dbTestConnection();
+    if (Result.isError(dbLatency)) {
+      logger.error(dbLatency.error);
+      process.exit(1);
+    }
     logger.log(
       kleur.green(
-        ` Database connected successfully! ${kleur.dim(`- ${dbLatency.toFixed(2)}ms`)}`,
+        ` Database connected successfully! ${kleur.dim(`- ${dbLatency.value.toFixed(2)}ms`)}`,
       ),
     );
 
-    const redisLatency = await redisTestConnection().match(
-      (latency) => latency,
-      (err) => {
-        logger.error(err);
-        process.exit(1);
-      },
-    );
+    const redisLatency = await redisTestConnection();
+    if (Result.isError(redisLatency)) {
+      logger.error(redisLatency.error);
+      process.exit(1);
+    }
     logger.log(
       kleur.green(
-        ` Redis connected successfully! ${kleur.dim(`- ${redisLatency.toFixed(2)}ms`)}`,
+        ` Redis connected successfully! ${kleur.dim(`- ${redisLatency.value.toFixed(2)}ms`)}`,
       ),
     );
 
